@@ -1,0 +1,3 @@
+﻿Moj kod je Monolith layered, nije Modular.
+Da bi bio Modular, moram imati posebne foldere za svaki subdomain (account, comment, portfolio, stock) i u svakom imati
+Models,Controllers,Data, DTOs, Interfaces foldere.

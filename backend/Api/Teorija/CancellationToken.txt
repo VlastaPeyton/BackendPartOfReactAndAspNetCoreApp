@@ -1,0 +1,5 @@
+Za async endpoints nisam koristio "cancellationToken = default", vec bez default vrednosti, jer ako ReactTS pozove ovaj endpoint, i user navigates away or closes FE, 
+.NET ce automtaski da shvati da treba prekinuti izvrsenje i dodelice odgovarajucu vrednost cancellation tokenu. 
+Zbog nemanja "=default" u async endpoint, ne smem imati "=default" ni u await metodama koje se pozivaju u endpointu. 
+Da sam koristio "=default" u endpoints, .NET ne bi znao da automatski prekine izvrsenje endpointa, pa bih morao u FE axios metodi da prosledim i controller.signal itd.
+CancellationToken se stavlja za time-consuming await metode npr duga ocitavanja u bazi, ali ja cu staviti na sve, zlu ne trebalo.

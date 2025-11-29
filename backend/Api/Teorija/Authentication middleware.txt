@@ -1,0 +1,13 @@
+
+Authentication middleware je built-in middleware koji se registruje u Program.cs pozivom app.UseAuthentication().
+app.UseAuthentication() must come before app.UseAuthorization() (pogledaj Authorization middleware.txt) in Program.cs.
+
+UseAuthentication middleware:
+	- registruje i pokrece authentication handlere za JWT (ili Cookie ako ga koristim umesto JWT za AccessToken token) koji su built-in u .NET i ne kodiram ih 
+	- reads JWT from Authorization header from request (pogledaj HttpContext.txt) (zbog SPA Security best practice JWT is in Auth header), pa validates JWT, 
+	pa ocita Claims iz JWT ( u TokenService.cs kreirao sam Claims), pa od Claims napravi ClaimsIdentity, pa od ClaimsIdentity napravi ClaimsPrincipal and
+	stores it in HttpContext.User. 
+	ClaimsPrincipal je fakticki user koji moze imati vise ClaimsIdentity npr logovao sam se preko username/password (ClaimsIdentity1) i preko Google naloga(ClaimsIdentity2).
+
+ControllerBase omogucava direktno dohvatanje svih user info in each request pomocu HttpContext.User cime se postize stateless da ne gledam user info u bazi.
+

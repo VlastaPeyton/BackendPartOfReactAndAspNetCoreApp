@@ -1,0 +1,7 @@
+1) Test Routes (Pages) samo da vidimo dal rade:
+    1.1) Test HomePage jer se ona prikaze kad npm start. U E2E folder nazvacu "01-HomePageTests.cy.ts" kako bih znao kojim redosledom sam testirao. 
+    1.2) Test RegisterPage jer sve van homepage zahteva register/login. U E2E folder nazacu "02-RegisterPageTests.cy.ts" kako bih znao kojim redosledom sam testirao.
+    1.3) Test LoginPage  -||-
+    1.4) 
+
+2) Test functionalities in Pages 

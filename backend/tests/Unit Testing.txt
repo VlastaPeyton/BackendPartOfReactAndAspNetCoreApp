@@ -1,0 +1,26 @@
+﻿Koristicu:
+	1) xUnit Testing, jer sam odabrao xUnit Test Project. 
+	2) FakeItEasy NuGet, a mogo sam i Moq, jer moram da mockujem mnogo toga
+	3) FluentAssertion, a mogo sam i bez toga, ali je elegantije kad se "//Assert" deo testa radi
+
+Controller test (pogledaj AccountControllerTests i bice jasno):
+	Mock (fake) all dependencies (repository, services, ....)
+	Test HTTP StatusCode, ModelState invalid/valid and Response types
+	Verify correct method calls on dependecies
+	Test model validation 
+	Testiram controllers po njihovom prioritetu. Neke mogu samo ligh testirati koji nisu bitni mnogo kao CRUD operations.
+
+Repository test:
+	Use integration test with in-memory db (Microsoft.EntityFrameworkCore.InMemory NuGet) where i use new empty db for each tested repository method
+	Test CRUD operations
+	Verify entity mapping
+	Test exception handling for db errors
+
+ApplicationDbContext test:
+	Nema obican test klasa kao za Controller i Repository.
+	Test entity configuration and constraints
+	Verify relationships and navigation properties
+	Validate data annotations and FluentAPI configurations 
+
+Entity klasu (Models folder) test:
+	Samo ako ima calculated property (expression bodied getter), validaciju ili metodu 

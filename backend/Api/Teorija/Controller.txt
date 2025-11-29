@@ -1,0 +1,7 @@
+Za svaki Request pravi se automatski nova instanca kontrolera (AddTransient fakticki), onda DI automatski, na osnovu AddTransient/Scoped/Singleton<IService,Service>() iz Program.cs, u ctor kontrolera doda zeljeni servis i kad se 
+response posalje u FE, GC unistava kontroler, ali zivot servisa zavisi da li je Singleton, Transient ili Scoped.
+
+Controller (+ validacija + http + itd.)  -> Service -> Repository -> DbContext
+
+Controller ne sme sadrzati logiku, vec samo primati request, raditi validaciju, rukovanje cookie, statuscodes, poziva service/cqrs koji sadrzi logiku da obradi zahtev i slati odgovor, hvata greske bacene u servisu (ako ne postoji GlobalExceptionHandler ili Result pattern) - videti Services.txt
+Controller ne treba bacati exception, jer se exception propagira u GlobalExceptionHandler, dok Controller vraca FE Ok/NotFound/BadRequest itd... 

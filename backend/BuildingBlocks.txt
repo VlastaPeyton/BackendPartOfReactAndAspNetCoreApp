@@ -1,0 +1,2 @@
+Pre nego sto sam dodao BuildingBlocks, BE je bio Api project only.
+BuildingBlocks dodajem da bih napravio 2 mikroservisa (Api + jos jedan) cisto da bih provezbao iako mi zaista ne treba to

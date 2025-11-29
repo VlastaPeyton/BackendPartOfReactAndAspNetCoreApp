@@ -1,0 +1,15 @@
+compayn.d.ts je Type Declaration file u kome ne stoji logika, vec samo definicija custom tipova koje API vraca kada ga pozovem putem Axios.
+Custom tip je tipa interface ili type. 
+
+npr: 
+  export type Osoba{
+    ime: string,
+    prezime: string,
+    godine: int
+  }
+
+  export interface Osoba{
+    ime: string,
+    prezime: string,
+    godine: int
+  }

@@ -1,0 +1,12 @@
+Reflection je programerski mehanizam, u svakom jeziku, koji omogucava, IMPLICITNO, programu da:
+	- pregleda sebe u runtime
+	- vidi tipove, metode i polja klasa
+	- pozove metode i kreira objekte tokom runtime, bez explicitno da navedem 
+	- sporija je od explicitnog poziva metode
+	- koristi se za:
+		- middleware da pozove Invoke/InvokeAsync
+		- DI 
+		- EF Core da mapira polja klase u kolone tabele
+		- JSON serialization
+		- SignalR i da otkrije metode koje client moze pozvati preko WebSocket
+	- moze se koristiti explicitno, ali ja nisam do sada imao potrebe

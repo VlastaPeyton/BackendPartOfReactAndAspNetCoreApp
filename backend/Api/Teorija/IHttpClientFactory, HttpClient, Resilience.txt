@@ -1,0 +1,24 @@
+HttpClient:
+	Otvara novu TCP konekciju za svaki zahtev, a te konkecije se ne zatvore odmah automatski,a ni rucno sa Dispose(), sto pojede socket resurse (socket exhaustion)
+	=> app usporava, request pocinje da baca greske ako previse HttpClient napravim jer potrose sockets bez da ih ugase nakon poziva
+	U Program.cs registujem "builder.Services.AddHttpClient<IFinacialModelingPrepService, FinancialModelingPrepService>();"
+	Ovo koristi IHttpClientFactory behind the scenes, ali za moj slucaj kada samo 1 API pozivam mi je dovoljno.
+	U Program.cs registrujem builder.Services.AddHttpClient<IFinacialModelingPrepService, FinancialModelingPrepService>(); sto je AddTransient automatski
+	AddHttpClient automatski pravi HttpClientFactory koja kao i rucno da je koristim resava socket exhaustion problem.
+
+IHttpClientFactory:
+	Resava problem socket exhaustion ako pravim vise HttpClient instanci za vise APIs.
+	Ja imam samo jednu HttpClient istancu i fakticki mi ne treba IHttpClientFactory, ali je pozeljno, jer on regulise automatski sve, posebno
+ kada je konekcija ka API otvorena dugo kao sto je moj slucaj, jer jednom ako pozovem FMP API, zauvek ostaje otvorena.
+	Polje klase je i dalje HttpClient tipa, ali u ctor imam IHttpClientFactoy.CreateClient() koje pravi HttpClient varijablu 
+	U Program.cs registrujem builder.Services.AddScoped<IFinacialModelingPrepService, FinancialModelingPrepService>(); 
+
+
+Resilience za Request:
+	Polly NuGet allows us to define resilience strategies such as retry, circuit breaker, timeout, rate-limiting, fallback.
+	Ove strategije mogu biti default (kao u Program.cs) a mogu biti i custom (kao u HttpClientResilienceExtensions.cs).
+	Umesto Polly, koristicu 2 nova NuGet koja olaksavaju posao, jer su built on top of Polly, a to su Microsoft.Extensions.Resilience i Microsoft.Extensions.Http.Resilience.
+	AddHttpClient i IHttpClientFactory trebaju Polly tj ova 2 nova NuGet, jer HttpClient koristim za Request prema external API ili drugom mikroservicu ako komuniciraju putem HTTP (ali to izbegavam, jer gRPC je bolji za inter-service communication).
+	U Program.cs:
+		- AddHttpClient<IFinacialModelingPrepService, FinancialModelingPrepService>().AddStandardRsilienceHandler() - cime postizem default retry, timeout, fallback 
+		- Umesto AddHttpClient<..>().AddStandardResilienceHandler(), koristim AddFMPHttpClientWithCustomResilience() - cime postizem custom retry, timeout, fallback

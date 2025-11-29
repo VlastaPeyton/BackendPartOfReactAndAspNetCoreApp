@@ -1,0 +1,25 @@
+Klijent posalje request, on se upise u Request objekat koji definisem
+U endpoint Request objekat se mapira u Command/Query objekat, gde Request i Command/Query moraju imati ista polja
+Command sluzi za pisanje u bazu, a Query za citanje iz baze.
+Kada endpont posalje Command/Query kroz MediatR, Validation za Command, pa Command/QueryHandler se automatski aktivira
+MediatR NuGet se koristi za CQRS pattern
+
+Validacija se radi za Command, retko za Query, jer bitno je validirati ono sto ulazi u bazu, a ne ono sto je ocitava
+FluentValidation, FluentValidation.DependencyInjection i FluentValidation.AspNetCore  NuGet se koristi
+
+Ako koristim CQRS, ne koristim Service i obratno ! 
+
+Repository ne baca exception/result pattern, vec samo vrati null ako ne nadje, dok CQRS Handler baca exception/result pattern u zavisnosti sta mu je repository vratio.
+
+Uradicu CQRS samo za CommentController endpointe neke (1 Read i 1 Write DB endpoint), da prikazem razliku CQRS vs Service metode + razliku izmedju ModelState i FluentValidation 
+jer ModelState validira u endpoint, a FluentValidation validira u Handler. 
+
+Request i Command/Query objekat moraju imati polja istog tipa i imena (olaksava mi AutoMapper/Mapster da moze)
+Response i Result objekat moraju imati polja istog imena i tipa (olaksava mi AutoMapper/Mapster da moze)
+
+Request objekat je argument endpointa, u endpoint se mapira u Command/Query objekat, pa takav ide u MediatR pipeline, pa kad dodje u Command/QueryHandler Handle 
+metodu tu se odradi sve sto treba u bazi, pa onda se tu napravi Result objekat koji se vrati u endpoint gde se mapira u Response objekat koji se salje frontendu.
+
+Request obicno ne postoji ako endpoint prima argumente prostog tipa i nema ih mnogo. Moze i tad, ali nema potrebe.
+Ako ima mnogo argumenata onda napravim Request klasu, ali ako nema mnogo (a vise od 1) onda [FromQuery] i automatski binduje u Request objekat, a ako ih bas mnogo ima 
+onda [FromBody]

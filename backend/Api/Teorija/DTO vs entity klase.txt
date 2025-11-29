@@ -1,0 +1,15 @@
+Entity klase (Models folder) se koriste u EF Core tj Repository i ApplicationDBContext tj rad sa bazom direkt, dok u svim ostalim slucajevima 
+(Redis, Frontend request/response itd) se koristi DTO klasa, jer ne valja mesati entity(Domain layer) sa ostalim layerima i zato postoji Mapper folder
+gde mapiram entity <-> dto.
+
+Jako bitno zato sto entity klasa ima navigational atribute, value object (custom type), FK-PK, circular reference itd. i onda kad saljem objekat te klase u redis/FE onda mora json serializer a tesko se
+serializuje entity objekat zbog ovih osobina, pa prvo ga pretvorim u DTO objekat (koji mora imati primitivne tipove, a ako je neki tip lista onda ta lista mora biti tipa DTO objekta nekog a ne entity) i onda ga saljem de ocu.
+Primer za ovo je StockMapper klasa i StockDTO objekat
+
+Model klasa nije Models(entity) folders, vec sluzi da se u command endpoint mapira incoming DTO u Model before sending it to service/cqrs. 
+
+Endpoint koji write to DB rade i koristi Service trebaju mapiranje izmedju ulaznog DTO - Model klase - Entity! 
+Endpoint koji read from DB rade i koristi Service ne trebaju mapiranje ! 
+Izlazni DTO, u oba tipa endpoint, koji ide iz service/cqrs u controller ne mora da mapira se uvek, jer on izlazi iz .NET i ide ka FE i onda ga takvog saljem iz controller u FE !
+
+

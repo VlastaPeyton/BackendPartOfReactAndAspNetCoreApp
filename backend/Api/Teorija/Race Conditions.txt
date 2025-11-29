@@ -1,0 +1,7 @@
+﻿1) AppUser (Register / Login / ResetPassword / RefreshToken endpoints): 
+	Nasledivsi IdentityUser, race condition je sprecen preko ConcurrencyStamp kolone, ali uz uslov da se svaki AppUser update odigra preko UserManager i SignInManager sto i jeste slucaj .
+	ConcurrencyStamp preventing two processes from accidentally overwriting each other's changes to the same user record in the database. ConcurrencyStamp se automatski promeni kada se azuzira AppUser(IdentityUser) vrsta u AspNetUsers tabeli, pa ako npr iz 2 taba u FE pokusam da zamenim password oba zapamte isti trenutni ConcurrencyStamp. 
+  Tab1 se prvi izvrsi i izmenice password, jer njegov ConcurrencyStamp isti kao trenutni ConcurrencyStamp u toj vrsti. 
+  Tab2 se drugi izvrsi i nece uspeti da izmeni password, jer Tab1 vec setovao novi password i .NET automatski promenio ConcurrencyStamp u toj vrsti, a Tab2 je zapamtio onaj prethodni ConcurrencyStamp (pre nego sto Tab1 uspeo da zameni password) i sada se njegov stamp ne slaze sa ovim novim u tabeli i nece moci da zameni password.
+  U AccountConttroller, sve UserManager metode koje azuriraju / prave novog usera ili menjaju password, automatski se ConcurrencyStamp azurira i sprecava race conditions
+

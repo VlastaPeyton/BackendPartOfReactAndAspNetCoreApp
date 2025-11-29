@@ -1,0 +1,4 @@
+Kreiranje aplikacije pomocu "Create React App" cime automatski dobijam sve neophodno (WebPacks, ESlint itd.) i spremno za rad.
+Ime foldera gde aplikacija ce biti smestena mora biti malim slovom, jer create-react-app to trazi.
+Kreirao sam aplikaciju pomocu "Create React App" (a mogo sam i pomocu "Vite") i dobio node_modules, public i src foldere + .gitignore, package-lock.json, package.json i tsconfig.json files
+Pokrecem aplikaciju pomocu "npm start" cime ocitavam public/index.html file.

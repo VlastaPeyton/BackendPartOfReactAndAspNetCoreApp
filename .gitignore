@@ -1,0 +1,4 @@
+/backend/Api/.env
+/frontend/.env
+/backend/Api/bin/
+/backend/Api/obj/

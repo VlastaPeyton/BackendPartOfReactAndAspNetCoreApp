@@ -1,0 +1,76 @@
+
+Request flow: Request -> Kestrel -> Middlewre -> Code 
+Response flow: Code -> Middleware -> Kestrel -> Client
+
+Sta je middleware i middleware pipeline:
+	Middleware je .NET komponenta u aplikacionom pipeline koja prima HttpContext (pogledaj HttpContext.txt) objekat koji moze da procita, izmeni ili koristi 
+  i odlucuje da li ce proslediti request sledecem middleware u pipeline ili ce sama zavrsiti obradu i poslati response. 
+    Isto ima ulogu i u slanju odgovora klijentu. 
+	Kada klijent posalje request, on prvo ide u Kestrel koji od http poruke napravi HttpContext objekat, a onda HttpContext ide u middleware pipeline. 
+	Kada BE salje response, on se obrnutim putem od request propagira takodje kroz middleware pipeline i na kraju Kestrel ga pravi kao http poruku i salje klijentu.
+    Midleware moze biti built-in ili custom. 
+	Middleware se registruje u Program.cs prilikom cega je bitan redosled registracije (odozgo na dole - request ce prvo uci u najvise pozicionirani middleware
+  u Program.cs i propagirati nizvodno, a response propagira uzvodno).
+	Middleware pipeline je kicma svake ASP.NET Core aplikacije bez koje se ne moze. 
+	Middleware pipeline je Singleton, jer se kreira pri pokretanju aplikacije i ne menja se.
+
+	Svaki middleware moze biti:
+		1) Conventional - bez implementacije IMiddleware 
+		   => u Program.cs se napise "app.UseMiddleware<CustomMiddleware>();"
+		   ovime middleware nije registrovan u servise tj u DI, ali je implicitno kao AddSingleton dodat u pipeline
+		   Svaki conventional middleware  mora sadrzati:
+			- ctor 
+			- InvokeAsync/Invoke metodu koja vraca Task (koja se poziva automatski refleksijom (pogledaj Reflection.txt)), a prima HttpContext
+			- next polje tipa RequestDelegete je opciono koje pokazuje na sledeci middleware u pipeline na osnovu Program.cs:
+				- ako ga ima, to znaci da nije poslednji middleware u pipeline
+				- ako ga nema, to znaci da jeste poslednji middleware u pipeline
+
+		2) Sa IMiddleware implementacijom:
+		   => u Program.cs se napise "builder.Services.AddTransient<IMiddleware,CustomMiddleware>()" i "app.UseMiddleware<CustomMiddleware>()"
+		   ovime middleware je registrovan kao servis u DI  explicitno kao AddTransient u pipeline, jer IMiddleware koristi IMiddlewareFactory koji zahteva DI registraciju
+		   Svaki middleware, koji implementira IMiddleware built-in interface, mora se registrovati kao AddTransient, a mora sadrzati:
+				- InvokeAsync/Invoke metodu koja vrata Task (-||-) i koja prima HttpContext i RequestDelegate 
+				- Ako koristim IMiddleware, treba AddTransient<IMiddleware,CustomInterface> jer, middleware pipeline nije ogranicen samo na Request (AddScoped), vec 
+				 sluzi i za gRPC,SignalR, WebSockets
+
+Built-in middleware:
+	- builder.Services.AddControllers(); - sadrzi UseRouting i UseEndpoints koje sam u starijim verzijama morao rucno registrovati
+	- app.UseHttpRedirection()
+	- app.UseAuthentication()
+	- .... 
+Built-in middleware,jer nije nasledio IMiddleware, nije registrovan nikako u DI, ali se kao AddSingleton ponasaju.
+
+Custom middleware:
+	- Svaki middleware koji ja napravim i ubacim u Program.cs i zavisi da li koristim IMiddleware ili ne.
+
+Oba tipa middleware se pozivaju pomocu "app.UseMiddleware<Middleware>", gde Middleware moze biti custom/built-in. 
+Za mnoge built-in ne koristim ovu notaciju, vec ima gotova extension metoda (npr app.UseRouting()) koja unutar sebe poziva app.UseMiddleware<RoutingMiddleware>, 
+gde RoutingMiddleware je built-in. Extension poziv mogu uraditi i za custom slucajeve, ali se generalno ne radi da ne zbuni citaoca koda, vec za custom koristim app.UseMiddleware<CustomMiddleware>.
+Ako koristim IMiddleware zahteva AddTransient explicitno before UseMiddleware.
+
+Posle "app = builder.Build()", se vrsi dodavanje middleware u pipeline odgovarajucim redosledom.
+"app.Run()" kreira pipeline po redosledu i napravi ogroman RequestDelegate koji Kestrel (pogledaj Kestrel.txt) vidi i zbog toga RequestDelegate polje svakog middleware 
+zna automatski koji mu je sledeci middleware.
+
+Ako je custom middleware mali, onda moze u Program.cs direktno da se definise i doda u pipeline, a to izgleda ovako:
+	app.Use(async (context, next) =>
+	{
+    Console.WriteLine("Logika pre poziva sledeceg middleware-a kada request propagira");
+    await next(); // poziva sledeci middleware 
+    Console.WriteLine("Logika nakon sledecg middleware-a kada response propagira");
+	});
+Ali nije dobra praksa, jer ruzni mi je kod mnogo, vec napraivm CustomMiddleware:IMiddleware klasu koju registrujem kao AddTransient Service i dodam u pipeline pomocu app.UseMiddleware<CustomMiddleware>.
+
+U Program.cs, bitno je kojim redosledom middleware registrujem, jer reqeust propagira nizvodno u Program.cs, a response uzvodno.
+Svaki middleware, nebitno gde u pipeline je registrovan, moze poslati odgovor klijentu bez da saceka da middleware koji su registrovani iznad njega zavrse. 
+Ovo je problem kojim moram da proverim u svakom custom middleware sa "if(context.Response.HasStarted)", jer ako je ovo true, onda odgovor je vec krenuo da se salje 
+u nekom middleware ispod mog trenutnog middleware, pa trenutni middleware ne moze poslati odgvor. 
+Ovo se desava retko, ali moze. 
+
+GlobalExceptionHandlingMiddleware je registrovan aman na vrhu (odma ispod Swagger i HttpsRedirection, jer ova 2 ne smeju biti wrapped with custom middleware) i onda on 
+hvata exception svih middleware ispod njega ako oni ispod nemaju catch blok, jer exception propagira uzvodno(response flow putanjom) do najblizeg catch bloka.
+Ovo slanje iz nize registrovanog middleware se ne mzoe desi u obicnom REST API koji je 90% sajtova.
+
+Svaki middleware ima InvokeAsync(HttpContext context, RequestDelegate next) metodu koju .NET poziva kada izvrsa taj middleware, a 
+RequestDelegate je metoda koja prima HttpContext argument i predstavlja sledeci middleware u pipeline tj onaj koi je registrovan 
+odma ispod GlobalExceptionHandlingMiddleware u Program.cs, a to je UseCors. RequestDelegate nema definiciju explicitnu, vec .NET je definise prilikom pokretanja aplikacije. 

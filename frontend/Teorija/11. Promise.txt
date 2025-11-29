@@ -1,0 +1,14 @@
+Promise je isto kao Task u C#. Kod staje dok Promise se ne resolve/reject. 
+
+new Promise((resolve, reject) => {
+    .....
+})
+
+resolve i reject su argumenti lambda funkcije,a oni su tipa built-in funkcija
+resolve je funkcija koju pozivam da uspesno zavrsim Promise
+reject je funkcija koju pozivam da oznacim gresku 
+
+Kada uradim "await funkcija(){ return 53;}" to je isto kao "await funkcija(){return Promise.resolve(53);} 
+kada god uradim result.data znaci da iz Promise izvadim built-in data polje koje nosi moj payload
+
+kada uradim promise.then(x) znaci da sam extraktovao payload iz promise

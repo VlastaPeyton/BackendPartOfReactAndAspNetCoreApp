@@ -1,0 +1,12 @@
+Poboljsaj Protected Route "Dok user logout i click on some login-needed route, take user to login, and then take him back to that route.
+Dodaj video 
+Dodaj EN/SR 
+
+1) Provera koda before compiling: 
+    - ESlint dodaj u VSC
+
+2) Testing:   
+    - Storybook nauci
+      Storybook is a development and documentation tool for building UI components in isolation. 
+      It's about creating and showcasing individual components outside of your main application.
+

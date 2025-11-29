@@ -1,0 +1,53 @@
+Pogledaj Authentication middleware.txt 
+
+Prvi tip Login je via Login endpoint (ClaimIdentity1), a drugi je via Google account (ClaimIdentity2). 
+Na https://console.cloud.google.com/ selektujem "OAuth consent screen", selektujem sve redom, i na kraju "Authorized URI" upisem URL za
+GoogleCallback endpoint, jer Google mora da redirektuje na moj endpoint. 
+Sacuvam "client_id" i "client_secret" koje dobijem na sajtu, jer mi to treba za kodiranje, ali ih skladistim u .env zbog Github.
+
+Ako korisnik nije registrovan pomocu Google naloga, prilikom prvog Google login, automatski se registruje, a svaki naredni put se samo logira.
+
+Potrebna su 2 endpoints:
+	1. GoogleLogin:
+		User u FE klikne "Login with Google" i aktivira se ovaj endpoint, gde Challenge(properties, "Google") pokrece 
+		Google Auth Handler (Authentication middleware) to generate URL oblika https://accounts.google.com/o/oauth2/v2/auth?
+																				  client_id=FROM_APPSETTINGS
+																				  &redirect_uri=https://localhost:7045/api/account/login/google/callback
+																				  &response_type=code
+																				  &scope=openid+email+profile
+																				  &state=RANDOM_ANTI_CSFR_TOKEN
+
+		state argument ensuers:
+			- no CSRF attacks
+			- no attacker can send your callback URL manually 
+
+		.NET stores state parameter in temporary Correlation cookie which is send to Browser alongside URL above 
+
+		Browser redirectuje usera na URL odozgo gde se pojavi google forma za login, Google authenticates user and redirects him back to 
+		https://localhost:7045/api/account/login/google/callback?code=XYZ&state=RANDOM_ANTI_CSRF_TOKEN (GoogleCallback endpoint) and Browser sends Correlation
+		cookie to .NET 
+
+
+	2. GoogleCallback:
+		Sada je user redirektovan ovde, HttpContext.AuthenticateAsync pokrece Google Auth Handler da ocita state argument iz URL query i uporedi sa state argument
+		iz Correlation cookie (Google Auth Handler (ne endpoint) ocitava URL code i state params i zato nemam [FromQuery] u ovom endpoint), pa ako su isti onda handler ocita
+		i code argument from URL query i uradi POST request to https://oauth2.googleapis.com/token with body 
+		{ code=XYZ, 
+		  client_id=FROM_APPSETTINGS, 
+		  client_secret=FROM_APPSETTINGS, 
+		  redirect_uri=httsp://localhost:7045/api/account/login/google/callback,
+		  grant_type=authorization_code
+		}
+		, a Google odgovori sa 
+		{"access_token": "...",
+		 "expires_in" : 3599,
+		 "id_token" : "...."
+		},
+		pa handler validira token_id (JWT from Google with user info such as email and profile jer njih u Program.cs sam upisao) i napravi od toga ClaimsIdentity i ClaimsPrincipal 
+		na osnovu Program.cs gde sam samo email i profile zahtevao od google da ubaci u id_token, i upise to u HttpContext da bi _signInManager.GetExternalLoginInfoAsync() mogo
+		da ocita te podatke.
+
+		
+Ako korisnik prvi put pristupa sajtu putem Google naloga, bice registrovan, a svaki naredni put loginovan, ali to se odigrava BTS, pa korisnik ne vidi nista 
+od toga.
+

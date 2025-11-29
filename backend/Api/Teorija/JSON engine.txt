@@ -1,0 +1,19 @@
+Pre nego sto sam dodao Redis cache u app, koristio sam NewtonsoftJson NuGet da automatski iskljuci circular reference za serializaciju endpoint response
+response body je uvek JSON koji se automatski serializuje u JSON kada endpoint vrati zeljenu vrednost clientu.
+
+Circular reference se desava zato sto:
+   - Stock ima List<Comment>, a Comment ima Stock polje koje pokazuje na Stock i to je circular reference koji dovodi do problema u JSON serialization ako ne ugasim to u Program.cs
+   - Isto vazi i za AppUser/Stock - Portfolio. 
+
+U Program.cs dodajem i vazi samo za controller tj endpoints:
+	builder.Services.AddControllers().AddNewtonsoftJson(options =>
+{
+    options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+});
+
+
+Kada sam dodao Redis cache u app, moram da koristim built-in System.Text.Json / Newtonsoft.Json NuGet jer rucno moram da serialize/deserialize u CachedStockRepository, pa cu 
+da koristim Newtonsoft.Json jer ne zelim da mesam NuGets. U CachedStockRepository moram rucno ugasiti circular reference svaki put.
+
+Posto Redis cache koristi JSON kao value type, pozeljno je u cache stavljati DTO objekte, a ne entity klase zbog DDD kako entity objekti i njihovi ValueObject Id tipovi 
+ne bi izlazili van domena jer Redis nije domain level.

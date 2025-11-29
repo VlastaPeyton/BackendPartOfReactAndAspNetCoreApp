@@ -1,0 +1,6 @@
+U fajlu mogu imati samo 1 "export default", a beskonacno "export".
+"export default Ime" omogucava "import BiloKojeIme from ..."
+"export Ime" omogucava "import {Ime} from ..."
+
+Npr u App.tsx, da sam, umesto "export default App", uradio "export function App()" u Routes.tsx (jer tamo importujem App), 
+morao bih umesto "import App from ..." da uradim "import {App} from ..."

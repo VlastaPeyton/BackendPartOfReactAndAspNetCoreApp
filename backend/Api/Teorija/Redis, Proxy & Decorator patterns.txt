@@ -1,0 +1,46 @@
+Proxy and Decorator pattern for Redis:
+
+    1) Proxy pattern: CachedRepository acts as a proxy tj forwarding calls to underlyin Repository. Omogucava lazy loading. 
+
+    2) Decorator pattern: Extend functionality of existing Repository by adding cache logic sto znaci da ova klasa mora da implementira IRepository bas kao sto je 
+                         i Repository klasa morala da ga implementira + da doda svoju cache logiku u metode of Repository.
+                          Dodavanjem CachedRepository kao Decorator za Repository, IRepository predstavljace CachedRepository u StockController, a CachedRepository mora da sadrzi Repository.
+                          Scrutor NuGet omogucava ovo.
+
+Znam sve cache strategije za Read/Write, ali koristicu cache-aside sa invalidacijom gde za UPDATE/DELETE azurira bazu, a brise cache, dok za GET ce prvo pogledati u cache, pa ako nema pogledace u 
+bazu pa ubaciti u cache i vratiti useru. Takodje koristicu i write-through za POST.
+Mozda budem koristio TTL i da Redis automatski trazi najkoriscenije podatke iz baze.
+           
+Redis sve cuva u key-value formatu, gde value moze biti string(JSON) ili byte, ali najcesci je JSON tj string jer u .NET samo za string(json) postoji built-in metoda u IDistributedCache.
+Key mora biti jedinstven i string formata zbog IDistributedCache, pa treba razmisliti koje polje iz zeljene klase bice key.
+
+Pogledaj JSON engine.txt koji ima veze sa serialization/deserialization objekta i Redis cache
+Posto Redis cache koristi JSON kao value type, pozeljno je u cache stavljati DTO objekte, a ne entity klase zbog DDD kako entity objekti i njihovi ValueObject Id tipovi 
+ne bi izlazili van domena jer Redis nije domain level => koristim postojeic StocDTO i pravim CommentRedisDTO jer Stock ima List<Comment>, a Comment ima CommentId ValueObject koji mora posebno
+da se serializuje/deserializuje jer je custom type. Naravno DTO klasa samo primitivne tipove ima. 
+
+NuGet za Redis:
+    Microsoft.Extensions.Caching.Distributed - IDistributedCache je built-in i predstavlja in-memory cache ako Redis ne povezemo sa IDistributedCache.
+    Microsoft.Extensions.Caching.StackExchangeRedis - poveze Redis with IDistributedCache koji je built-in i sad ce on da predstavlja Redis.
+    Scrutor za Decorator pattern kako ne bih morao u Program.cs da pisem veliki kod.
+
+    U Program.cs Decorator pattern bez Scrutor: 
+      builder.Services.AddScoped<IStockRepository, StockRepository>();
+      builder.Services.AddScoped<IStockRepository, CachedStockRepository>();
+      // Ako uradim ovako, override cu AddScoped<IStockRepository, StockRepository>(), a to ne zelim, vec moram ovako
+      builder.Services.AddScoped<IBasketRepository>(provider =>
+      {   
+          var stockRepository = provider.GetService<StockRepository>();
+          return new CachedStockRepository(stockRepository, provider.GetRequiredServices<IDistributedCache>());
+      });
+    
+    U Program.cs Decorator pattern sa Scrutor:
+      builder.Services.AddScoped<IStockRepository, StockRepository>();
+      builder.Services.Decorate<IStockRepository, CachedStockRepository>();
+
+Ocu za StockRepository da uradim Redis.
+
+Redis cu iz Docker da koristim bas kao RabbitMQ sto sam.
+
+
+

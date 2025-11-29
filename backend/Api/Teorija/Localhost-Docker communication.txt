@@ -1,0 +1,8 @@
+Backend komunicira sa Frontendom (Client) preko 7045/5110 (https://localhost:7045;http://localhost:5110) portova 
+tj na ovim portovima prima/salje saobracaj ka Frontend. 
+Backend je za sada u localhost (nisam ga stavio u Docker container), ali RabbitMQ i Redis koristim kao Docker container.
+U docker-compose.yml za RabbitMQ i Redis moram da rucno "mapiram" localhost port preko koga ce app u localhost rezimu da komunicira
+sa RabbitMQ/Redis in Docker. Ovaj localhost port ne sme biti isti kao port preko koga BE komunicira sa FE, vec mora poseban port.
+
+Kada sam uradio docker-compose, automatski se napravio docker container za ceo Api projekat ciji su portovi 
+8080/8081 http/https. Ove portove koristi Api docker container, jer 

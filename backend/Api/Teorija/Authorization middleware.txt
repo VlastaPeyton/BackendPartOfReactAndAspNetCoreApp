@@ -1,0 +1,13 @@
+
+Built-in middleware koji se u Program.cs registruje pomocu app.UseAuthorization().
+Mora se registrovati nakon app.UseAuthentication() middleware u pipeline u Program.cs - pogledaj Authentication middleware.txt
+
+UseAuthorization middleware:
+	- vidi ima li endpoint [Authorize]
+	- ako ima [Authrozire], proveri HttpContext.User tj ClaimsPrincipal u njemu, ako je u TokenService.cs kao claim ubacen Role
+
+Also, enforces access rules based on user (HttpContext.User) identity.
+
+Controller:ControllerBase, a ControllerBase pruza User(HttpContext.User) polje koje omogucava stateless da ocitam user info bez gledanja u bazu.
+
+

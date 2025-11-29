@@ -1,0 +1,4 @@
+Za global state management se koristi Redux ili Context. 
+Ja cu koristiti Context, jer je lakse za ovu aplikaciju, ali za ozbiljne aplikacije Redux mora.
+
+Svaka komponenta, koja koristim context, ponovo se renderuje kada se context promeni.

@@ -1,0 +1,1 @@
+Koriste u Service klasi, ne u Repository, jer Repository ne sme znati da li je deo transakcije.

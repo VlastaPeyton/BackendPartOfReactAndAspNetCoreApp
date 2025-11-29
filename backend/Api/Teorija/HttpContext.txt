@@ -1,0 +1,20 @@
+HttpContext je objekat koji se kreira u Kestrel (videti Kesterl.txt)  tako sto se http request pretvara u HttpContext i onda HttpContext ide u middleware pipeline  
+(pogleadj Middleware.txt) i sadrzi informacije o:
+	- Incoming request tipa HttpRequest
+	- Outcoming response tipa HttpResponse
+	- Currently authenticated user info tipa ClaimsPrincipal
+	- I jos neke, meni za sada, nebitne info
+
+ControllerBase u svakom Controller pruza pristup svim poljima iz HttpContext.
+
+Kada BE napravi odgovor on ide obrnutim redosledom od request (Response flow: Code -> Middleware -> Kestrel -> Client) i na kraju stize do Kestrel koji od njega pravi http poruku i salje klijentu. 
+
+U kodu, HttpContext je klasa sa poljima: Request, Response, User itd. Gde ova polja imaju svoja neka polja, pa tako mogu npr setovati status code u response kao HttpContext.Response.StatusCode = 500. 
+
+Kada FE posalje request ka .NET:
+	- User polje je prazno i popuni se u Authentication middleware - pogledaj Authentication middleware.txt
+	- HttpContext Response polje je prazno, ali se ono popuni kasnije on its way back to FE.
+
+
+
+

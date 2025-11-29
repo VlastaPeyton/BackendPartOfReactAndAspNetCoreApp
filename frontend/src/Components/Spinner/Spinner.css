@@ -1,0 +1,13 @@
+/*
+Moram da ga namestim da bude u centru stranice
+
+loading-spinner jer mora isto kao u <div id="loading-spinner"> iz Spinner.tsx 
+# means select element with id="loading-spinner" u Spinner.tsx
+*/
+
+#loading-spinner {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}

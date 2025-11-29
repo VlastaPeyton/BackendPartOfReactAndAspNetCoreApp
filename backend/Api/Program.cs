@@ -1,0 +1,243 @@
+using System.Threading.RateLimiting;
+using Api.CQRS_and_Validation;
+using Api.CQRS_and_Validation.Logging;
+using Api.Data;      
+using Api.Extensions;
+using Api.Interfaces;
+using Api.MessageBroker;
+using Api.Middlewares;
+using Api.Models;
+using Api.Repository;
+using Api.Service;
+using Api.Services;
+using DotNetEnv;
+using FluentValidation;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models; // Add this using directive
+
+var builder = WebApplication.CreateBuilder(args);
+
+Env.Load(); // Loads ".env" from project root pre svega ostalog, jer mnogo toga (i van Program.cs) zavisi od Env.GetString(...)
+
+// Registrovanje servisa u DI - pogledaj Dependency Injection.txt
+
+builder.Services.AddControllers(); 
+// Add Swagger services
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+// Add Authorize dugme za unos JWT u Swagger 
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo { Title = "Demo API", Version = "v1" });
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        In = ParameterLocation.Header,
+        Description = "Please enter valid token",
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        BearerFormat = "JWT",
+        Scheme = "Bearer"
+    });
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {   
+        { // Mora ovaj par zagrada, jer OpenApiSecurityRequirement nasledjuje recnik 
+            new OpenApiSecurityScheme // Dictionary Key
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[]{} // Dictionary Value
+        }
+    });
+});
+
+// Add DbContext (AddScoped by default)
+builder.Services.AddDbContext<ApplicationDBContext>(options =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("Database"));
+});
+// Nakon ovoga, u Package Manager Console kucam "Add-Migration ime_migracije", pa "Update-Database" da se naprave sve tabele i FK-PK iz OnModelCreating 
+
+// Add IdentityDbContext da bih definisao password kog oblika mora biti i skladistim ga u istu bazu sa Stocks i Comments, stoga mora AddEntityFrameworkStores
+builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
+{   // IdentityRole je AspNetRoles tabela. AddIdentity ce napraviti i povezati SVE Identity tabele iz IdentityDbContext, a ne samo ove 2.
+    options.Password.RequireDigit = true;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireLowercase = true;
+    options.Password.RequireNonAlphanumeric = true;
+    options.Password.RequiredLength = 12;
+    options.User.RequireUniqueEmail = true;         // Da ne mogu dva usera da imaju isti Email prilikom njihovog dodavanja u AspNetUsers tabelu u Register endpoint
+
+}).AddEntityFrameworkStores<ApplicationDBContext>() // AddEntityFrameworkStores tells Identity to use EF Core to store Identity data (users, roles, tokens, etc.) in the database using ApplicationDbContext.
+  .AddDefaultTokenProviders();                      // Is needed for email confirmation in Register or password reset in ForgotPassword endpoint
+
+// Nakon ova 2 registrovanja iznad, u Package Manager Console kucam "Add-Migration Identity", pa "Update-Database", da sa naprave sve Identity tabele (objasnjene u ApplicationDbContext.cs) 
+
+// JWT Authentication for [Authorize] endpoints
+builder.Services.AddAuthentication(options =>
+{   
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme; // How app authenticate users (reads JWT)
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;    // What happens when unauthenticated user hits [Authorize] endpoint
+    options.DefaultForbidScheme = JwtBearerDefaults.AuthenticationScheme;       // What happens when authenticated user is not authorized 
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;             // Fallback if other shcemes arent specified
+    options.DefaultSignInScheme = JwtBearerDefaults.AuthenticationScheme;       // For sign in 
+    options.DefaultSignOutScheme = JwtBearerDefaults.AuthenticationScheme;      // For sign out
+    // Svuda koristim JWT Bearer jer to mi najlakse, obzirom da samo Login endpoint postoji tj nemam dodatni Google login npr
+
+}).AddJwtBearer(options =>
+{   // AddJwtBearer je registrovanje JWT handler. Pogledati Authentication middleware.txt
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidIssuer = builder.Configuration["JWT:Issuer"], 
+        ValidateAudience = true,
+        ValidAudience = builder.Configuration["JWT:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(builder.Configuration["JWT:SigningKey"]))
+    };
+}).AddGoogle("Google", options =>
+{   // Google auth handler for google login/register - pogledaj GoogleLogin.txt 
+
+    options.ClientId = Env.GetString("GOOGLE_AUTH_CLIENT_ID");
+    options.ClientSecret = Env.GetString("GOOGLE_AUTH_CLIENT_SECRET");
+
+    // Include email and profile in id_token
+    options.Scope.Add("email"); 
+    options.Scope.Add("profile"); 
+
+    options.CallbackPath = "api/account/login/google/callback";
+});
+
+// Objasnjeno u JSON engine.txt 
+builder.Services.AddControllers().AddNewtonsoftJson(options =>
+{
+    options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore; // Kada endpoint vraca odgovor clientu, automatski se pravi JSON i ignorise circular reference
+});
+
+// Add MassTransit (MessageBroker + Outbox pattern) za RabbitMQ Publisher - mora pre repository u kom se koristi
+builder.Services.AddMassTransitRabbitMQAndOutboxInbox<ApplicationDBContext>(builder.Configuration);
+
+// Svaki servis ima interface zbog SOLID + lako se testira sa xUnit, FakeItEasy/Moq, FluentAssertions itd.
+
+// Add StockService i IStockService
+builder.Services.AddScoped<IStockService, StockService>(); 
+// Add StockRepository i IStockRepository
+builder.Services.AddScoped<IStockRepository, StockRepository>();
+// Add CachedStockRepository via Scrutor - pogledaj Redis, Proxy & Decorator patterns.txt i pogledaj CachedStockRepository
+builder.Services.Decorate<IStockRepository, CachedStockRepository>(); 
+// Add IDistributedCache za CachedStockRepository from StackExchangeRedis NuGet kako bih povezao Redis with IDistributedCache
+builder.Services.AddStackExchangeRedisCache(config =>
+{   
+    config.Configuration = builder.Configuration.GetConnectionString("Redis");
+});
+// Add AccountService i IAccountService 
+builder.Services.AddScoped<IAccountService, AccountService>(); 
+// Add CommentService i ICommentService
+builder.Services.AddScoped<ICommentService, CommentService>();
+// Add CommentRepository i ICommentRepository
+builder.Services.AddScoped<ICommentRepository, CommentRepository>();
+// Add TokenService i ITokenService
+builder.Services.AddScoped<ITokenService, TokenService>();
+// Add EmailService as IEmailSender after Env.Load()
+builder.Services.AddScoped<IEmailService, EmailService>();
+// Add IPortfolioRepository i PortfolioRepository 
+builder.Services.AddScoped<IPortfolioRepository, PortfolioRepository>();
+
+// Add HttpClient for FinancialModelingPrepService 
+builder.Services.AddHttpClient<IFinacialModelingPrepService, FinancialModelingPrepService>() // Pogledaj IHttpClientFactory, HttpClient, Resilience.txt
+                .AddStandardResilienceHandler(); // Dodaje defaultne retry, timeout, circuit breaker. Pogledaj IHttpClientFactory, HttpClient, Resilience.txt
+//builder.Services.AddFMPHttpClientWithCustomResilience();  - ako zelim custom Resilience
+
+// Morao sam FluentValidation.DependencyInjectionExtensions da instalim u BuildingBlocks pre ovoga
+builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly); // Finds CommandValidator klase koje imeplementiraju AbstractValidator , da ValidationBehaviour moze da ih nadje tokom runtime
+
+// Add Mediator - pogledaj Mediator.txt
+builder.Services.AddMediatR(config =>
+{   // Registruje Handler klase jer registruje IRequestHandler koga implementira ICommand/IQueryHandler
+    config.RegisterServicesFromAssemblies(typeof(Program).Assembly); // Nadje sve klase koje implementiraju MediatR interface
+    // Dodam ValidationBehavior to MediatR pipeline. Bitan je redosled registracije of behaviours
+    config.AddOpenBehavior(typeof(ValidationBehaviour<,>)); 
+    // Dodam LoggingBehavior to MediatR pipeline koje se pokrece automatski iz ValidationBehaviour
+    config.AddOpenBehavior(typeof(LoggingBehaviour<,>));   
+});
+
+// Add Rate Limiter 
+builder.Services.AddRateLimiter(options =>
+{   // Nema globalni default rate limiter => Endpoints koji nemaju [EnableRateLimiting("slow/fast")] nece imati nikakav 
+    options.AddFixedWindowLimiter("slow", limiterOptions =>
+    {
+        limiterOptions.Window = TimeSpan.FromMinutes(1);
+        limiterOptions.PermitLimit = 5; // 2 Request per 1min . During 1min, if other requests comes after first 5, they will be put in queue, of size QueueuLimit, to wait in QueueProcessingOrder order. Others will be rejected.
+        limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        limiterOptions.QueueLimit = 3;  
+    });
+
+    options.AddFixedWindowLimiter("fast", limiterOptions =>
+    {
+        limiterOptions.Window = TimeSpan.FromMinutes(1);
+        limiterOptions.PermitLimit = 10;
+        limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        limiterOptions.QueueLimit = 7;
+    });
+});
+
+// Custom middleware koji nasledi IMiddleware mora biti registrovan AddTransient u DI
+builder.Services.AddTransient<IMiddleware, GlobalExceptionHandlingMiddleware>();
+
+// Options pattern for MessageBrokerSettings
+// Registruj u DI IOptions<MessageBrokerSettings> i proveri da l su polja dobro upisana u appsettings.json 
+builder.Services.AddOptions<MessageBrokerSettings>()
+                .Bind(builder.Configuration.GetSection("MessageBroker"))
+                .ValidateDataAnnotations()   
+                .ValidateOnStart();
+// Zbog ovoga, u MassTransitExtensions.cs moze GetRequiredService<MessageBrokerSettings>, a ne mora GetRequiredService<IOptions<MessageBrokerSettings>>().Value
+builder.Services.AddSingleton(resolver => resolver.GetRequiredService<IOptions<MessageBrokerSettings>>().Value);
+
+var app = builder.Build();
+
+// Dodavanje middleware u pipeline bitan redosled jer request ide nizvodno ovde, a response uzvodno - pogledaj Middleware.txt 
+
+// Enable Swagger middleware both for Dev and Prod env
+app.UseSwagger();
+app.UseSwaggerUI(); // Default UI at /swagger
+
+app.UseHttpsRedirection(); // Forces HTTP to become HTTPS ako FE posalje Request na http://localhsto:5110 umesto https://localhost:7045 jer je sigurnije
+
+// Add custom middleware on top of pipeline da bi uhvatio sve greske iz middleware koji su ispod 
+app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
+
+// CORS (Browser sequrity feature that restrics pages from making request to different domain that one that served the page). 
+app.UseCors(x => x.WithOrigins("https://localhost:3000") // Samo moj Fronted(https ili http) (od svih sajtova na netu) moze slati Request to my Api (Backend ovaj)
+                 .AllowAnyMethod() // Allows every Request method (GET, POST, PUT, DELETE...)
+                 .AllowAnyHeader() // Allows custom headers, Authorization headers za JWT...
+                 .AllowCredentials()); // Da bi FE mogo, kad mu je Access Token blizu isteka , rekao Browseru posalji zahtev za novi Access Token via Cookie(Refresh Token)
+
+/*
+app.UseCookiePolicy(new CookiePolicyOptions
+{
+    HttpOnly = Microsoft.AspNetCore.CookiePolicy.HttpOnlyPolicy.Always,
+    Secure = CookieSecurePolicy.Always, // Zbog ovoga, mora FE in HTTPS
+    MinimumSameSitePolicy = SameSiteMode.None
+}); // Jer RefreshToken Endpoint ovo zahteva. Ovo mora before UseAuthentication
+Ako ovo imam, onda u AccountController ne pisem Append i ne navodim one parametre.*/
+
+// Enable Authentication - pogledaj Authentication middleware.txt
+app.UseAuthentication(); 
+// Enable Authorization after Authentication - pogledaj Authorization middleware.txt 
+app.UseAuthorization();  
+// Enable using of Rate Limiter middleware on desired endpoints 
+app.UseRateLimiter();
+
+// Ubaci Controlers (+ Routing i Endpoint) middleware u pipeline. Za svaki [Http...("route..")] iznad Endpoint ASP.NET Core znace kako da ga mapira sa incoming request.
+app.MapControllers();
+
+await app.SeedAdminAsync(); // Admin user se dodaje iz BE uvek
+
+app.Run(); // Middleware dodat u pipeline pomocu app.Run() nema next() 

@@ -1,0 +1,21 @@
+U Clean architecture, svaki sloj je projekat za sebe, stoga samo API layer ima Program.cs (jer je API layer projekat Web API tipa),
+dok drugi slojevi su Class library (pa nemaju Program.cs, jer samo 1 Program.cs mora postojati na nivou solution). U svakom sloju
+pravim DependencyInjection.cs koja ce sadrzati extension method za IServiceCollection gde cu upisivati sve sto bih inace upisao u
+Program.cs za svaki layer. Ovo smanjuje kolicinu koda u Program.cs i omogucava da vodim racuna za DI u svakm layer posebno.
+
+U Vertical slice architecture radim DependencyInjection.cs per feature.
+
+Svaki servis (built-in ili custom - pogledaj Services.txt) predstavlja klasu koja se registruje u Program.cs (ako je custom) ili je vec registrovana u DI container (ako je built-in).
+Servis se naziva dependency kada se injektuje u neku klasu da ga ta klasa koristi (putem konstruktora te klase).
+Svaki controller koristi sebi svojstvene servise (mainly custom) ili CQRS, jer logika ne sme biti u endpoint, vec u services/CQRS koji se iz endpoint pozivaju.
+
+Injection of dependencies u conttroller ima 2 nacina:
+	1) Klasika - inject dependencies kroz ctor. Ako imam previse servisa, ctor postane ogroman (samim tim i gomila fields mi treba) i kod je nepregledam 
+	             + zauzima vise memorije, jer je nemoguce da svaki endpoint koristi sve servise iz controllera. 
+				 Controller instance is created per request. 
+				 Services live for duration of the request (or their registered lifetime in Program.cs which is mainly scoped lifetime).
+	
+	2) Napredno - kroz ctor injectujem zajednicke servise za vecinu endpoints, dok services koji se koriste u pojedinacnim endpointsima injectujem 
+				  kroz argumente endpointa pomocu [FromServices] keyword. Ovime postizem da controller manje memoriju zauzima, jer se odredjeni servisi injectuju
+				  pozivom odredjong endpointa + lakse se testira endpoint + brisanjem endpointa brise se i njegov dependency pa onda klasa nece imati nekoriscen dependency.
+				  Memorijski ovo nije nista bolje, jer servisi su light mainly + GC pocisti sve kad se request zavrsi + dependency lifetime is scoped mainly.

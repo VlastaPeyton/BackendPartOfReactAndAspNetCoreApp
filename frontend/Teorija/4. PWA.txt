@@ -1,0 +1,16 @@
+PWA = Progressive Web App
+
+PWA web app osobine:
+      1) Installable - can be added to desktop
+      1) No app store required - can install it from browser
+      2) Offline-capable - via caching works without internet collection but cannot make api request
+      3) Fast - loads fast even on slow network
+      4) Responsive - works on mobile, tablet and desktop without need for making separate React Native app za mobile
+                      PWA za mobile koristim ako app ne koristi GPS, imenik, camera, vec samo iskljucivo kao web app sluzi i na telefonu (eCommerce, portal itd.)
+      5) Secure - over HTTPS radi
+      6) Push notifications
+
+Technologies behind PWA:
+      1) Service workers - background script that handles caching, offline mode, push notifications
+      2) Web App Manifest - JSON file defining app name, icon, theme, install behavior
+      3) HTTPS - security

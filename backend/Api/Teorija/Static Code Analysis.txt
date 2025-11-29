@@ -1,0 +1,57 @@
+Proces u kome alat analizira moj kod bez pokretanja koda.
+Funkcionise tako sto:
+	1) Cita izvorni kod
+	2) Razume sintaksu jer parsira kod u Abstract Syntax Tree
+	3) Primeni pravila da proveri kvalitet, stil, sigurnost, performanse itd
+	4) Ipsise upozorenja, greske i preporuke
+
+
+Kada buildam project, staticka analiza pronadje pre nego sto aplikacija krene da se izvrsava:
+	1) Greske i bugs:
+		- Null reference
+		- Dead code
+		- Unreachable kod
+		- Non initialized vars
+		- Pogresno koriscenje async/await
+
+	2) Sigurnosnu ranjivost
+		- SQL Injection
+		- XSS
+		- Hardoced credentials
+
+	3) Lose prakse:
+		- Preduge metode
+		- Previse parametara
+		- Krsenje SOLID 
+		- Duplirani kod
+
+	4) Performanse:
+		- Visestruko otvaranje konekcija
+		- Neoptimalno koriscenje IEnumerable/ToList
+
+	5) Stilske greske:
+		- Imena klasa/metoda ne postuju konvencije
+		- Nedostatak komentara
+
+Pozeljno je napraviti .editorconfig fajl i on ce da vazi na svaki kod.
+Ovaj fajl kaze analizerima sta da proveravaju i koliko strogo. 
+
+Rosly je built-in analizator koji radi kad kucam kod iako nemam mozda .editorconfig, vec se koriste
+default C# pravila, pa onaj null reference warning mi je zbog Roslyn. Roslyn je temelj na osnovu kog rade
+sve Static Code Analysis NuGets, i zato Roslyn samo proverava jezik, a ne politiku koda. 
+
+Koristim SonarAnalyzer.Csharp (funkcionalne greske - vise bitne) i StyleCop.Analyzer (stilske greske - manje bitne) NuGets
+
+StyleCop.Analyzer ima bezbroj stilskih pravila, ali evo primera nekih:
+	- Komentarisanje linija koda se radi sa "////"
+	- Jednolinijski komentar ("//") (koji opisuje kod ispod njega) mora biti jednim praznim redom razmaknut od koda/jednolinijskog komentara
+	  jer ovakav komentar treba da razdvoji logicke celine u kodu.
+	- itd...
+	- Stilska pravila su manje bitna, jer ona su produkt dogovora clanova tima, ali funkcionalna pravila su bitna i moraju se ispostovati !
+
+SonarAnalyzer.Csharp ima bezbroj funkcionalnih pravila.
+
+Solution/project->desni klik->Add New EditorConfig => automatski sve sto je podeseno bice ispisano u .editorconfig file koji se tom prilikom pravi
+u .editorconfig rucno gasim iz ovih NuGets pravila koja mi ne trebaju 
+
+Moram da izbrisem StyleCop.Analyzer, jer imam 1200k warnings non stop i ne zelim da se cimma oko toga.

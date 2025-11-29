@@ -1,0 +1,30 @@
+Svaki Controller, sadrzi Endpoints - pogledaj Controller.txt
+
+Svaki Endpoint je metoda of Controller, a predstavlja URL koji FE poziva kada zeli da pokrene neko BE izvrsenje.
+
+Svaki Endpoint:
+    - koristi DTO kao argumente (Request object) i DTO za slanje podataka to FE, jer dobra praksa je ne dirati Models (Entity) klase (koje predstavljaju tabele u bazi) koje su namenjene za Repository tj EF Core.
+    
+    - bice tipa Task<IActionResult<T>>, jer IActionResult<T> omoguci return of StatusCode + Data of type T, dok Task omogucava async. 
+    
+    - salje to FE Response koji ima polja Status, Headers i Body. 
+      Status i Body najcesce definisem ja, a Header mogu ja u CreatedAtAction, ali najcesce to automatski .NET radi.
+      Ako u objasnjenju return naredbe ne spomenem Header, to znaci da je on automatski popunjem podacima.
+      Endpoint kad posalje Frontendu StatusCode!=2XX i mozda error data uz to, takav Response nece ostati u FE try block, vec ide u catch block i onda response=undefined u ReactTS.
+    
+    - Moze biti Write to DB ili Read from DB:
+        - Write to DB: 
+             Data validation when writing to DB: 
+                Request object je Endpoint argument koji stize from FE in order to write to DB or read from DB. Request object is never Entity class, but DTO class as i want to split api from domain/infrastructure layer. 
+                If Endpoint exhibits write to DB, i have to validate Request DTO object fields before it is mapped to Entity class and written to DB. 
+                Validation can be done:
+                    1) using ModelState - default validation logic. U write to DB endpoint, stavim ModelState koji zna da treba da validira annotated polja iz Request DTO object tog endpointa.
+                    2) using FluentValidation - ako zelim custom validation logic. 
+
+        - Read from DB:
+           Nema validacije u ovom slucaju, jer se ne menja nista u bazi. 
+   
+   - Ako endpoint nema [Authorize], FE ne treba slati JWT in Request Header.
+     Endpoint koji sadrzi "User.GetUserName" zahteva od FE da posalje JWT, jer u JWT su upisane claims (user info) bez obzira da li ima [Authorize] ili nema.
+
+ Postman/Swagger/FE gadja endpoints.

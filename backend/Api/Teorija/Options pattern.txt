@@ -1,0 +1,7 @@
+Za svaki section, u appsettings.json, koji sadrzi vise od 1 polja, pravim klasu koja sadrzi polja istog imena 
+i pisem annotations za svako polje. Ako u appsettings.josn upisem pogresnu vrednost za neko polje sekcije, binding appsettings.json i klase 
+ce prepoznati annotations i reci ce da je vrednost pogresna za odredjeno polje.
+
+Ovime se postize takodje IntelliSense + compiler ce da javi greske ako zamenim ime polja u appsetting.json a ne i u klasi + testiranje lako.
+
+Koristim IOptions<T> i AddSingleton jer ovo treba biti singleton 

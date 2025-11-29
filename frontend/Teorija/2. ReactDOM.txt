@@ -1,0 +1,11 @@
+Pogledaj Kreiranje i pokretanje React app.txt 
+
+public/index.html je glavni korenski HTML file koji se pokrece u browseru prilikom "npm start".
+public/index.html sadrzi prazan <div> element u koji se ucitava cela React aplikacija. 
+<div> - zato sto je neutralan i koristi se kao kontejner za druge elemente. 
+
+Svaka komponenta koju napravim ubacuje se u public/index.html pomocu ReactDOM.
+
+React je Client-side rendering sto znaci da se frontend ucitava u browseru, a ne na serveru, pa da se posalje browseru. 
+Kada "npm start" pokrene aplikaciju, ucita se prvo public/index.html, a zatim u njegov <div id='root'>, pomocu ReactDOM, 
+se ubaci sve sto sam kodirao, pa to prikaze u browseru.

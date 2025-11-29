@@ -1,0 +1,14 @@
+Pogledaj Exception driven error handling.txt
+
+Result pattern koristi se kada exception nije retka i uzasna pojava, vec poslovna logika npr: invalid password, invalid username, out of stock.
+Result pattern olaksava testiranje.
+Pravim genericku Result<T> klasu koja sadrzi odredjena polja i metode i preko nje vracam iz servisa u kontroler i dobro i lose, za slucaj kad servisna metoda
+vraca non-void.
+Pravim non-generic Result klasu koja se malo razlike, za slucaj kad servisna metoda vraca vodim.
+Ali kod internal server error StatusCode 500 koje se desavaju npr u DbContext ili Identity paketu, ovu gresku moram sa try-catch da uhvatim.
+
+Result pattern se koristi kod DDD, CQRS + MediatR, jer ideja je da exception ne bude deo poslovne logike tj oni su za "things going wrong with the system",
+dok Result govori o "things goind wrong with the business". Zato kombinujem global exception middleware kao fallback za nepredvidjeni exception (_userManager/_signInManager kad ne moze
+da upise korisnika u bazu, da ga procita ili da uporedi password ili baza pukne) jer su oni greska u radu sa bazom, dok ostali exceptions (WrongUsernameException, 
+WrongPasswordException, UserNotFoundException itd) su mi sada biznis logika pomocu Result pattern i onda controller vraca i dobre i lose odgovore (osim exceptions koji su nepredvidjeni 
+kojeg salje global excp handler).

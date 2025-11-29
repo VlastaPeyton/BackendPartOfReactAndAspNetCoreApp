@@ -1,0 +1,1 @@
+U Routes.txt sam uradio lazy loading sto znaci da se on app startup ocitava sam homepage tj da se stranice ocitavaju tek kada se zatraze

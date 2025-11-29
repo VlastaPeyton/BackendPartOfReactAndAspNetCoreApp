@@ -1,0 +1,6 @@
+Ako se desi exception u npr repository, on propagira nagore kroz stack sve dok ne naidje na prvi try-catch.
+Ako u repository metodi nemam try-catch, exception ide nagore i udje u servis, pa ako tu nema try-catch, onda propagira nagore i udje u controller, pa ako u Controller nemam try-catch, exception ide nagore 
+i udje u GlobalExceptionHandlingMiddleware gde imam try-catch i tu ga uhvati.
+
+Dobra je praksa imati GlobalExceptionHandlingMiddleware za svaki slucaj ako negde nizvodno u kodu duboko nisam ubacio konkretni try-catch da ga ovde barem uhvati i posalje odgovarajuci 
+odgovor klijentu - pogledaj Exception driven error handling.txt i Middleware.txt

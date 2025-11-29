@@ -1,0 +1,7 @@
+Kada se desi excpetion, to takodje saljem klijentu. 
+Tada je bitan StatusCode koji se salje u Status line of Response.
+Ali Status line se moze menjati kako response propagira do klijenta (zbog CORS npr) i onda FE procita pogresan statuscode. 
+Desi se i da FE iz nekog razloga ne moze da procita Status line.
+Zato se koristi built-in ProblemDetails klasa u cija polja upisem tip greske, opis greske i status line. 
+ProblemDetails posaljem kao Reposne body koje se ne moze promeniti i FE najlakse i najcesce pristupa samo body part of response.
+Response Body je sada klasa(Problem Details) sto znaci da se od nje lako napravi JSON koji je podrazumevani format za Response body.

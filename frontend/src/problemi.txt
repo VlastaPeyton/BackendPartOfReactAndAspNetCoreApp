@@ -1,0 +1,12 @@
+1) SearchPage.tsx moze da se resi sa Redux onaj localStorage. 
+2) DesignGuide tableConfig render func modifikuj da tip arugmenta bude any, inace nece RatioList i Table hteti da renderuje jer testIncomeStatementData nema nijedno isto polje kao CompanyKeyMetrics
+3) Modifikuj RatioLists sa onim vec napisanim generic kodom, pa isto tako i Table zbog row:any 
+4) U CompanyProfile/IncomeStatement/BalanceSheet/Cashflow  ubaci u Sidebar folder jer tu pripadaju
+5) Namesti da se app prilagodjava velicini ekrana kad smanjujem/povecavam ekran za celu APP tj za sve stranice - ReactApp to ima
+6) Kad ugasim app, pa ukljucim, ostaje mi logovan user, jer  u .NET backend 7 dana token traje, a browser ga upamtio - mozda i ne menjati ovo, jer tako radi svaki sajt
+7) After comment submit delete title and content field
+8) Da li u companny.d.ts dodati ocekivan tip i za backend api ali to sam stavio u Models folder
+9) Kada sam log out, a hocu npr SearchPage da kliknem, baca me na login page (jer SearchPage je ProtectedRoute) i namesti da me vrati na SearchPage odma nakon login 
+   tako uradi za svaki ProtectedRoute stranicu
+
+10) Forgot password logiku napravi u backend u LoginPage kad kliknem da me vodi negde da to sredim

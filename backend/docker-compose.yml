@@ -1,0 +1,36 @@
+services:
+  api:
+    image: ${DOCKER_REGISTRY-}api
+    build:
+      context: Api
+      dockerfile: Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    depends_on:
+      - messagebroker2
+
+  # messagebroker postoji u EshopMicroservices sa 5672 i 15672 vec zauzetim portovima za taj rabbitmq container, ali sad pravim nov rabbitmq container pa ih mogu koristiti opet
+  messagebroker2:
+    image: rabbitmq:management # Mora ovako za RabbitMQ
+    container_name: messagebroker2
+    hostname: financeapp-mq # Mora ime da vidim u Chrome kad otvorim
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    restart: always
+    ports:
+      - "5673:5672"
+      - "15673:15672"
+      # Levi port 5673 je localhost port preko koga app komunicira sa RabbitMQ (nije mogo 5672 jer je zauzet u EshopMicroservices). Desni port 5672 je default in Docker RabbitMQ preko koga container prima/salje saobracaj ka localhost/drugi container
+      # Levi port 15673 je localhost port preko koga app komunicira sa RabbitMQ Management Dashboard (u Chrome mu pristupam) (nije mogo 15672 jer je zauzet u EshopMicroservices), a desni port 15672 je default in Docker RabbitMQ Management Dashboard preko koga container prima/salje saobracaj ka localhost/drugi container
+  
+  # redis postoji u EshopMicroservices sa vec zauzetim portovima za taj distributedcache container, ali sad pravim novi distributedcache container pa ih mogu koristiti opet
+  distributedcache2:
+    image: redis # Mora ovako za Redis
+    container_name: distributedcache2 
+    restart: always
+    ports:
+      - "6378:6379"
+      # Levi port 6378 je localhost port preko koga app komunicira sa Redis (nije mogo 6379 jer je zauzet u EshopMicroservices). Desni port 6379 je default in Docker Redis preko koga container prima/salje saobracaj ka localhost/drugi container
+
+    

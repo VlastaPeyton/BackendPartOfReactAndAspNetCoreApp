@@ -1,0 +1,37 @@
+﻿AspNetCore Identity package se koristi za users i roles. 
+
+     DB ime                   C# ime                 Kolone
+
+ AspNetRoleClaims   | IdentityRoleClaim  | Id, RoleId, ClaimType, ClaimValue
+ AspNetUserClaims   | IdentityUserClaim  | Id, UserId, ClaimType, ClaimValue
+ AspNetUsers        | IdentityUser       | Id, UserName, NormalizedUserName, Email, NormalizedEmail, PasswordHash, ConcurrencyStamp, LastRefreshTokenUsedAt, RefreshTokenHash itd.
+ AspNetRoles        | IdentityRole       | Id, Name, NormalizedName, ConcurrencyStamp
+ AspNetUserLogins   | IdentityUserLogin  | LoginProvider, ProviderKey, ProviderDisplayName, UserId
+ AspNetUserRoles    | IdentityUserRole   | UserId, RoleId (composite PK)
+ AspNetUserTokens   | IdentityUserToken  | UserId, LoginProvider, Name (composite PK), Value
+       
+ FK-PK relationsh:
+   - AspNetRoleClaims (RoleId FK) <-> AspNetRoles (Id PK)
+   - AspNetUserClaims (UserId FK) <-> AspNetUser (Id PK) 
+   - AspNetUsers nema FK 
+   - AspNetRoles nema FK
+   - AspNetUserLogins 
+   - AspNetUserLogins (UserId FK) <-> AspNetUser (Id PK)
+   - AspNetUserRoles: (UserId FK) <-> AspNetUsers (Id PK)
+                      (RoleId FK) <-> AspNetRoles (Id PK)
+   - AspNetUserTokens: (UserId FK) <-> AspNetUsers (Id PK)
+                        
+Ako PK-FK veze nisu jasne, pogledaj u Server Explorer 
+Za svaku tabelu, pogledaj u Server Explorer da l je PK kolona IDENTITY, jer to znaci da se automatski popunjava.
+Za AspNetUserClaims i AspNetRoleClaims se automatski popuni, dok za ostale tabele mora rucno iz koda.
+
+Postoji UserManager, SignInManager i RoleManager.
+
+How to use Identity in code:
+    Prvi uslov je da imam klasu koja nasledjuje IdentityUser (AppUser:IdentityUser) ako mi trebaju dodatne kolone koje IdentityUser nema
+   ali ako mi ne trebaju, onda ne moram praviti nikakvu AppUser klasu. 
+    Drugi uslov je ApplicationDbContext:IdentityDbContext<AppUser> ili ApplicationDbContext:IdentityDbContext<IdentityUser> 
+    Treci sulov je pokreni Migracije i Update database sa one 2 komande poznate svima i napravice se sve Identity tabele i automatski PK-FK relacije, jer
+   IdentityDbContext te tabele sadrzi bez da ih definisem u ApplicationDbContext
+    U AccountController koristim UserManager, RoleManager i SignInManager.
+    U OnModelCreating seedujem AspNetRoles, ali AspNetUsers ne mogu, jer za to mi treba UserManager koga NE SMEM koristiti u ApplicationDbContext.

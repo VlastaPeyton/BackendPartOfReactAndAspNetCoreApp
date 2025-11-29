@@ -1,0 +1,5 @@
+Logic erros sredim sa try-catch. 
+
+Rendering errors sredim sa built-in ErrorBoundary.
+ErrorBoundary mora da okruzi sve komponente u App.tsx, pa ako se desi rendering error u nekoj komponenti, propagira se uz stablo do 
+najblize ErrorBoundry cime se aktivira FallbackComponent

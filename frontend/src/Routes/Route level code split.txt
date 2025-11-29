@@ -1,0 +1,49 @@
+Pre Route-level code splitting, Routes.tsx je izgledao:
+
+import { createBrowserRouter} from "react-router-dom";
+import App from "../App";
+import HomePage from "../Pages/HomePage/HomePage";
+import SearchPage from "../Pages/SearchPage/SearchPage";
+import CompanyPage from "../Pages/CompanyPage/CompanyPage";
+import CompanyProfile from "../Components/CompanyProfile/CompanyProfile";
+import IncomeStatement from "../Components/IncomeStatement/IncomeStatement";
+import DesignGuide from "../Pages/DesignGuide/DesignGuide";
+import BalanceSheet from "../Components/BalanceSheet/BalanceSheet";
+import Cashflow from "../Components/Cashflow/Cashflow";
+import LoginPage from "../Pages/LoginPage/LoginPage";
+import RegisterPage from "../Pages/RegisterPage/RegisterPage";
+import ProtectedRoute from "./ProtectedRoute";
+import ForgotPasswordPage from "../Pages/ForgotPasswordPage/ForgotPasswordPage";
+import ResetPasswordPage from "../Pages/ResetPasswordPage/ResetPasswordPage";
+
+export const router = createBrowserRouter([
+    {   
+        path:"/",         // Base path when opening app = htpp://localhost:3000/
+        element: <App />, // Uvek App.tsx ovde za path:"/"
+        children: [       // Gde sve mozemo otici iz pocetne strane. Zbog childer za <App /> , u App.tsx mora <Outlet /> postojati. 
+            {path: "", element: <HomePage/>},                                          // http://localhost:3000/
+            {path: "search", element:<ProtectedRoute><SearchPage /></ProtectedRoute>}, // http://localhost:3000/search
+            {path: "design-guide", element: <DesignGuide />},                          // http://localhost:3000/design-guide
+            {path: "login", element: <LoginPage />},                                   // http://localhost:3000/login
+            {path: "register", element: <RegisterPage />},                             // http://localhost:3000/register
+            {path: "forgot-password", element: <ForgotPasswordPage />},                // http://localhost:3000/forgot-password
+            {path: "reset-password", element: <ResetPasswordPage />},                  // http://localhost:3000/reset-password
+            {path: "company/:ticker",                   
+             element:  <ProtectedRoute><CompanyPage /></ProtectedRoute>,               // http://localhost:3000/company/:ticker
+             children: [{path:"company-profile", element: <CompanyProfile />},         // http://localhost:3000/company/:ticker/company-profile
+                        {path:"income-statement", element: <IncomeStatement />},       // http://localhost:3000/company/:ticker/income-statement
+                        {path:"balance-sheet", element: <BalanceSheet />},             // http://localhost:3000/company/:ticker/balance-sheet
+                        {path:"cashflow", element: <Cashflow />}                       // http://localhost:3000/company/:ticker/cashflow
+             ], 
+            }
+        ],
+    },
+]);
+
+Kada pokrenemo app, sve components (sve routes) se downloaduju. Obzirom da pokretanje app nas vodi na Homepage, sve ostale routes se bespotrebno downloaduju cime usporavaju rad aplikacije. 
+Dodavanjem Route level code splitting, omogucavam lazy loading svake route cime ce se omoguciti tokom pokretanja app samo Homepage da se downloaduje, a odlaskom na bilo koju route(stranicu) downloadovace se
+samo ta stranica. Ovime se ubrzava proces ocitavanja app iniicjalno. Ovo nije znacajno kada je app mala, ali kako postaje velika, ovo sve veci znacaj ima i zato je ovo bitno.
+
+Sada cu Routes.tsx da napravim pomocu Route-level code splitting.
+
+ErrorBoundary.tsx ce uhvatiti i Lazy loading greske sto je dobro jer ne moram da modifikujem tu component.

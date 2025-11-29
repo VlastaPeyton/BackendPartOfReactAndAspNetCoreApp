@@ -1,0 +1,11 @@
+Pogledaj Exception propagation.txt
+
+Klasicni .NET sadrzi exception-driven error handling u kome se exception baca explicitno u servisu ili implicitno u repository (servis poziva repository). 
+Gde god se exception desio, on propagira do prvog try-catch bloka da se uhvati. 
+Exception-driven handling znaci da korstim GlobalExceptionHandlingMiddleware (pogledaj Middleware.txt) koji hvata greske (nigde pre njega nemam try-catch) 
+i salje negativan odgovor klijentu.
+Ovo je performatno skup pristup kada imam mnogo predvidivih gresaka (user not found, invalid password, token expired...) jer exceptions se ovde ne koriste za
+izuzetno retke slucajeve, vec za normalne ishode poslovne logike + testiranje je teze.
+Ukratno, exception je dobar za neocekivane greske samo, dok za ocekivane(biznis) greske se koristi Result pattern.
+
+Pogledaj Result pattern error handling.txt

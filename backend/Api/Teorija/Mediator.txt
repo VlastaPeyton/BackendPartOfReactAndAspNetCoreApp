@@ -1,0 +1,5 @@
+Ovo je za MediatR vezano jer taj NuGet omogucava mediator pattern. 
+ValidationBehaviour i LoggingBehaviour su ustvari decoratori oko Command/QueryHandler klase 
+tako da pre pokretanja Handle metode iz Handlera, radi se Validation, a Logging moze i pre i posle.
+Bitan je redosled registrovanja of behaviours u Program.cs - u mom slucaju prvo sam upisao ValidationBehaviour sto znaci da
+ta klasa mora imati "return next()" , dok LoggingBehaviour ce imati "response = next()" jer je on poslednji middleware u mediator pipeline.

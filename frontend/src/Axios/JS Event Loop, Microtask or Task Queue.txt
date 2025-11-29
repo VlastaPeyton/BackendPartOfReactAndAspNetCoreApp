@@ -1,0 +1,9 @@
+JavaScript(TypeScript) is single-threaded, sto znaci da u Call Stack moze samo 1 task(1 line of code) to be executing at a time.
+JavaScript Runtime je deo Browsera i sluzi za izvrsavanje FE koda.
+JS Runtime sastoji se od: 1) Call Stack ili Heap - code propagira na dole i svaku liniju koda stalja na Call Stack i onda je pokrece. Moze da izvrsi samo 1 line of code at a time jer je single-threaded.
+                                                   Kada naidje na narednu liniju, stavi je na Call Stack, pokrene, izbaci iz Call Stack, a ako je to sync linija onda njen rezultat (callback) ide u Task queue, a ako je async(await) onda ide u Microtask queu.
+                          2) Web API 
+                          3) Task Queue - ako je pokrenuta sync funkcija, pre nego sto se izvrsi u Call Stack, iz Web API ide u Task Queue.
+                          4) Microtask Queue  - ovde idu lines after await i then-catch-finally. Ima prednost u odnosu na Task queue.
+                          5) Event Loop - menadzer za prethodna 4 navedena. Proverava da li je Call Stack slobodan i ako jeste, proverava da l ima nesto prvo u Microtask queue, a ako nema onda u Task queue. 
+                                          Ako nema nista u Microtask queue, a ima u Task queue, izvrsi se to iz Task queue, ali opet prvo proveri Microtask queue iako ima jos u Task queue.

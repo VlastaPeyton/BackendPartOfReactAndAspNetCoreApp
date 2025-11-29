@@ -1,0 +1,2 @@
+U App.tsx, sve komponente koje sam napisao su prisutne na svakoj strani ! 
+U Routes.tsx, sve komponente koje sam napisao su prisutne samo na tim URL !

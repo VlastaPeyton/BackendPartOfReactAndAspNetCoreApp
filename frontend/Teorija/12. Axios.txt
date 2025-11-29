@@ -1,0 +1,23 @@
+axios sluzi za API request to BE. Bolji je od fetch, jer je laksi za pisanje i moderniji.
+axios instance sadrzi:
+    - defaults:
+        - baseURL
+        - headers
+        - withCredentials
+    
+    - interceptors:
+        - request:
+            - handlers[]                   // niz funkcija
+            - use(onFulfilled, onRejected) // metoda iz koje interceptor vraca config/promise u axios instance (ako vrati promise, automatski axios izvuce payload)
+        
+        - response:
+            - handlers[]
+            - use(onFulfilled, onRejected)
+
+    - methods:
+        - get
+        - post
+        - put
+        - delete
+
+u use metodi axios interno uradi promise.then (na promise koji mu interceptor return) i time extraktuje payload iz promise 

@@ -1,0 +1,32 @@
+Kada kodiram microservices app, koristim rec "microservice" za svaki zasebni projekat, a unutar svakog microservice koristim rec "service" za 
+svaki interni servis koji se koristi. 
+Ovo nije microservices app, ali moze se smatrati ovaj projekat kao 1 microservice, dok Services folder sadrzi service koje koristim unutar projekta 
+tj unutar ovog microservice. Ovo objasnjavam, da ne dodje do zabune izmedju service i microservice. 
+
+Services predstavlja svaku klasu koju controller koristi. 
+Moze biti custom ili built-in. Custom se mora rucno registrovati u DI container u Program.cs, dok built-in ne mora.
+Svaki servis mora imati interface koji implementira zbog SOLID (visoki nivoi zavise od apstrakcija) + zbog testiranja. 
+
+U Program.cs, servis registrujem najcesce kao AddScoped, jer DbContext je AddScoped i pogodono je jer je Scoped lifetime of http Request
+
+Nije dobra praksa da kontroler ima logiku, vec da poziva service, a service ima logiku i poziva repository i sve ostalo. 
+Controller/endpoint samo prima, validira, poziva servise i salje klijentu.
+Ovime se postize S of SOLID + lakse se testira (mock only service, not DbContext ) + lakse se koristi logika na vise mesta (samo injectuj servise gde treba)
+
+Controller (+ validacija + http)  -> Service -> Repository -> DbContext
+
+Services je application layer koji sadrzi poslovnu logiku, dok EmailService, FMPService i TokenService su infrastructure layer jer su pomocne stvari.
+Controller prima DTO, salje ga u Service, Service mapira DTO u Entity, salje Entity u Repository jer Repository radi samo sa njim, pa Repository vraca Entity u Servis koji ga mapira
+u DTO pa DTO vrati u Controller i Controller salje DTO klijentu.
+
+Service baca explicitne custom greske i implicitne built-in, ali svakako oba tipa moram uhvatiti u controller ili GlobalExceptionHandler ili result pattern.
+Implicitnu gresku mogu uhvatiti kao Exception klasu.
+Service treba try-catch samo ako:
+	1) u njemu hvatam built-in exception koju prevodim u moj custom exception i bacam je dalje da propagira u controller i/ili GlobalExceptionHandler 
+	2) catch blok koristim za recovery usled exception(greske) u try block
+
+Controller ne baca exception/result pattern, vec null ako ne nadje, a Service/CQRS Handler baca exception/result pattern u zavisnosti sta mu je repository vratio.
+
+Ako koristim Service, ne koristim CQRS i obratno ! 
+
+U write to DB endpoint, incoming DTO se mapira u neku klasu koja se salje u service metodu cime se postize separacija slojeva + service reusability + testiranje bolje - Pogledaj DTO vs entity klase.txt 

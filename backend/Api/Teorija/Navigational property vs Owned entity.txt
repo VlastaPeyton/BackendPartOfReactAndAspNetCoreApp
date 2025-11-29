@@ -1,0 +1,20 @@
+Klasa A ima navigational property tipa B ako:
+	- A i B su tabele
+	- Property je tipa klase B + A sadrzi BId => EF Core automatski FK-PK one-to-one napravi
+	- Property je List/IEnumerable<B> + B sadrzi A.Id => EF Core automatski FK-PK one-to-many napravi
+
+Za navigtional property:
+	- Koristim Include (Eager loading) u LINQ klase A da dohvatim i polje B ako klasa A ima polje B, jer B ne moze biti kolona nikako 
+	- Ako je circular reference (B sadrzi AId i A sadrzi BId) => problem kod JSON serializer => U Program.cs ugasi rucno 
+
+Klasa A ima Owned entity property ako:
+	- A je tabela u bazi
+	- Property je tipa klase B i ima annotation [Owned]
+
+Za owned entity:
+	- Svi property iz B bice kolone u A
+	- B moze, ali ne mora biti tabela
+
+Eager vs explicit loading:
+	Explicit unosi N+1 problem
+	Eager (Include) pravi JOIN 
