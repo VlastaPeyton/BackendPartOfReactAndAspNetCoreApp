@@ -1,5 +1,5 @@
 Klasa A ima navigational property tipa B ako:
-	- A i B su tabele
+	- A i B su tabele tj def u ApplicationDbContext kao tabele 
 	- Property je tipa klase B + A sadrzi BId => EF Core automatski FK-PK one-to-one napravi
 	- Property je List/IEnumerable<B> + B sadrzi A.Id => EF Core automatski FK-PK one-to-many napravi
 
@@ -7,14 +7,18 @@ Za navigtional property:
 	- Koristim Include (Eager loading) u LINQ klase A da dohvatim i polje B ako klasa A ima polje B, jer B ne moze biti kolona nikako 
 	- Ako je circular reference (B sadrzi AId i A sadrzi BId) => problem kod JSON serializer => U Program.cs ugasi rucno 
 
-Klasa A ima Owned entity property ako:
+Klasa A ima Owned entity property tipa B ako:
 	- A je tabela u bazi
-	- Property je tipa klase B i ima annotation [Owned]
+	- Property je tipa klase B i :
+		- ima annotation [Owned] ili u OnModelCreating je upisan pomocu "builder.Entity<A>().OwnsOne(...)" 
+		- B nije def u ApplicationDbContext kao tabela u bazi
+		- B nema Id polje 
 
 Za owned entity:
-	- Svi property iz B bice kolone u A
-	- B moze, ali ne mora biti tabela
+	- Sva polja iz B bice kolone u A pod nazivom B_field1, B_field2 ...
+	- Owned entity klasa se koristi u DDD tj unutar Agregate 
+	- Owned entity je Value Object ustvari
 
-Eager vs explicit loading:
-	Explicit unosi N+1 problem
-	Eager (Include) pravi JOIN 
+Eager vs lazy loading:
+	Lazy loading unosi N+1 problem
+	Eager loadinh (Include u LINQ) pravi JOIN i smanjuje broj round trips ka DB.

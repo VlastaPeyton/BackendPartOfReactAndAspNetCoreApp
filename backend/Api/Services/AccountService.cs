@@ -10,7 +10,6 @@ using Api.Exceptions_i_Result_pattern.Exceptions;
 using Api.Interfaces;
 using Api.Models;
 using DotNetEnv;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 

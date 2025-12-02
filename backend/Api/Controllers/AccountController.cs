@@ -69,7 +69,7 @@ namespace Api.Controllers
 
             var newUserDTO = await _accountService.RegisterAsync(command);
 
-            string refreshToken = newUserDTO.RefreshToken;
+            string refreshToken = newUserDTO.RefreshToken!;
 
             // Refresh Token (not hashed!) is sent to Browser(not to FE) from Controller via highly-secured Cookie to prevent CSRF attack. 
             Response.Cookies.Append("refreshToken", refreshToken, new CookieOptions

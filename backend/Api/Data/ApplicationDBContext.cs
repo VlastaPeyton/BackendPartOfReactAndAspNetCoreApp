@@ -131,7 +131,7 @@ namespace Api.Data
                     }
                 };
 
-                entity.HasData(roles);// Seeds data in Migration to AspNetRoles only if it is empty 
+                entity.HasData(roles);// Seeds data during Migration to AspNetRoles only if it is empty 
             });
 
             //Dodaj Outbox/Inbox tabele ručno u EF model, ali Inbox cu da iskljucim jer ovo je publisher microservice 
