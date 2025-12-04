@@ -3,11 +3,16 @@ Authentication middleware je built-in middleware koji se registruje u Program.cs
 app.UseAuthentication() must come before app.UseAuthorization() (pogledaj Authorization middleware.txt) in Program.cs.
 
 UseAuthentication middleware:
-	- registruje i pokrece authentication handlere za JWT (ili Cookie ako ga koristim umesto JWT za AccessToken token) koji su built-in u .NET i ne kodiram ih 
-	- reads JWT from Authorization header from request (pogledaj HttpContext.txt) (zbog SPA Security best practice JWT is in Auth header), pa validates JWT, 
-	pa ocita Claims iz JWT ( u TokenService.cs kreirao sam Claims), pa od Claims napravi ClaimsIdentity, pa od ClaimsIdentity napravi ClaimsPrincipal and
-	stores it in HttpContext.User. 
-	ClaimsPrincipal je fakticki user koji moze imati vise ClaimsIdentity npr logovao sam se preko username/password (ClaimsIdentity1) i preko Google naloga(ClaimsIdentity2).
+	- Ako endpoint nema [Authorize], nicemu ne sluzi Authentication/Authorization middleware, jer se taj endpoint moze pozvati bez Authentication header
+	- Ako endpoint ima [Authorize], onda:
+		Authentication middleware registruje Authentication handler (def u Program.cs) tj u HttpContext(pogledaj HttpContext.txt) doda AuthenticateAsync metodu, jer
+		onda request propagira nizvodno u Authorization middleware, pa onda Authorization middleware moze da pozove HttpContext.AuthenticateAsync, jer inace ne bi mogo kasnije 
+		registrovan middleware da pozove ranije registrovan middleware. 
+		Authentication hanlder sluzi za JWT (ili Cookie ako ga koristim umesto JWT za AccessToken). Ovaj hanlder je built-in. On cita JWT iz 
+		Authentorization header from request (pogledaj HttpContext.txt) jer JWT je u Authorization header smeste (pogledaj SPA Security best practicte.txt),
+		pa validira JWT, pa ocita Claims iz JWT (u TokenService.cs kreirao sam Claims koje BE salje kroz JWT to FE), pa od Claims napravi ClaimsIdentity, pa 
+		od ClaimsIdentity napravi ClaimsPrincipal and stores it in HttpContext.User, jer ClaimsPrincipal je user koji moze imati vise ClaimsIdentity u zavisnosti 
+		kako se logirao (Login endpoint) pravi ClaimsIdentity1, dok GoogleLogin endpoint pravi CLaimsIdentity2.
 
 ControllerBase omogucava direktno dohvatanje svih user info in each request pomocu HttpContext.User cime se postize stateless da ne gledam user info u bazi.
 

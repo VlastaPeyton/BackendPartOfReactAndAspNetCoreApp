@@ -1,0 +1,2 @@
+Isto radi kao Middleware, ali nije namenjen za svaki http request, vec samo za one koji idu u odredjeni endpoint, jer se primenjuje 
+u zeljenom Controller endpoint.

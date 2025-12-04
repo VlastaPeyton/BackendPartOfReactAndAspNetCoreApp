@@ -10,6 +10,8 @@ namespace Api.CQRS_and_Validation
        Validation je iz FluentValidation.
         
        U Program.cs mora da se ValidationBehaviour ubaci u MediatR pipeline da bi ova klasa mogla automatski da prepozna sta treba da validira kada ISender.Send()
+        
+       Pogledaj CQRS, Validation and MediatR pipeline.txt
      */
     public class ValidationBehaviour<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse> where TRequest : ICommand<TResponse>
     {   
@@ -36,7 +38,7 @@ namespace Api.CQRS_and_Validation
 
             // If any error occured, throw ValidationException 
             if (failures.Any())
-                throw new ValidationException(failures); // ValidationException je built-in
+                throw new ValidationException(failures); // ValidationException je built-in. Propagira uzvodno do prvog catch koji se nalazi u GlobaleExceptionHandlingMiddleware
 
             // next() will run next MediatR pipeline behaviour (ako postoji) registrovan nakon ValidationBehaviour u Program.cs, pa tek na kraju CommandHandler's Handle metodu jer ona je uvek na kraju pipeline
             return await next();

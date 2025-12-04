@@ -19,6 +19,17 @@ Za owned entity:
 	- Owned entity klasa se koristi u DDD tj unutar Agregate 
 	- Owned entity je Value Object ustvari
 
-Eager vs lazy loading:
-	Lazy loading unosi N+1 problem
-	Eager loadinh (Include u LINQ) pravi JOIN i smanjuje broj round trips ka DB.
+EF Core does not fetch navigational property automatcially, thats why Eager / Lazy / Explicit loading come into play:
+	1. Eager:
+		Include/ThenInclude u LINQ koristim, jer znam da mi treba B property istovremeno kada ocitavam A tabelu.
+		Eager loading reduces round trips to DB as Include is SQL JOIN command, rather than separate queries.
+		Ako je navigation attribute B ogromno i retko se koristi, ne isplati se ovaj pristup. 
+
+	2. Lazy:
+		Lazy loading unosi N+1 problem, jer ako je B lista, onda ce za svaki element pozivati bazu. 
+		Kada mi treba B polje na zahtev. 
+		Navigation attribute B must be virtual.
+		U OnModelCreating treba "UseLazyLoadingProxies".
+
+	3. Explicit:
+		Koristi se keyword "LoadAsync()" na kraju LINQ.

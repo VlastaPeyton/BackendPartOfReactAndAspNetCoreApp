@@ -79,21 +79,21 @@ namespace Api.Repository
             // Ako ima u cache, onda vrati ga clientu
             if (!string.IsNullOrEmpty(cachedStockDtoJson))
             {
-                var stockDTO = JsonConvert.DeserializeObject<StockDTOResponse>(cachedStockDtoJson)!; // Napravim StockDTO iz JSON jer u redis je JSON(StockDTO)
+                var stockDto = JsonConvert.DeserializeObject<StockDTOResponse>(cachedStockDtoJson)!; // Napravim StockDtoResponse iz JSON jer u redis je JSON(StockDtoResponse)
                 var stock = new Stock
                 {
                     //Mapiram Id, jer je ovo read scenario, dok u write ne bih smeo jer baza sama generise Id vrednost
-                    Id = stockDTO.Id,
-                    Symbol = stockDTO.Symbol,
-                    CompanyName = stockDTO.CompanyName,
-                    Purchase = stockDTO.Purchase,
-                    Dividend = stockDTO.Dividend,
-                    Industry = stockDTO.Industry,
-                    MarketCap = stockDTO.MarketCap,
-                    Comments = stockDTO.Comments.Select(c => new Comment
+                    Id = stockDto.Id,
+                    Symbol = stockDto.Symbol,
+                    CompanyName = stockDto.CompanyName,
+                    Purchase = stockDto.Purchase,
+                    Dividend = stockDto.Dividend,
+                    Industry = stockDto.Industry,
+                    MarketCap = stockDto.MarketCap,
+                    Comments = stockDto.Comments.Select(c => new Comment
                     {
                         Id = CommentId.Of(c.Id),
-                        StockId = stockDTO.Id,
+                        StockId = stockDto.Id,
                         Title = c.Title,
                         Content = c.Content,
                         CreatedOn = c.CreatedOn,

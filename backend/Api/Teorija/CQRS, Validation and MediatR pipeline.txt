@@ -23,3 +23,6 @@ metodu tu se odradi sve sto treba u bazi, pa onda se tu napravi Result objekat k
 Request obicno ne postoji ako endpoint prima argumente prostog tipa i nema ih mnogo. Moze i tad, ali nema potrebe.
 Ako ima mnogo argumenata onda napravim Request klasu, ali ako nema mnogo (a vise od 1) onda [FromQuery] i automatski binduje u Request objekat, a ako ih bas mnogo ima 
 onda [FromBody]
+
+Logging/ValidationBehaviour se "middleware" za MediatR pipeline. Ovo je aplikativni sloj, dok obican .NET middleware je web sloj.
+RequestHandlerDelegate je isto sto i RequestDelegate u GlobalExceptionHandler middleware.

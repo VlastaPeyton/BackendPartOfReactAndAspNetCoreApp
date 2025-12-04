@@ -1,0 +1,5 @@
+IHost is running .NET app container AKA object that represents app while its alive.
+DI container, Logging, app lifetime control all wraped into runtime object.
+
+In Program.cs "builder = WebApplication.CreateBuilder(args)" kreira WebApplication implementira IHost, sto znaci da je moja app
+automatski wrapped into IHost.

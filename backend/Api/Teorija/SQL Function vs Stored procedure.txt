@@ -1,0 +1,7 @@
+SQL Function:
+	can only query DB. Used inside SELECT.
+	Stored in DB.
+
+SQL Stored procedure: 
+	can query and write DB. Not used inside SELECT. "EXEC" keyford for SQL Server. 
+	Stored in DB.

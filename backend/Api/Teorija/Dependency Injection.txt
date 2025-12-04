@@ -19,3 +19,41 @@ Injection of dependencies u conttroller ima 2 nacina:
 				  kroz argumente endpointa pomocu [FromServices] keyword. Ovime postizem da controller manje memoriju zauzima, jer se odredjeni servisi injectuju
 				  pozivom odredjong endpointa + lakse se testira endpoint + brisanjem endpointa brise se i njegov dependency pa onda klasa nece imati nekoriscen dependency.
 				  Memorijski ovo nije nista bolje, jer servisi su light mainly + GC pocisti sve kad se request zavrsi + dependency lifetime is scoped mainly.
+
+Postoje 3 vrste registrovanja servisa u DI:
+	1. Singleton service:
+		Moze imati samo Singleton servise injektovane. Ako injectujem DbContext(Scoped service) u Singleton, connection to DB is never released and stale data.
+		Ako bas zelim Transient/Scoped servise injektovati u Singleton service, moram pomocu IServiceScopeFactory, ali ne preporucuje se ni to.
+
+	2. Transient service:
+		Moze imati Singleton/Transient/Scoped servise injektovane. Shorter-lived services can always depend on longer-lived services.
+		Moze injection of Scoped, ali unutar http request (Controller,Endpoint, Minimal API Endpoint, Service, Middleware's InvokeAsync method, SignalR ), dok 
+	  unutar background service ne moze tj tad mora rucni scope da se napravi. 
+		New instance of same service created every time that service is needed throughout same http request. 
+
+	3. Scoped service:
+		Moze imati Singleton/Transient/Scoped service injektovane. 
+		Same instance of same service regardless of how many times that service is needed throughout same http request.
+	
+Scope services:
+	Anything inside http request (Middleware InvokeAsync, Controller, Endpoint, Minimal API Endpoint, Service used in endpoint, handlers, SignalR).
+    Samo pratim da l je trenutni servis Singleton/Transient/Scoped kako bih znao sta od drugih DI servisa mogu da injektujem. 
+
+Non-scope services:
+	Background services tj anything outside of http reqeuest.
+	Ako zelim da injektujem Scoped ili Transient depending on Scoped, onda rucni scope pravim. 
+	Ako zelim da injektujem Transient not depending on Scoped ili Singleton, onda iz root DI (bez rucni scope) injektujem. 
+
+Factory pattern for creating a service:
+	Ako service zahteva npr string da mu se prosledi tokom kreiranja, moram koristiti Factory pattern u Program.cs.
+
+	services.AddScoped<IMyService>(provider =>
+	{
+		var config = provider.GetRequiredService<IConfiguration>();
+		var logger = provider.GetRequiredService<ILogger<MyService>>();
+		string connectionString = config.GetConnectionString("Default");
+
+		return new MyService(connectionString, logger);
+	});
+
+	Primer za Factory pattern je u Redis, Proxy & Decorator pattern.txt

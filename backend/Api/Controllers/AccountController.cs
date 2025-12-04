@@ -39,6 +39,8 @@ namespace Api.Controllers
          Koristim Result pattern za ocekivane (biznis) greske i GlobalExceptionHandlingMiddleware za neocekivane greske - pogledaj Result pattern.txt i GlobalExceptionHandlingMiddleware.txt 
         
          AccountController nece imati CQRS endpointe jer me mrzi da ih iskucam, dok ostali controllers oce. 
+
+         Nijedan endpoint ne sme imati [Authorize], jer za njih nemoguce je poslati JWT u Authorization header of request, dok endpointi ostalih controllera imaju [Authorize]
          */
 
         //[EnableRateLimiting("fast")] - nesto nije htelo kad sam imao ovaj ratelimiter ukljucen

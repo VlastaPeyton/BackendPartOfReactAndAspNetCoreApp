@@ -3,11 +3,10 @@ Request flow: Request -> Kestrel -> Middlewre -> Code
 Response flow: Code -> Middleware -> Kestrel -> Client
 
 Sta je middleware i middleware pipeline:
-	Middleware je .NET komponenta u aplikacionom pipeline koja prima HttpContext (pogledaj HttpContext.txt) objekat koji moze da procita, izmeni ili koristi 
-  i odlucuje da li ce proslediti request sledecem middleware u pipeline ili ce sama zavrsiti obradu i poslati response. 
-    Isto ima ulogu i u slanju odgovora klijentu. 
-	Kada klijent posalje request, on prvo ide u Kestrel koji od http poruke napravi HttpContext objekat, a onda HttpContext ide u middleware pipeline. 
-	Kada BE salje response, on se obrnutim putem od request propagira takodje kroz middleware pipeline i na kraju Kestrel ga pravi kao http poruku i salje klijentu.
+	Middleware je .NET komponenta u app pipeline koja prima HttpContext (pogledaj HttpContext.txt) objekat koji moze da procita, izmeni ili koristi 
+  i odlucuje da li ce proslediti request sledecem middleware u pipeline ili ce sama zavrsiti obradu i poslati response klijentu. 
+	Kada klijent posalje request, on prvo ide u Kestrel (pogledaj Kestrel.txt) koji od http poruke napravi HttpContext objekat, a onda HttpContext ide u middleware pipeline. 
+	Kada BE salje response, on se obrnutim putem od request propagira kroz middleware pipeline i na kraju Kestrel od HttpContext napravi http poruku i posalje klijentu.
     Midleware moze biti built-in ili custom. 
 	Middleware se registruje u Program.cs prilikom cega je bitan redosled registracije (odozgo na dole - request ce prvo uci u najvise pozicionirani middleware
   u Program.cs i propagirati nizvodno, a response propagira uzvodno).
@@ -18,20 +17,23 @@ Sta je middleware i middleware pipeline:
 		1) Conventional - bez implementacije IMiddleware 
 		   => u Program.cs se napise "app.UseMiddleware<CustomMiddleware>();"
 		   ovime middleware nije registrovan u servise tj u DI, ali je implicitno kao AddSingleton dodat u pipeline
+		   ovime se teze testira ako imam non-Singleton service u InvokeAsync (ispod objasnjeno)
 		   Svaki conventional middleware  mora sadrzati:
-			- ctor 
-			- InvokeAsync/Invoke metodu koja vraca Task (koja se poziva automatski refleksijom (pogledaj Reflection.txt)), a prima HttpContext
+			- ctor koji moze primiti servise koji su registrovani samo kao AddSingleton 
+			- InvokeAsync metodu (koja se poziva automatski refleksijom (pogledaj Reflection.txt) per request), a prima HttpContext i opciono servis koji moze biti Singleton/Scoped/Transient 
 			- next polje tipa RequestDelegete je opciono koje pokazuje na sledeci middleware u pipeline na osnovu Program.cs:
 				- ako ga ima, to znaci da nije poslednji middleware u pipeline
 				- ako ga nema, to znaci da jeste poslednji middleware u pipeline
 
 		2) Sa IMiddleware implementacijom:
-		   => u Program.cs se napise "builder.Services.AddTransient<IMiddleware,CustomMiddleware>()" i "app.UseMiddleware<CustomMiddleware>()"
-		   ovime middleware je registrovan kao servis u DI  explicitno kao AddTransient u pipeline, jer IMiddleware koristi IMiddlewareFactory koji zahteva DI registraciju
-		   Svaki middleware, koji implementira IMiddleware built-in interface, mora se registrovati kao AddTransient, a mora sadrzati:
-				- InvokeAsync/Invoke metodu koja vrata Task (-||-) i koja prima HttpContext i RequestDelegate 
-				- Ako koristim IMiddleware, treba AddTransient<IMiddleware,CustomInterface> jer, middleware pipeline nije ogranicen samo na Request (AddScoped), vec 
-				 sluzi i za gRPC,SignalR, WebSockets
+		   => u Program.cs se napise "builder.Services.AddTransient/Scoped<IMiddleware,CustomMiddleware>()" i "app.UseMiddleware<CustomMiddleware>()"
+		   ovime middleware je registrovan kao servis u DI explicitno u pipeline, jer IMiddleware koristi IMiddlewareFactory koji zahteva DI registraciju
+		   ovime se lakse testira ako imam non-Singleton services inside middleware 
+		   Svaki middleware, koji implementira IMiddleware built-in interface, mora se registrovati kao AddTransient/Scoped, a mora sadrzati:
+				- ctor moze primiti Singleton/Transient/Scoped service 
+				- InvokeAsync metodu (-||-) i koja prima HttpContext i RequestDelegate i opciono servis koji moze biti Singleton/Transient/Scoped
+				- Ako koristim IMiddleware, treba AddTransient/Scoped<IMiddleware,CustomInterface> jer, middleware pipeline nije ogranicen samo na Request (AddScoped), vec 
+				 sluzi i za gRPC, SignalR, WebSockets
 
 Built-in middleware:
 	- builder.Services.AddControllers(); - sadrzi UseRouting i UseEndpoints koje sam u starijim verzijama morao rucno registrovati
@@ -55,22 +57,21 @@ zna automatski koji mu je sledeci middleware.
 Ako je custom middleware mali, onda moze u Program.cs direktno da se definise i doda u pipeline, a to izgleda ovako:
 	app.Use(async (context, next) =>
 	{
-    Console.WriteLine("Logika pre poziva sledeceg middleware-a kada request propagira");
+    Console.WriteLine("Logika pre poziva sledeceg registrovanog middleware-a kada request propagira");
     await next(); // poziva sledeci middleware 
-    Console.WriteLine("Logika nakon sledecg middleware-a kada response propagira");
+    Console.WriteLine("Logika nakon prethodnog (sledeceg registrovanog) middleware-a kada response propagira");
 	});
-Ali nije dobra praksa, jer ruzni mi je kod mnogo, vec napraivm CustomMiddleware:IMiddleware klasu koju registrujem kao AddTransient Service i dodam u pipeline pomocu app.UseMiddleware<CustomMiddleware>.
+Ali nije dobra praksa, jer ruzniji je kod mnogo, vec napraivm CustomMiddleware na 1 od gornja 2 nacina.
 
 U Program.cs, bitno je kojim redosledom middleware registrujem, jer reqeust propagira nizvodno u Program.cs, a response uzvodno.
 Svaki middleware, nebitno gde u pipeline je registrovan, moze poslati odgovor klijentu bez da saceka da middleware koji su registrovani iznad njega zavrse. 
 Ovo je problem kojim moram da proverim u svakom custom middleware sa "if(context.Response.HasStarted)", jer ako je ovo true, onda odgovor je vec krenuo da se salje 
 u nekom middleware ispod mog trenutnog middleware, pa trenutni middleware ne moze poslati odgvor. 
-Ovo se desava retko, ali moze. 
+Ovo slanje iz nize registrovanog middleware se ne mzoe desi u obicnom REST API koji je 90% sajtova.
 
 GlobalExceptionHandlingMiddleware je registrovan aman na vrhu (odma ispod Swagger i HttpsRedirection, jer ova 2 ne smeju biti wrapped with custom middleware) i onda on 
 hvata exception svih middleware ispod njega ako oni ispod nemaju catch blok, jer exception propagira uzvodno(response flow putanjom) do najblizeg catch bloka.
-Ovo slanje iz nize registrovanog middleware se ne mzoe desi u obicnom REST API koji je 90% sajtova.
 
-Svaki middleware ima InvokeAsync(HttpContext context, RequestDelegate next) metodu koju .NET poziva kada izvrsa taj middleware, a 
-RequestDelegate je metoda koja prima HttpContext argument i predstavlja sledeci middleware u pipeline tj onaj koi je registrovan 
-odma ispod GlobalExceptionHandlingMiddleware u Program.cs, a to je UseCors. RequestDelegate nema definiciju explicitnu, vec .NET je definise prilikom pokretanja aplikacije. 
+Svaki middleware ima InvokeAsync(HttpContext context, RequestDelegate next) metodu koju .NET poziva kada izvrsa taj middleware, a RequestDelegate je metoda
+koja prima HttpContext argument i predstavlja sledeci middleware u pipeline tj onaj koi je registrovan odma ispod tog middleware u Program.cs (u slucaju
+GlobalExceptionHandlingMiddleware, to je UseCors). RequestDelegate nema definiciju explicitnu, vec .NET je definise prilikom pokretanja aplikacije. 

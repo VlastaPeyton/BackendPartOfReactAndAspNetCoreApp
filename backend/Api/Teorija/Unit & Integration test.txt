@@ -1,0 +1,36 @@
+Unit test:
+	Proveri logiku.
+	Testira klasu/njene metode dok sve DI oko nje je simulirano (mokovano).
+	Pokriva Service/CQRS, Helpers, Validator. 
+
+Integration test:
+	Testiram prave komponente (repository , controller ), ne mokovane. Tj sve sto zavisi od baze i API.
+	Koristi test bazu.
+	Koristi EF Core, DbContext za razliku od Unit test.
+	Proveri da li slojevi saradjuju kako treba.
+
+Moj app sadrzi Middleware -> Controller i Endpoint -> Service/CQRS -> Repository -> DbContext -> Db 
+
+Unit test izgledace:
+	NuGet packages: xUnit, Moq/FakeItEasy, FluentAssertions 
+	Arrange: mock repository, service/cqrs handler sa tim mock, input podatke
+	Act: pozoves metodu
+	Assert: provera rezultata
+
+Integration test izgledace:
+	1. Repository + DbContext + test baza:
+		Koristim pravi Repository, EF Core 
+		Provera da li AddAsync, Update, Delete radi kako treba
+		Provera da li query vraca sta treba
+		Provera da li mapping radi 
+
+	2. API Integration Controller i Endpont -> Service/CQRS -> Repository -> DbContext:
+		2.1 WebApplicationFactory<TEntryPoint> (iz Microsoft.AspNetCore.Mvc.Testing)
+		2.2 Test podigne minimalnu verziju tvoje aplikacije u memoriji
+		2.3 Dobijes HttpClient koji gadja test instancu 
+		2.4 U testu napravis:
+			Http Request na odredjeni endpoint url
+			taj request ide kroz middleware, routing, controller,service/cqrs, repository, dbcontext, test baza
+		2.5 Dobijes response nazad 
+
+

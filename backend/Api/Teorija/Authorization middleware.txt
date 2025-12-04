@@ -4,7 +4,8 @@ Mora se registrovati nakon app.UseAuthentication() middleware u pipeline u Progr
 
 UseAuthorization middleware:
 	- vidi ima li endpoint [Authorize]
-	- ako ima [Authrozire], proveri HttpContext.User tj ClaimsPrincipal u njemu, ako je u TokenService.cs kao claim ubacen Role
+	- ako ima [Authrozire], pozove HttpContext.AuthenticateAsync() (pogledaj AuthenticationMiddleware.txt) i proveri HttpContext.User tj ClaimsPrincipal 
+	  u njemu, ako je u TokenService.cs kao claim ubacen Role
 
 Also, enforces access rules based on user (HttpContext.User) identity.
 

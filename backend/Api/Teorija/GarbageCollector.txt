@@ -1,0 +1,19 @@
+
+Stack:
+	Each thread has its own stack.
+	Stores value types and pointers to heap (reference) objects.
+	LIFO.
+	When object's (which is on heap) method is called, new stack frame is created, and methods variables are on the stack frame, 
+  once method is finished stack frame is closed 
+
+
+Heap:
+	Shared between trheads.
+	Stores value types object, but pointer to reference type object is stored on stack. 
+	Manageb by GC.
+
+GarbaceCollector:
+	Runs kad god misli da treba to clean the heap.
+	Can affect speed of app.
+	Moze manuelno GC da se pokrece.
+

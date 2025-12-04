@@ -16,7 +16,7 @@ Key mora biti jedinstven i string formata zbog IDistributedCache, pa treba razmi
 
 Pogledaj JSON engine.txt koji ima veze sa serialization/deserialization objekta i Redis cache
 Posto Redis cache koristi JSON kao value type, pozeljno je u cache stavljati DTO objekte, a ne entity klase zbog DDD kako entity objekti i njihovi ValueObject Id tipovi 
-ne bi izlazili van domena jer Redis nije domain level => koristim postojeic StocDTO i pravim CommentRedisDTO jer Stock ima List<Comment>, a Comment ima CommentId ValueObject koji mora posebno
+ne bi izlazili van domena jer Redis nije domain level => koristim postojeci StocDTO i pravim CommentRedisDTO jer Stock ima List<Comment>, a Comment ima CommentId ValueObject koji mora posebno
 da se serializuje/deserializuje jer je custom type. Naravno DTO klasa samo primitivne tipove ima. 
 
 NuGet za Redis:
@@ -26,12 +26,13 @@ NuGet za Redis:
 
     U Program.cs Decorator pattern bez Scrutor: 
       builder.Services.AddScoped<IStockRepository, StockRepository>();
-      builder.Services.AddScoped<IStockRepository, CachedStockRepository>();
-      // Ako uradim ovako, override cu AddScoped<IStockRepository, StockRepository>(), a to ne zelim, vec moram ovako
+      //builder.Services.AddScoped<IStockRepository, CachedStockRepository>();
+      // Ako uradim ovo iznad, override cu AddScoped<IStockRepository, StockRepository>(), a to ne zelim, vec moram ovako
       builder.Services.AddScoped<IBasketRepository>(provider =>
       {   
           var stockRepository = provider.GetService<StockRepository>();
           return new CachedStockRepository(stockRepository, provider.GetRequiredServices<IDistributedCache>());
+          // Pogledaj Factory pattern.txt
       });
     
     U Program.cs Decorator pattern sa Scrutor:

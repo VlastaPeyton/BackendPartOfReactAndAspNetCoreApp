@@ -81,30 +81,26 @@ builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
 
 // Nakon ova 2 registrovanja iznad, u Package Manager Console kucam "Add-Migration Identity", pa "Update-Database", da sa naprave sve Identity tabele (objasnjene u ApplicationDbContext.cs) 
 
-// JWT Authentication for [Authorize] endpoints
+// JWT Authentication when http request hits [Authorize] endpoint - pogledaj Authentication middleware.txt
 builder.Services.AddAuthentication(options =>
 {   
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme; // How app authenticate users (reads JWT)
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;    // What happens when unauthenticated user hits [Authorize] endpoint
-    options.DefaultForbidScheme = JwtBearerDefaults.AuthenticationScheme;       // What happens when authenticated user is not authorized 
-    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;             // Fallback if other shcemes arent specified
-    options.DefaultSignInScheme = JwtBearerDefaults.AuthenticationScheme;       // For sign in 
-    options.DefaultSignOutScheme = JwtBearerDefaults.AuthenticationScheme;      // For sign out
-    // Svuda koristim JWT Bearer jer to mi najlakse, obzirom da samo Login endpoint postoji tj nemam dodatni Google login npr
-
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme; // Authenticate user via JwtBearerHandler to read JWT on when accessing HttpContext.User
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;    // Specifies the scheme to use when an unauthenticated user hits [Authorize] endpoint and return 401
+    options.DefaultForbidScheme = JwtBearerDefaults.AuthenticationScheme;       // User is authenticated but forbidden on specific endpoint and return 403
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;             // Fallback if other shcemas arent specified
+    
 }).AddJwtBearer(options =>
-{   // AddJwtBearer je registrovanje JWT handler. Pogledati Authentication middleware.txt
+{   // AddJwtBearer je registrovanje JWT handler - pogledati Authentication middleware.txt
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
         ValidIssuer = builder.Configuration["JWT:Issuer"], 
         ValidateAudience = true,
         ValidAudience = builder.Configuration["JWT:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(builder.Configuration["JWT:SigningKey"]))
+        IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(builder.Configuration["JWT:SigningKey"]!))
     };
 }).AddGoogle("Google", options =>
 {   // Google auth handler for google login/register - pogledaj GoogleLogin.txt 
-
     options.ClientId = Env.GetString("GOOGLE_AUTH_CLIENT_ID");
     options.ClientSecret = Env.GetString("GOOGLE_AUTH_CLIENT_SECRET");
 
@@ -240,4 +236,4 @@ app.MapControllers();
 
 await app.SeedAdminAsync(); // Admin user se dodaje iz BE uvek
 
-app.Run(); // Middleware dodat u pipeline pomocu app.Run() nema next() 
+app.Run(); // Middleware dodat u pipeline pomocu app.Run() nema next() i on mora biti poslednji in pipeline

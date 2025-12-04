@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using Api.Exceptions;
 using Api.Exceptions_i_Result_pattern.Exceptions;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Middlewares
@@ -21,7 +22,7 @@ namespace Api.Middlewares
     public class GlobalExceptionHandlingMiddlewareBezInterface
     {
         private readonly RequestDelegate _next;
-        private readonly ILogger<GlobalExceptionHandlingMiddlewareBezInterface> _logger;
+        private readonly ILogger<GlobalExceptionHandlingMiddlewareBezInterface> _logger; // Singleton i zato moze kroz ctor da se ubaci 
         public GlobalExceptionHandlingMiddlewareBezInterface(RequestDelegate next, ILogger<GlobalExceptionHandlingMiddlewareBezInterface> logger)
         {
             _next = next;
@@ -59,8 +60,12 @@ namespace Api.Middlewares
             {   /* RequestDelegate je metoda koja prima HttpContext argument i predstavlja sledeci middleware u pipeline tj onaj koi je registrovan 
                  odma ispod GlobalExceptionHandlingMiddleware u Program.cs, a to je UseCors.
                    RequestDelegate nema definiciju explicitnu, vec .NET je definise prilikom pokretanja aplikacije. 
+
+                   Ako zelim u request flow da ovaj middleware nesto uradi sa HttpContext.Request, onda pre "await next(context)" moram to napisati.
                 */
-                await next(context); // propusta request dalje do controllera, servisa ....
+                await next(context); // propusta request dalje u sledeci (nize registrovani middleware u Program.cs), pa sve do controllera, servisa ....
+
+                // Ako zelim u response flow da ovaj middleware nesto uradi sa HttpContext.Response, onda posle "await next(context)" moram to napisati.
             }
             // Svaki custom exception je nasledio Exception i zato ce, kao i Exception, biti ovde uhvacen i kreiran odgovorajuci response 
             catch (Exception ex)
@@ -77,7 +82,7 @@ namespace Api.Middlewares
                 context.Response.ContentType = "application/json";
                 context.Response.StatusCode = ex switch
                 {   
-                    // Account:
+                    // AccountController:
 
                         // Register endpoint 
                     UserCreatedException or RoleAssignmentException => StatusCodes.Status500InternalServerError,
@@ -97,18 +102,21 @@ namespace Api.Middlewares
                         // GoogleCallback endpoint
                     GoogleLoginException => StatusCodes.Status400BadRequest,
 
-                    // Comment:
+                    // CommentController:
                         // nema nistaa
 
-                    // Stock:
+                    // StockController:
 
                         // Update endpoint
                     StockNotFoundException => StatusCodes.Status404NotFound,
 
-                    // Portfolio:
+                    // PortfolioController:
 
                         // GetUserPortfolios endpoint 
                     UserNotFoundException => StatusCodes.Status404NotFound,
+
+                    // ValidationBehaviour in MediatR pipeline 
+                    ValidationException => StatusCodes.Status406NotAcceptable,
 
                     // Svaki endpoint, u bilo kom controlleru, je slao klijentu StatusCode 500 ako se desio implicitni error u service/repository/cqrs
                     _ => StatusCodes.Status500InternalServerError
@@ -136,6 +144,9 @@ namespace Api.Middlewares
 
                         // Portfolio: 
                         UserNotFoundException => "User not found ",
+
+                        // ValidationBehaviour MediatR pipeline
+                        ValidationException => "Validation problem",
 
                         _ => "Implicit internal server error u service/repository"
                     },
