@@ -16,6 +16,7 @@ namespace Api.Middlewares
     a gresku mu saljem iz GlobalExceptionHandlingMiddleware.
      
      Pogledaj Middleware.txt i Exception driven error handling.txt i Result pattern.txt
+
     */
 
     // Ovo moze i cesto je, ali se tesko testira, pa necu da koristim => U Program.cs: app.UseMiddleware<GlobalExceptionHandlingMiddlewareBezInterface>(); i middleware automatski registruje kao AddSingleton

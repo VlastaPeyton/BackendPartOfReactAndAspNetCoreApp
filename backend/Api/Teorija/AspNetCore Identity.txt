@@ -35,3 +35,5 @@ How to use Identity in code:
    IdentityDbContext te tabele sadrzi bez da ih definisem u ApplicationDbContext
     U AccountController koristim UserManager, RoleManager i SignInManager.
     U OnModelCreating seedujem AspNetRoles, ali AspNetUsers ne mogu, jer za to mi treba UserManager koga NE SMEM koristiti u ApplicationDbContext.
+
+U Program.cs definisem zahteve za password (veliko/malo slovo, digit itd) cime izbegavam proveru u Register/LoginDTO ili FluentValidation.

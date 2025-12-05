@@ -1,0 +1,4 @@
+DbContext je Unit of work by default. 
+Moze i rucno da se napravi Unit of work, ali ako imam razlicite baze jer svaka baza ima svoj DbContext (u mom slucaju mogo bih odvojiti 
+Identity i auth jednu bazu i ostale stvari druga baza, ali ne zelim da prekomplikujem bezveze.
+Registrujem kao AddScoped jer Unit of work wrapps DbContext koji je AddScoped takodje.

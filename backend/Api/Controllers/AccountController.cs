@@ -100,9 +100,10 @@ namespace Api.Controllers
             Kad pozivam iz ReactTS Frontenda ovaj Endpoint, moram polja da nazovem i prosledim redosledom kao u LoginDTO jer LoginDTO je tip input argumenta. Zbog [FromBody] moram u body of Request ih staviti.
             */
 
-            // ModelState pokrene validaiton iz LoginDTO tj za zeljena LoginDTO polja proverava na osnovu njihovih annotations.
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            // ModelState pokrene validaiton iz LoginDTO tj za zeljena LoginDTO polja proverava na osnovu njihovih annotations. - koristim FluentValidation umesto ovoga
+            //if (!ModelState.IsValid)
+            //    return BadRequest(ModelState);
+
             // Frontendu ce biti poslato StatusCode=400 u Response Status Line, a ModelState objekat bice poslat u Response Body sa LoginDTO poljima (UserName i Password) u "errors" delu poruke
 
             // Write to DB endpoint, pa mapiram LoginDTO u CommandModel - pogledaj Services.txt + DTO vs entity klase.txt

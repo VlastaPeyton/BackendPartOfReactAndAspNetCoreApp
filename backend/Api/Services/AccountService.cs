@@ -10,6 +10,7 @@ using Api.Exceptions_i_Result_pattern.Exceptions;
 using Api.Interfaces;
 using Api.Models;
 using DotNetEnv;
+using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -27,9 +28,10 @@ namespace Api.Services
         private readonly IEmailService _emailService;
         private readonly ApplicationDBContext _dbContext; 
         private readonly ILogger<AccountService> _logger;
+        private readonly IValidator<LoginCommandModel> _loginValidator; // Za LoginAsync method jer samo tu koristim FluentValidation
 
         public AccountService(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, ITokenService tokenService, ILogger<AccountService> logger, IEmailService emailService,
-                              ApplicationDBContext dbContext)
+                              ApplicationDBContext dbContext, IValidator<LoginCommandModel> loginValidator)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -37,6 +39,7 @@ namespace Api.Services
             _logger = logger;
             _emailService = emailService;
             _dbContext = dbContext;
+            _loginValidator = loginValidator;
         }
         /* UserManager i SignInManager metode ne prihvataju cancellationToken i zato ga nema u endpoints ni ovde.
            Metode nemaju try-catch, pa se exception propagira u Controller odakle se dalje propagira u GlobalExceptionHandlingMidleware - pogledaj Services.txt
@@ -96,8 +99,13 @@ namespace Api.Services
         }
 
         public async Task<Result<NewUserDTO>> LoginAsync(LoginCommandModel command)
-        {   
-            
+        {
+            var validationResult = await _loginValidator.ValidateAsync(command);
+            if (!validationResult.IsValid)
+            {
+                return Result<NewUserDTO>.Fail("Password nije zadovoljio standarde");
+            }
+
             var appUser = await _userManager.FindByNameAsync(command.UserName); // Bolji i sigurniji nacin nego 2 linije iznad i takodje pretrazuje AspNetUsers tabelu da nadjemo AppUser by UserName
                                                                                  // appUser je ocitao sve kolone iz zeljene vrste AspNetUsers tabele, medju kojima je i ConcurrencyStamp koji sprecava race conditions
             if (appUser is null)

@@ -1,1 +1,8 @@
 Koriste u Service klasi, ne u Repository, jer Repository ne sme znati da li je deo transakcije.
+
+Ako koristim SaveChangesAsync, bez explicitne transakcije, on je transakcija + commit koji ne moze rollback.
+Ako koristim explicitnu transakciju i unutar nje 1 ili vise SaveChangesAsync, onda svaki SaveChangesAsync samo upise u bazu ali ne commit, 
+i moze rollback, dok commit moram explicitno napisati na kraju transakcije.
+Ako imam vise SaveChangesAsync u explicitnoj transakciji, to znaci da svaki SaveChangesAsync zavisi od od prethodnog npr ako prvi upise novu vrstu, 
+ta vrsta dobije novi Id automatski, a naredna linija koda koristi taj Id pa se na osnovu toga i neku drugi red zameni i onda SaveChangesAsync zameni 
+taj drugi red. 

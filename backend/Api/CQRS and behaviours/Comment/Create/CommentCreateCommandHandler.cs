@@ -18,7 +18,7 @@ namespace Api.CQRS_and_behaviours.Comment.Create
         {
             RuleFor(x => x.UserName).NotEmpty();
             RuleFor(x => x.Symbol).NotEmpty();
-            // Necu sad da validiram CreateCommenCommandModel polja iako bih trebao
+            // Necu sad da validiram ostala CreateCommenCommandModel polja iako bih trebao
         }
     }
 

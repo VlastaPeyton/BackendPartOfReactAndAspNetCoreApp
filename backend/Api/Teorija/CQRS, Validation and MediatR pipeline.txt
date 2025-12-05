@@ -6,6 +6,8 @@ MediatR NuGet se koristi za CQRS pattern
 
 Validacija se radi za Command, retko za Query, jer bitno je validirati ono sto ulazi u bazu, a ne ono sto je ocitava
 FluentValidation, FluentValidation.DependencyInjection i FluentValidation.AspNetCore  NuGet se koristi
+FluentValidation je najbolje uz CQRS, ali ide dobro i uz Service (ako ne koristim CQRS), jer FV je bolja zamena za ModelState, jer ModelState
+je vezan za controller, dok FV nije i ubacam ga u Service metode.
 
 Ako koristim CQRS, ne koristim Service i obratno ! 
 

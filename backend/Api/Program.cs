@@ -1,7 +1,8 @@
 using System.Threading.RateLimiting;
 using Api.CQRS_and_Validation;
 using Api.CQRS_and_Validation.Logging;
-using Api.Data;      
+using Api.Data;
+using Api.DTOs.AccountDTOs;
 using Api.Extensions;
 using Api.Interfaces;
 using Api.MessageBroker;
@@ -66,7 +67,7 @@ builder.Services.AddDbContext<ApplicationDBContext>(options =>
 });
 // Nakon ovoga, u Package Manager Console kucam "Add-Migration ime_migracije", pa "Update-Database" da se naprave sve tabele i FK-PK iz OnModelCreating 
 
-// Add IdentityDbContext da bih definisao password kog oblika mora biti i skladistim ga u istu bazu sa Stocks i Comments, stoga mora AddEntityFrameworkStores
+// Add IdentityDbContext + definisem password kog oblika mora biti i skladistim ga u istu bazu sa Stocks i Comments, stoga mora AddEntityFrameworkStores
 builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
 {   // IdentityRole je AspNetRoles tabela. AddIdentity ce napraviti i povezati SVE Identity tabele iz IdentityDbContext, a ne samo ove 2.
     options.Password.RequireDigit = true;
@@ -151,8 +152,10 @@ builder.Services.AddHttpClient<IFinacialModelingPrepService, FinancialModelingPr
                 .AddStandardResilienceHandler(); // Dodaje defaultne retry, timeout, circuit breaker. Pogledaj IHttpClientFactory, HttpClient, Resilience.txt
 //builder.Services.AddFMPHttpClientWithCustomResilience();  - ako zelim custom Resilience
 
-// Morao sam FluentValidation.DependencyInjectionExtensions da instalim u BuildingBlocks pre ovoga
+// Add FluentValidation AbstractValidator (FluentValidation.DependencyInjectionExtensions NuGet) for MediatR pipeline
 builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly); // Finds CommandValidator klase koje imeplementiraju AbstractValidator , da ValidationBehaviour moze da ih nadje tokom runtime
+// Add FluentValidation for AccountService LoginAsync method which is not MediatR pipeline
+builder.Services.AddScoped<IValidator<LoginCommandModel>, LoginCommandModelValidator>();
 
 // Add Mediator - pogledaj Mediator.txt
 builder.Services.AddMediatR(config =>

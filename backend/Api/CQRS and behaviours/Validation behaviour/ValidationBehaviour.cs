@@ -16,7 +16,7 @@ namespace Api.CQRS_and_Validation
     public class ValidationBehaviour<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse> where TRequest : ICommand<TResponse>
     {   
         private readonly IEnumerable<IValidator<TRequest>> _validators;
-        /* IValidator<TRequest> <=> AbstractValidator<Command> u CommandValidator klasi 
+        /* IValidator<TRequest> <=> AbstractValidator<Command> u CommandValidator klasi, jer se samo za Command koristi validacija.
            IValidator<TRequest>, zbog DI u Program.cs za MediatR Pipeline, znace na koji CommandValidator se odnosi, jer CommandValidator: AbstractValidator<Command>
            IEnumerable<IValidator<TRequest>> - svi validatori za zeljeni Command (ali uvek samo 1 validator za 1 command imam tj neam 2 CommandValidator skoro nikad)
          */
@@ -28,10 +28,11 @@ namespace Api.CQRS_and_Validation
         // Mora metoda zbog interface 
         public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
         {   
-            var context = new ValidationContext<TRequest>(request); 
+            var context = new ValidationContext<TRequest>(request);  
 
             // Call ValidateAsync method for each Handle method - ide kroz CommandValidator i pokrece svaki RuleFor 
-            var validationResults = await Task.WhenAll(_validators.Select(v => v.ValidateAsync(context, cancellationToken))); // Task.WhenAll = complete all validation operations for CommandValidator
+            var validationResults = await Task.WhenAll(_validators.Select(v => v.ValidateAsync(context, cancellationToken))); 
+            // Task.WhenAll = start all validators for same Command object at the same time (ako imam ugnedenu validaciju ili vise validatora za isti objekat -nemam nista od ovoga)
 
             // Check for any erro in validationResults 
             var failures = validationResults.Where(r => r.Errors.Any()).SelectMany(r => r.Errors).ToList();
