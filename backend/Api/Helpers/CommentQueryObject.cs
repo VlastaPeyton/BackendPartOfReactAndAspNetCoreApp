@@ -6,7 +6,7 @@
     */
     public class CommentQueryObject
     {
-        public string Symbol { get; set; }
+        public string Symbol { get; set; } = string.Empty;
         public bool IsDescending { get; set; } = true;
 
         // https://localhost:port/api/comment/?Symbol=${symbol}&IsDescending=true - Ovako sam u FE uradio jer moram poslati ova polja istog imena i redosleda kao u klasi

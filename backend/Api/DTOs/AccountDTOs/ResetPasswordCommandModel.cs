@@ -3,8 +3,8 @@
     // Objasnjeno u RegisterCommandModel
     public class ResetPasswordCommandModel
     {
-        public string NewPassword { get; set; }
-        public string ResetPasswordToken { get; set; }
-        public string EmailAddress { get; set; }
+        public string NewPassword { get; set; } = null!;
+        public string ResetPasswordToken { get; set; } = null!;
+        public string EmailAddress { get; set; } = null!;
     }
 }

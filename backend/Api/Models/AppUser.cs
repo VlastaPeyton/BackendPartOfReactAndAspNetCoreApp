@@ -30,10 +30,10 @@ namespace Api.Models
 
         /* Dodajem kolone potrebne za Refresh Token jer Refresh Token is not stateless as JWT(Access Token) i mora biti povezan u bazi za odgovarajuceg user
          Ove kolone, zbog ?, su nullable, sto je dobro zbog SeedAdminAsync jer admina pravim na pocetku kroz BE (ne register kroz FE) i ne dodeljujem mu token dok se on ne login. */
-        public string? RefreshTokenHash { get; set; } // Mora da se hashuje pre skaldistenja u bazu
+        public string? RefreshTokenHash { get; set; }  // Mora da se hashuje pre skaldistenja u bazu
         public DateTime? RefreshTokenExpiryTime { get; set; }
-        public DateTime? LastRefreshTokenUsedAt { get; set; }
-        // Nakon dodavanja RefreshToken kolona, pokrenem migraciju da u AppUser tabeli u bazi ih dodam
+        public DateTime? LastRefreshTokenUsedAt { get; set; } // Moze i bez null, jer "?" to automatski omoguci
 
+        // Nakon dodavanja RefreshToken kolona, pokrenem migraciju da u AppUser tabeli u bazi ih dodam
     }
 }

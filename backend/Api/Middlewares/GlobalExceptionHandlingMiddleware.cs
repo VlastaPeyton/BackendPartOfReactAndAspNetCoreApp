@@ -82,29 +82,29 @@ namespace Api.Middlewares
 
                 context.Response.ContentType = "application/json";
                 context.Response.StatusCode = ex switch
-                {   
+                {
                     // AccountController:
 
-                        // Register endpoint 
+                    // Register endpoint 
                     UserCreatedException or RoleAssignmentException => StatusCodes.Status500InternalServerError,
 
-                        // Login endpoint 
+                    // Login endpoint 
                     //WrongPasswordException or WrongUsernameException => StatusCodes.Status401Unauthorized, - postalo Result pattern jer nije neocekivana greska systema, vec biznis logika
 
-                        // ForgotPassword endpoint 
+                    // ForgotPassword endpoint 
                     ForgotPasswordException => StatusCodes.Status200OK,
 
-                        // ResetPassword endpoint 
+                    // ResetPassword endpoint 
                     ResetPasswordException => StatusCodes.Status200OK,
 
-                        // RefreshToken endpoint  
+                    // RefreshToken endpoint  
                     RefreshTokenException => StatusCodes.Status401Unauthorized,
-                        
-                        // GoogleCallback endpoint
+
+                    // GoogleCallback endpoint
                     GoogleLoginException => StatusCodes.Status400BadRequest,
 
                     // CommentController:
-                        // nema nistaa
+                        // Nema 
 
                     // StockController:
 
@@ -115,6 +115,9 @@ namespace Api.Middlewares
 
                         // GetUserPortfolios endpoint 
                     UserNotFoundException => StatusCodes.Status404NotFound,
+
+                    // User.GetUserName in Portfolio/CommentController
+                    UnauthorizedAccessException => StatusCodes.Status400BadRequest,
 
                     // ValidationBehaviour in MediatR pipeline 
                     ValidationException => StatusCodes.Status406NotAcceptable,
@@ -145,6 +148,9 @@ namespace Api.Middlewares
 
                         // Portfolio: 
                         UserNotFoundException => "User not found ",
+
+                        // User.GetUserName in Portfolio/CommentController
+                        UnauthorizedAccessException => "Claims not found", 
 
                         // ValidationBehaviour MediatR pipeline
                         ValidationException => "Validation problem",

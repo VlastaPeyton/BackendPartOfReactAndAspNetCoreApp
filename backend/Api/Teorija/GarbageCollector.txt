@@ -5,7 +5,7 @@ Stack:
 	LIFO.
 	When object's (which is on heap) method is called, new stack frame is created, and methods variables are on the stack frame, 
   once method is finished stack frame is closed 
-
+	Brzi nego Heap.
 
 Heap:
 	Shared between trheads.

@@ -1,0 +1,2 @@
+IIS is a built-in Windows only web server which acts like a reverse proxy for Kestrel (pogledaj Kestrel.txt)
+When app is put in Docker, IIS is not present. Only Kestrel is, pa onda client -> docker -> kestrel -> middleware -> code.

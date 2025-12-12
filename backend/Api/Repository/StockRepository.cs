@@ -22,25 +22,24 @@ namespace Api.Repository
         public async Task<List<Stock>> GetAllAsync(StockQueryObject query, CancellationToken cancellationToken)
         {   // Iako treba da primi Entity argument, ne moze, jer QueryObject ne moze da se mapira niti u jedan Entity objekat
 
-            var stocks = _dbContext.Stocks.AsNoTracking().Include(c => c.Comments).ThenInclude(c => c.AppUser).AsQueryable(); // Dohvati sve stocks + njihove komentare + AppUser svakog komentara
+            var stocks = _dbContext.Stocks.AsNoTracking().Include(c => c.Comments).ThenInclude(c => c.AppUser).AsQueryable(); // Dohvati sve stocks + njihove komentare + AppUser svakog komentara. Ovo je deffered execution
             // Stock ima List<Comment> polje i FK-PK vezu sa Comment i zato moze include. Bez tog polja, moralo bi kompleksiniji LINQ.
-            // Include.ThenInclude ne vraca cisti IQueryable, pa mora AsQueryable da zadrzim LINQ osobine, pa mogu kasnije npr stocks.Where(...), stocks.Skip/Take/ToListAsync
+            // Include.ThenInclude ne vraca IQueryable, vec IIncludableQueryable, pa mora AsQueryable da zadrzim LINQ osobine, pa mogu kasnije npr stocks.Where/Skip/Take/ToListAsync
             // Ovde nema EF change tracking zbog AsNoTracking, obzirom da ne azuriram ono sto sam dohvatio, pa da neam bespotrebni overhead and memory zbog tracking
 
-            // In if statement no need to AsQueryable again 
+            // In if statements there is no need for AsQueryable again 
             if (!string.IsNullOrWhiteSpace(query.CompanyName))
                 stocks = stocks.Where(s => s.CompanyName.Contains(query.CompanyName));
 
             if (!string.IsNullOrWhiteSpace(query.Symbol))
                 stocks = stocks.Where(s => s.Symbol.Contains(query.Symbol));
 
-            if (!string.IsNullOrWhiteSpace(query.SortBy))
-                if (query.SortBy.Equals("Symbol", StringComparison.OrdinalIgnoreCase))
+            if (!string.IsNullOrWhiteSpace(query.SortBy) && query.SortBy.Equals("Symbol", StringComparison.OrdinalIgnoreCase))
                     stocks = query.IsDescending ? stocks.OrderByDescending(s => s.Symbol) : stocks.OrderBy(s => s.Symbol);
 
             var skipNumber = (query.PageNumber - 1) * query.PageSize; // Pagination
 
-            return await stocks.Skip(skipNumber).Take(query.PageSize).ToListAsync(cancellationToken);
+            return await stocks.Skip(skipNumber).Take(query.PageSize).ToListAsync(cancellationToken); // Immediate execution 
         }
 
         public async Task<Stock?> GetByIdAsync(int id, CancellationToken cancellationToken)
@@ -82,7 +81,7 @@ namespace Api.Repository
 
         public async Task<Stock?> DeleteAsync(int id, CancellationToken cancellationToken)
         {   
-            var stock = await _dbContext.Stocks.FirstOrDefaultAsync(x => x.Id == id, cancellationToken); 
+            var stock = await _dbContext.Stocks.FirstOrDefaultAsync(s => s.Id == id, cancellationToken); 
             // EF tracks stock object, so every change made to stock will be applied to its corresponding row in Stocks table after SaveChangesAsync. Ne smem AsNoTracking jer Remove(stock) ne moze za untracked object.
             // As Id is PK for Stock, it is automatically also Index so this is fastest way for query
             
@@ -107,7 +106,5 @@ namespace Api.Repository
         {
             return await _dbContext.Stocks.AnyAsync(s => s.Id == id, cancellationToken);
         }
-       
-        
     }
 }

@@ -212,7 +212,7 @@ app.UseHttpsRedirection(); // Forces HTTP to become HTTPS ako FE posalje Request
 // Add custom middleware on top of pipeline da bi uhvatio sve greske iz middleware koji su ispod 
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 
-// CORS (Browser sequrity feature that restrics pages from making request to different domain that one that served the page). 
+// CORS (Browser sequrity feature that restrics pages from making request to different domain that one that served the page).  CORS middleware registrovan mora pre Authentication middleware.
 app.UseCors(x => x.WithOrigins("https://localhost:3000") // Samo moj Fronted(https ili http) (od svih sajtova na netu) moze slati Request to my Api (Backend ovaj)
                  .AllowAnyMethod() // Allows every Request method (GET, POST, PUT, DELETE...)
                  .AllowAnyHeader() // Allows custom headers, Authorization headers za JWT...
@@ -237,6 +237,6 @@ app.UseRateLimiter();
 // Ubaci Controlers (+ Routing i Endpoint) middleware u pipeline. Za svaki [Http...("route..")] iznad Endpoint ASP.NET Core znace kako da ga mapira sa incoming request.
 app.MapControllers();
 
-await app.SeedAdminAsync(); // Admin user se dodaje iz BE uvek
+await app.SeedAdminAsync(); // Admin user se dodaje iz BE uvek na pocetku svega
 
 app.Run(); // Middleware dodat u pipeline pomocu app.Run() nema next() i on mora biti poslednji in pipeline

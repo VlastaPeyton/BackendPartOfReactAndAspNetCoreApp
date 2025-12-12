@@ -34,7 +34,10 @@ namespace Api.CQRS_and_behaviours.Portfolio.Delete
 
         public async Task<Result<PortfolioDeleteResult>> Handle(PortfolioDeleteCommand command, CancellationToken cancellationToken)
         {
-            var appUser = await _userManager.FindByNameAsync(command.UserName); // Ne podrzava cancellationToken
+            var appUser = await _userManager.FindByNameAsync(command.UserName); // UserManager ne podrzava cancellationToken
+            if (appUser is null)
+                return Result<PortfolioDeleteResult>.Fail("User not found"); 
+
             var userStocks = await _portfolioRepository.GetUserPortfoliosAsync(appUser, cancellationToken);
             var stockInPortfolios = userStocks.Where(s => s.Symbol.ToLower() == command.Symbol.ToLower()).ToList(); // Nema moze async, jer ne pretrazujem u bazu, vec in-memory userStocks varijablu
 

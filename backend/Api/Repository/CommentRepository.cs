@@ -36,7 +36,7 @@ namespace Api.Repository
         {   // Iako Repository prima/vraca samo Entity objekte, CommentQueryObject nisam mogao mapirati u odgovarajuci Entity objekat
             // Sada koristim Soft delete, definisan u OnModelCreating da ocitava samo redove koji imaju IsDeleted=false
 
-            var comments = _dbContext.Comments.AsNoTracking().Include(c => c.AppUser).Include(c => c.Stock).AsQueryable();  // Include is Eager loading
+            var comments = _dbContext.Comments.AsNoTracking().Include(c => c.AppUser).Include(c => c.Stock).AsQueryable();  // Include is Eager loading. Deffered execution.
             // Comment ima AppUser polje i PK-FK vezu sa AppUser, pa zato moze Include(c => c.AppUser)
             // AsQueryable mora nakon Include kako bih zadrzao LINQ osobine, da mogu kasnije npr comments.Where(...), comments.OrderByDescending(...) itd.
             // Ovde nema EF tracking jer sam stavio AsNoTracking posto necu da modifikujem/brisem comments nakon ocitavanja iz baze, pa da ne dodajem overhead and memory zbog tracking

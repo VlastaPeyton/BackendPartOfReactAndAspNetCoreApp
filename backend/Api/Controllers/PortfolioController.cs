@@ -91,7 +91,7 @@ namespace Api.Controllers
             if (resultPattern.IsFailure)
                 return BadRequest(new { message = resultPattern.Error });
 
-            var result = resultPattern.Value;
+            var result = resultPattern.Value!;
             return Ok(result.PortfolioDtoResponse);
         }
 

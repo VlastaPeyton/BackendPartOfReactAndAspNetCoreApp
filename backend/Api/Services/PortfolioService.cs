@@ -83,6 +83,9 @@ namespace Api.Services
         public async Task<Result<PortfolioDtoResponse>> DeletePortfolioAsync(string symbol, string userName, CancellationToken cancellationToken)
         {
             var appUser = await _userManager.FindByNameAsync(userName); // Ne podrzava cancellationToken
+            if (appUser is null)
+                return Result<PortfolioDtoResponse>.Fail("AppUser does not exist"); 
+
             var userStocks = await _portfolioRepository.GetUserPortfoliosAsync(appUser, cancellationToken);
             var stockInPortfolios = userStocks.Where(s => s.Symbol.ToLower() == symbol.ToLower()).ToList(); // Nema moze async, jer ne pretrazujem u bazu, vec in-memory userStocks varijablu
 

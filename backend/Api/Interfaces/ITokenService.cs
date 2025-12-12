@@ -9,7 +9,7 @@ namespace Api.Interfaces
     public interface ITokenService
     {   
         // Nema potrebe za async, jer ovo je obicno sync, jer nijedna metoda ne komunicira sa bazom npr pa da se ceka neko izvrsenje, vec su ovo brze metode
-        string CreateAccessToken(AppUser user);
+        string CreateAccessToken(AppUser appUser);
         string CreateRefreshToken();
         string HashRefreshToken(string refreshToken);
     }

@@ -79,7 +79,7 @@ namespace Api.Services
 
                 appUser.RefreshTokenHash = hashedRefreshToken; // U DB ide hash, dok u Cookie ide non-hashed refresh token
                 appUser.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7); // Refresh token is long lived 
-                appUser.LastRefreshTokenUsedAt = new DateTime(2000, 1, 1); // Prilikom register, user nije nijednom jos uvek koristio Refresh Token, pa mu dodajem neku idiotsku vrednost koja simulira nikad korisceno
+                appUser.LastRefreshTokenUsedAt = null; // Prilikom register, user nije nijednom jos uvek koristio Refresh Token
 
                 // Moram azurirati appUser u bazi zbog RefreshToken
                 var updateResult = await _userManager.UpdateAsync(appUser); // ConcurrencyStamp column of IdentityUser prevents overwriting if another request wanna update the same user right after registration => race condition prevented
@@ -124,12 +124,17 @@ namespace Api.Services
 
             appUser.RefreshTokenHash = hashedRefreshToken; // U DB ide hash, dok u Cookie ide obican refresh token
             appUser.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7); // Refresh token is long lived. 
-            appUser.LastRefreshTokenUsedAt = new DateTime(2000, 1, 1); // Prilikom login, user nije nijednom jos uvek koristio Refresh Token, pa mu dodajem neku idiotsku vrednost koja simulira nikad korisceno
+            appUser.LastRefreshTokenUsedAt = null; // Prilikom login, user nije nijednom jos uvek koristio Refresh Token
             // Moram azurirati appUser u bazi zbog Refresh Token
             await _userManager.UpdateAsync(appUser); // ConcurrencyStamp column of IdentityUser stops a race where two logins for the same account try to update refresh token fields at the same time - race condition sprecen. 
 
             // Service ne radi nista sa Cookies (refreshToken), vec to ostaje odgovornost of AccountController. Service samo prosledi not-hashed refreshToken, jer to ide u Cookie.
-            var newUserDTO = new NewUserDTO { UserName = appUser.UserName, EmailAddress = appUser.Email, Token = accessToken, RefreshToken = refreshToken };
+            var newUserDTO = new NewUserDTO 
+            {   UserName = appUser.UserName ?? string.Empty, 
+                EmailAddress = appUser.Email ?? string.Empty, 
+                Token = accessToken, 
+                RefreshToken = refreshToken,
+            };
 
             return Result<NewUserDTO>.Success(newUserDTO);
         }
@@ -151,7 +156,11 @@ namespace Api.Services
             var resetUrl = $"{frontendBaseUrl}/reset-password?token={encodedToken}&email={user.Email}"; // Ne treba email biit poslat, rizicno je !
             // frontendBaseUrl/reset-password mora da postoji u FE kao route da bi ovo moglo !
             // Send email to user.Email containing "Reset Password" subject and message containing reset-password url 
-            await _emailService.SendEmailAsync(user.Email, "Reset Password", $"Click <a href='{HtmlEncoder.Default.Encode(resetUrl)}'>here</a> to reset your password.");
+            await _emailService.SendEmailAsync(
+                user.Email!, 
+                "Reset Password", 
+                $"Click <a href='{HtmlEncoder.Default.Encode(resetUrl)}'>here</a> to reset your password."
+                );
             // URL je oblika http://localhost:port/reset-password?token=sad8282s9&email=adresa@gmail.com. Iako imam ovaj Query Parameter, ReactTS svakako otvara ResetPassword endpoint tj http://localhost:port/reset-password (ResetPasswordPage)         
             // Kada .NET sends reset password url, odma zaboravi kakav je token, jer token nije skladisten nigde osim u varijabli. Onda user klikne na link u mejlu, cime aktivira ResetPassword endpoint, a .NET ima mehanizam u ResetPasswordAsync, koji decodes token iz linka i vidi user credentials u tokenu
         }
@@ -179,7 +188,7 @@ namespace Api.Services
             }
         }
 
-        public async Task<AccessAndRefreshTokenDTO> RefreshTokenAsync(string? refreshToken)
+        public async Task<AccessAndRefreshTokenDTO> RefreshTokenAsync(string refreshToken)
         {   
             _logger.LogInformation("BE primio refreshtoken cookie");
 
@@ -190,8 +199,8 @@ namespace Api.Services
             if (appUser is null || appUser.RefreshTokenExpiryTime <= DateTime.UtcNow) 
                 throw new RefreshTokenException("User not found during refreshtoken or invalid refreshToken");
             
-            // Prevent double use:  poredim sa DateTime(2000,1,1) jer je to za LastRefreshTokenUsedAt u Login/Register postavljeno kao inicijalna vrednost oznavajuci da RefreshToken nije koriscen ni jednom do tada
-            if (appUser.LastRefreshTokenUsedAt > new DateTime(2000, 1, 1) && (DateTime.UtcNow - appUser.LastRefreshTokenUsedAt)?.TotalSeconds < 10)
+            // Prevent double use: LastRefreshTokenUsedAt u Login/Register postavljeno kao inicijalna vrednost null, oznavajuci da RefreshToken nije koriscen
+            if (appUser.LastRefreshTokenUsedAt.HasValue && (DateTime.UtcNow - appUser.LastRefreshTokenUsedAt.Value).TotalSeconds < 10)
             {   /* Uslov je 10s za real-world apps koji osigurava da ne moze unutar 10s 2 ili vise puta da ovaj endpoint bude pozvan. Sprecavam abuse ovim. 
                     Ovo je u skladu sa 30s JWT expiry time u AxiosWithJWTForBackend.tsx u FE, jer ako nije, onda problem. */
                 throw new RefreshTokenException("RefreshToken used too frequentyl");
@@ -256,7 +265,10 @@ namespace Api.Services
                     if (appUser is null)
                     {
                         // Kreiranje novi korisnik, jer ne postoji niko u bazi sa ovim email
-                        appUser = new AppUser { UserName = email, Email = email, EmailConfirmed = true};
+                        appUser = new AppUser { UserName = email, 
+                                                Email = email, 
+                                                EmailConfirmed = true,
+                        };
 
                         var createResult = await _userManager.CreateAsync(appUser);
                         if (!createResult.Succeeded)
@@ -295,7 +307,7 @@ namespace Api.Services
             {
                 appUser.RefreshTokenHash = hashedRefreshToken;
                 appUser.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
-                appUser.LastRefreshTokenUsedAt = new DateTime(2000, 1, 1);
+                appUser.LastRefreshTokenUsedAt = null;
 
                 var updateResult = await _userManager.UpdateAsync(appUser);
                 if (!updateResult.Succeeded)
@@ -311,8 +323,8 @@ namespace Api.Services
 
             return new NewUserDTO
             {
-                UserName = appUser.UserName,
-                EmailAddress = appUser.Email,
+                UserName = appUser.UserName!,
+                EmailAddress = appUser.Email!,
                 Token = accessToken,
                 RefreshToken = refreshToken,
             };

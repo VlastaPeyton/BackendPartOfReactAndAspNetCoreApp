@@ -8,11 +8,13 @@ namespace Api.DTOs.Account
     public class ResetPasswordDTO
     {
         [Required]
-        public string NewPassword { get; set; }
+        public string NewPassword { get; set; } = null!;
+
         [Required]
-        public string ResetPasswordToken { get; set; } // FE procita ovo iz linka u email i prosledi prilikom pozivanja ResetPassword endpoint
+        public string ResetPasswordToken { get; set; } = null!; // FE procita ovo iz linka u email i prosledi prilikom pozivanja ResetPassword endpoint
+
         [Required]
         [EmailAddress]
-        public string EmailAddress { get; set; }
+        public string EmailAddress { get; set; } = null!;
     }
 }

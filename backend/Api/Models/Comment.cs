@@ -9,14 +9,14 @@ namespace Api.Models
     [Table("Comments")] // Ime tabele u bazi explicitno definisano
     public class Comment 
     {
-        public CommentId Id { get; set; } // PK and Index by default dok je bio int type, ali sam stavio custom type. Posto je custom type(Value Object) u OnModelCreating moram definisati da je PK.
+        public CommentId Id { get; set; } = default!; // PK and Index by default dok je bio int type, ali sam stavio custom type. Posto je custom type(Value Object) u OnModelCreating moram definisati da je PK.
         public int StockId { get; set; } // FK koji gadja Id u Stock klasi mora biti istog tipa kao Id u Stock klasi.
-        public Stock? Stock { get; set; } // Navigational property => Comment.Include(Stock)
+        public Stock Stock { get; set; } = default!; // Navigational property => Comment.Include(Stock)
         public string Title { get; set; } = string.Empty;
         public string Content { get; set; } = string.Empty;
-        public DateTime CreatedOn { get; set; } = DateTime.Now; 
-        public string AppUserId { get; set; } // AppUserId je string, jer AppUser.Id je string. Ovo je FK koji gadja Id u AppUser klasi
-        public AppUser AppUser { get; set; } // Navigational property => Comment.Include(AppUser)
+        public DateTime CreatedOn { get; set; } = DateTime.Now;
+        public string AppUserId { get; set; } = default!; // AppUserId je string, jer AppUser.Id je string. Ovo je FK koji gadja Id u AppUser klasi
+        public AppUser? AppUser { get; set; } // Navigational property => Comment.Include(AppUser)
         public bool IsDeleted { get; set; } = false; // Soft delete. Necu da brisem iz baze fizicki, vec IsDelete=true i u OnModelCreating stavim da ocitava samo redove gde je false i onda kao da sam ih izbrisao
                                                      // Migraciju uradi posle IsDelete jer sam dodao je naknadno 
 

@@ -12,6 +12,6 @@ namespace Api.Interfaces
        CancellationToken objasnjen u bilo kojoj Controller klasi */
     public interface IFinacialModelingPrepService
     {
-        Task<Stock> FindStockBySymbolAsync(string symbol, CancellationToken cancellationToken);// Stock se razaznaje by symbol npr : Microsoft je MSFT symbol
+        Task<Stock?> FindStockBySymbolAsync(string symbol, CancellationToken cancellationToken);// Stock se razaznaje by symbol npr : Microsoft je MSFT symbol
     }
 }

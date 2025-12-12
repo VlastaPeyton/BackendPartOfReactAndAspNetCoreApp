@@ -5,8 +5,8 @@ namespace Api.DTOs.AccountDTOs
     // Objasnjeno u RegisterCommandModel
     public class LoginCommandModel
     {
-        public string UserName { get; set; }
-        public string Password { get; set; }
+        public string UserName { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
     }
 
     /* Umesto ModelState u AccountController, koristim FluentValidation u AccountService, jer je bolje.

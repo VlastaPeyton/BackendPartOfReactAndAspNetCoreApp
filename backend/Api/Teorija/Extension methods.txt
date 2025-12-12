@@ -1,0 +1,5 @@
+Pogledaj Mapper folder. 
+
+Umesto da dodam metodu za postojecu klasu(tip), ja ne zelim da menjam tu klasu, vec napravim novu, static, klasu neku i static extension metodu koja 
+kao prvi argument prima klasu koju prosirujem tom metodom, a ostali argumenti su opcioni. 
+Ovo se koristi za mapiranje najcesce.

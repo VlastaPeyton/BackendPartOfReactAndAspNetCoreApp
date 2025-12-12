@@ -118,9 +118,9 @@ namespace Api.Controllers
             if (result.IsFailure)
                 return Unauthorized(new { message = result.Error }); // Salje objekat da bi se automatski napravio u JSON jer response body uvek JSON treba biti
 
-            var appUser = result.Value; // NewUserDTO
+            var appUser = result.Value!; // NewUserDTO
 
-            string refreshToken = appUser.RefreshToken; 
+            string refreshToken = appUser.RefreshToken!; 
 
             // Refresh Token (not hashed !) is sent from Controller to Browser(not to FE) via highly-secured Cookie to prevent CSRF attack
             Response.Cookies.Append("refreshToken", refreshToken, new CookieOptions
@@ -235,10 +235,10 @@ namespace Api.Controllers
         [HttpGet("login/google/callback")]
         public async Task<IActionResult> GoogleCallback()
         {
-            var newUserDto = await _accountService.GoogleLoginRegisterAsync();
+            NewUserDTO newUserDto = await _accountService.GoogleLoginRegisterAsync();
 
             // Set RefreshToken in cookie as in Login/Register endpoint
-            Response.Cookies.Append("refreshToken", newUserDto.RefreshToken, new CookieOptions
+            Response.Cookies.Append("refreshToken", newUserDto.RefreshToken!, new CookieOptions
             {
                 HttpOnly = true,
                 Secure = true,

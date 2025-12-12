@@ -48,7 +48,7 @@ namespace Api.Service
                 else
                     return null;
             }
-            catch (Exception ex) // Jer httpClient moze baciti exception neki
+            catch (Exception) // Jer httpClient moze baciti exception neki
             {
                 return null; // Ne ide u GlobalbExceptionHandlingMiddleware jer vraca vrednost
             }

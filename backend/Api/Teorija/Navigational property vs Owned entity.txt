@@ -6,6 +6,7 @@ Klasa A ima navigational property tipa B ako:
 Za navigtional property:
 	- Koristim Include (Eager loading) u LINQ klase A da dohvatim i polje B ako klasa A ima polje B, jer B ne moze biti kolona nikako 
 	- Ako je circular reference (B sadrzi AId i A sadrzi BId) => problem kod JSON serializer => U Program.cs ugasi rucno 
+	- Uvek koristim "?" ili "=defaul!" za navigation property, jer ako ocitavannja klase A ne ocitam i B, onda B  bice null sto je u redu, ali sa "?"/"=default!" compiler ne kuka
 
 Klasa A ima Owned entity property tipa B ako:
 	- A je tabela u bazi

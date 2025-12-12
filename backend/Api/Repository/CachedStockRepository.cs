@@ -105,6 +105,8 @@ namespace Api.Repository
             }
             // Ako nema u cahce, uzmem iz baze, upisem u cache i vratim clientu
             var dbStock = await _stockRepository.GetByIdAsync(id, cancellationToken);
+            if (dbStock is null)
+                return null;
             var stockDtoJson = JsonConvert.SerializeObject(dbStock.ToStockDtoResponse(), new JsonSerializerSettings
             {
                 // Za razliku od endpoint circular reference u Program.cs, ovde moram navoditi explicitno uvek 

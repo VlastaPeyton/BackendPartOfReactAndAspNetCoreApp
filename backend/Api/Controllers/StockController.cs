@@ -205,7 +205,7 @@ namespace Api.Controllers
             if (resultPattern.IsFailure)
                 return NotFound(new { message = resultPattern.Error });
 
-            var result = resultPattern.Value; 
+            var result = resultPattern.Value!; 
             // Ne treba mi StockUpdateResponse object 
 
             return Ok(result.StockDTOResponse);

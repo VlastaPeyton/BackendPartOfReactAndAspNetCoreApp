@@ -1,4 +1,4 @@
-Kestrel je built-in web server u ASP.NET Core koji sedi ispod haube aplikacije i brine o mrezi, socketima, http protokolu, ssl itd.
+Kestrel je built-in cross-platform web server u ASP.NET Core koji sedi ispod haube aplikacije i brine o mrezi, socketima, http protokolu, ssl itd.
 Kada FE posalje request, prvo Kestrel server primi taj request (koji je http poruka) i pretvori ga u HttpContext objekat (pogledaj HttpContext.txt) i onda ga 
 prosledi u Middleware pipeline (pogledaj Middleware.txt). 
 Kada BE posalje response, on ide kroz middleware pipeline obrnutim redosledom od request i na kraju ga Kestrel ga pretvori u http poruku i posalje klijentu.

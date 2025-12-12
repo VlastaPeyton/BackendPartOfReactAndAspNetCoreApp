@@ -8,8 +8,12 @@ namespace Api.Extensions
     public static class SeedAdminExtensions
     {
         public static async Task SeedAdminAsync(this IApplicationBuilder app)
-        {
-            using var scope = app.ApplicationServices.CreateScope();
+        {   /*
+             IApplicationBuilder.ApplicationServices je root IServiceProvider. 
+             Pravim Scope, jer sam van http request + koristim DbContext/UserManager/RoleManager koji su AddScoped, a Scoped servis mora da zivi
+            unutar scope da bi se dispose na kraju.
+            */
+            using var scope = app.ApplicationServices.CreateScope(); 
             var services = scope.ServiceProvider;
 
             var userManager = services.GetRequiredService<UserManager<AppUser>>();

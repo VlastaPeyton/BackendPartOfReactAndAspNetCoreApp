@@ -24,7 +24,7 @@ namespace Api.Controllers
         public CommentController(ICommentService commentService, ISender sender)
         {
             _commentService = commentService;
-            _sender = _sender;
+            _sender = sender;
         }
 
         /* 
@@ -91,7 +91,7 @@ namespace Api.Controllers
             if (resultPattern.IsFailure)
                 return BadRequest(resultPattern.Error);
 
-            var commentDTOResponse = resultPattern.Value; 
+            var commentDTOResponse = resultPattern.Value!; 
              
             return CreatedAtAction(nameof(GetById), new { id = commentDTOResponse.Id }, commentDTOResponse); // Id property of Comment ima Value polje jer strongly-id type
             /* Prva 2 su route of GetById endpoint i endpoint's argument, jer GetById endpoint zahteva id argument.
@@ -233,7 +233,7 @@ namespace Api.Controllers
             if (resultPattern.IsFailure)
                 return NotFound(resultPattern.Error);
 
-            var result = resultPattern.Value.CommentDTOResponse; // CommentDTOResponse
+            var result = resultPattern.Value!.CommentDTOResponse; // CommentDTOResponse
             // Ne treba mi CommentDeleteResponse
 
             return Ok(result);

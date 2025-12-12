@@ -1,0 +1,5 @@
+Immediate execution of LINQ:
+	ToList, ToListAsync, FirstOrDefaultAsync itd kada se odma pretvara iz SQL u objekat.
+
+Deffered execution of LINQ:
+	Kada nema nista od onoga iznad, vec ostaje samo LINQ koji cemo kasnije pretvoriti u objekte.

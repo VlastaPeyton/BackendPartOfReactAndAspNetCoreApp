@@ -20,9 +20,9 @@ namespace Api.Data
         public ApplicationDBContext(DbContextOptions<ApplicationDBContext> options) : base(options) {}
 
         // Pozeljno tabele default! da Compiler moze da garantuje da nisu null tokom inicijalizacije njihove. 
-        public DbSet<Stock> Stocks { get; set; } = default!; // Moglo je i DbSet<Stock> => Set<Stock>() jer EF Core automatski setuje.
-        public DbSet<Comment> Comments { get; set; } = default!;
-        public DbSet<Portfolio> Portfolios { get; set; } = default!;
+        public DbSet<Stock> Stocks { get; set; } // Moglo je i DbSet<Stock> => Set<Stock>() jer EF Core automatski setuje.
+        public DbSet<Comment> Comments { get; set; } 
+        public DbSet<Portfolio> Portfolios { get; set; } 
 
         // Seeds data into AspNetRoles table only when i run Migration from Package Manager Console and define FK-PK relatiosnhips for Entities
         protected override void OnModelCreating(ModelBuilder builder)

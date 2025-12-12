@@ -12,7 +12,7 @@ namespace Api.Interfaces
         Task<Result<NewUserDTO>> LoginAsync(LoginCommandModel command);
         Task ForgotPasswordAsync(ForgotPasswordDTO forgotPasswordDTO);
         Task ResetPasswordAsync(ResetPasswordCommandModel command);
-        Task<AccessAndRefreshTokenDTO> RefreshTokenAsync(string? refreshToken);
+        Task<AccessAndRefreshTokenDTO> RefreshTokenAsync(string refreshToken);
         Task<NewUserDTO> GoogleLoginRegisterAsync();
     }
 }

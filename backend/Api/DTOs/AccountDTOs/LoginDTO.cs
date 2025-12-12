@@ -10,10 +10,10 @@ namespace Api.DTOs.Account
         pa nema potrebe ja ovde da proverim to, jer bolja praksa da provere oni, a ovde samo da proverim da l su prazna polja.
      */
     public class LoginDTO
-    {   
+    {
         [Required]
-        public string UserName { get; set; }
+        public string UserName { get; set; } = null!;
         [Required]
-        public string Password { get; set; }
+        public string Password { get; set; } = null!;
     }
 }

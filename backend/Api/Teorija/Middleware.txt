@@ -1,6 +1,6 @@
 
-Request flow: Request -> Kestrel -> Middlewre -> Code 
-Response flow: Code -> Middleware -> Kestrel -> Client
+Request flow: Request -> Kestrel -> Middlewre -> Endpoint (code)
+Response flow: Endpoint(code) -> Middleware -> Kestrel -> Client
 
 Sta je middleware i middleware pipeline:
 	Middleware je .NET komponenta u app pipeline koja prima HttpContext (pogledaj HttpContext.txt) objekat koji moze da procita, izmeni ili koristi 
@@ -75,3 +75,7 @@ hvata exception svih middleware ispod njega ako oni ispod nemaju catch blok, jer
 Svaki middleware ima InvokeAsync(HttpContext context, RequestDelegate next) metodu koju .NET poziva kada izvrsa taj middleware, a RequestDelegate je metoda
 koja prima HttpContext argument i predstavlja sledeci middleware u pipeline tj onaj koi je registrovan odma ispod tog middleware u Program.cs (u slucaju
 GlobalExceptionHandlingMiddleware, to je UseCors). RequestDelegate nema definiciju explicitnu, vec .NET je definise prilikom pokretanja aplikacije. 
+
+U Program.cs:
+	- app.UseMiddlewareNeki se koristi za chaining via next() method.
+	- app.Run() nema middleware nakon njega i pokrece code tj endpoint 

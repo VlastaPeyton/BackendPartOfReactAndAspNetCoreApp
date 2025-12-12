@@ -10,6 +10,6 @@ namespace Api.DTOs.Account
 
         [Required]
         [EmailAddress]
-        public string? EmailAddress { get; set; }
+        public string EmailAddress { get; set; } = null!;
     }
 }
