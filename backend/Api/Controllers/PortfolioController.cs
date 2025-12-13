@@ -46,7 +46,7 @@ namespace Api.Controllers
             var userName = User.GetUserName(); // User i GetUserName come from ControllerBase ClaimsPrincipal tj user info from request i zahteva od FE da posalje JWT jer su u njemu claims
             
             var resultPattern = await _portfolioService.AddPortfolioAsync(symbol, userName, cancellationToken);
-            if (resultPattern.IsFailure)
+            if (!resultPattern.IsSuccess)
                 return BadRequest(new {message = resultPattern.Error});
 
             return Created();
@@ -60,7 +60,7 @@ namespace Api.Controllers
             var userName = User.GetUserName(); 
 
             var resultPattern = await _portfolioService.DeletePortfolioAsync(symbol, userName, cancellationToken);
-            if (resultPattern.IsFailure)
+            if (!resultPattern.IsSuccess)
                 return BadRequest(new { message = resultPattern.Error });
 
             return Ok();
@@ -88,7 +88,7 @@ namespace Api.Controllers
 
             // Nema potrebe za Request object, jer samo 1 argument prostog tipa u endpoint 
             var resultPattern = await _sender.Send(new PortfolioApCommand(symbol, userName), cancellationToken);
-            if (resultPattern.IsFailure)
+            if (!resultPattern.IsSuccess)
                 return BadRequest(new { message = resultPattern.Error });
 
             var result = resultPattern.Value!;
@@ -102,7 +102,7 @@ namespace Api.Controllers
             var userName = User.GetUserName();
 
             var resultPattern = await _sender.Send(new PortfolioDeleteCommand(symbol, userName), cancellationToken);
-            if (resultPattern.IsFailure)
+            if (!resultPattern.IsSuccess)
                 return BadRequest(new { message = resultPattern.Error });
 
             return Ok();

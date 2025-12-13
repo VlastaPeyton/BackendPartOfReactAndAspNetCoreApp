@@ -15,7 +15,7 @@ namespace Api.Interfaces
     {
         // Task, jer u CommentRepository bice definisane kao async + ce u CommentController Endpoint mozda da ih poziva pomocu await
         // Metoda koja ima Comment?, zato sto compiler warning prikaze ako method's return moze biti null jer FirstOrDefault/FindAsync moze i null da vrati
-        Task<List<Comment>> GetAllAsync(CommentQueryObject commentQueryObject, CancellationToken cancellationToken);
+        Task<IEnumerable<Comment>> GetAllAsync(CommentQueryObject commentQueryObject, CancellationToken cancellationToken);
         Task<Comment?> GetByIdAsync(int id, CancellationToken cancellationToken);
         Task<Comment> CreateAsync(Comment comment, CancellationToken cancellationToken);
         Task<Comment?> DeleteAsync(int id, CancellationToken cancellationToken); 

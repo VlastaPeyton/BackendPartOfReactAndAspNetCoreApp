@@ -85,3 +85,4 @@ C:\Projects\ReactTSAspNetCoreAppGithub\ReactTSAspNetCoreApp\backend\bin\Debug\Sc
 C:\Projects\ReactTSAspNetCoreAppGithub\ReactTSAspNetCoreApp\backend\bin\Debug\StackExchange.Redis.dll
 C:\Projects\ReactTSAspNetCoreAppGithub\ReactTSAspNetCoreApp\backend\bin\Debug\Pipelines.Sockets.Unofficial.dll
 C:\Projects\ReactAspNetCoreApp\backend\obj\Debug\docker-compose.dcproj.CoreCompileInputs.cache
+C:\Projects\BackendPartOfReactAndAspNetCoreAppGithub\backend\obj\Debug\docker-compose.dcproj.CoreCompileInputs.cache

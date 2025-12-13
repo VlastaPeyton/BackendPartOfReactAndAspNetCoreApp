@@ -63,7 +63,7 @@ namespace Api.Repository
             return stock;
         }
 
-        public async Task<List<Stock>> GetAllAsync(StockQueryObject query, CancellationToken cancellationToken)
+        public async Task<IEnumerable<Stock>> GetAllAsync(StockQueryObject query, CancellationToken cancellationToken)
         {
             // Nema potrebe cache ovde, jer GetAllAsync u StockRepository nema smisla za cache
             var listStocks = await _stockRepository.GetAllAsync(query, cancellationToken);

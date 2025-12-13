@@ -5,7 +5,9 @@ using Api.Exceptions_i_Result_pattern;
 using Api.Exceptions_i_Result_pattern.Exceptions;
 using Api.Helpers;
 using Api.Interfaces;
+using Api.Localization;
 using Api.Mapper;
+using Microsoft.Extensions.Localization;
 
 namespace Api.Services
 {   
@@ -13,9 +15,15 @@ namespace Api.Services
     public class StockService : IStockService
     {   
         private readonly IStockRepository _stockRepository; // Koristice CachedStockRepository, jer je on decorator on top of StockRepository 
-        public StockService(IStockRepository stockRepository) => _stockRepository = stockRepository;
+        private readonly IStringLocalizer<Resource> _localization;
+        public StockService(IStockRepository stockRepository, 
+                            IStringLocalizer<Resource> localizer)
+        {
+            _stockRepository = stockRepository;
+            _localization = localizer;
+        }
 
-        public async Task<List<StockDTOResponse>> GetAllAsync(StockQueryObject query, CancellationToken cancellationToken)
+        public async Task<IEnumerable<StockDTOResponse>> GetAllAsync(StockQueryObject query, CancellationToken cancellationToken)
         {
             var stocks = await _stockRepository.GetAllAsync(query, cancellationToken);  // Poziva CachedStockRepository jer je on Decorator over StockRepository
             // Iako Repository mora primiti Entity objekat, QueryObject ne mogu mapirati niti u jedan Entity objekat
@@ -60,7 +68,7 @@ namespace Api.Services
         {
             var stock = await _stockRepository.DeleteAsync(id, cancellationToken);
             if (stock is null)
-                throw new StockNotFoundException("Nije nadjen stock");
+                throw new StockNotFoundException($"{_localization["StockNotFoundException"]}");
             
             return stock.ToStockDtoResponse();
         }

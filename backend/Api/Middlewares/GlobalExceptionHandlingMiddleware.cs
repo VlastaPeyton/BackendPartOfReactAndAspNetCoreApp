@@ -1,8 +1,10 @@
 ﻿using System.Net;
 using Api.Exceptions;
 using Api.Exceptions_i_Result_pattern.Exceptions;
+using Api.Localization;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 
 namespace Api.Middlewares
 {
@@ -48,10 +50,13 @@ namespace Api.Middlewares
     public class GlobalExceptionHandlingMiddleware : IMiddleware
     {
         private readonly ILogger<GlobalExceptionHandlingMiddleware> _logger;
+        private readonly IStringLocalizer<Resource> _localization; 
 
-        public GlobalExceptionHandlingMiddleware(ILogger<GlobalExceptionHandlingMiddleware> logger)
+        public GlobalExceptionHandlingMiddleware(ILogger<GlobalExceptionHandlingMiddleware> logger,
+                                                 IStringLocalizer<Resource> localization)
         {
             _logger = logger;
+            _localization = localization;
         }
 
         // .NET poziva InvokeAsync kada izvrsava ovaj middleware
@@ -134,28 +139,28 @@ namespace Api.Middlewares
                     {   
                         // Account: 
 
-                        UserCreatedException or RoleAssignmentException => "Implicit internal server error u service/repository",
-                        ForgotPasswordException => "Saljem 200OK da zavaram trag i da si zamenio i da nisi password",
-                        ResetPasswordException => "Saljem 200OK da zavaram trag i da si resetovao i da nisi password",
-                        RefreshTokenException => "Unauthorized",
-                        GoogleLoginException => "Greska prilikom google login",
+                        UserCreatedException or RoleAssignmentException => _localization["UserCreatedExceptionOrRoleAssignmentException"],
+                        ForgotPasswordException => _localization["ForgotPasswordException"],
+                        ResetPasswordException => _localization["ResetPasswordException"],
+                        RefreshTokenException => _localization["RefreshTokenException"],
+                        GoogleLoginException => _localization["GoogleLoginException"],
 
                         // Comment:
                             // nema nistaa 
 
                         // Stock:
-                        StockNotFoundException => "Stock not found",
+                        StockNotFoundException => _localization["StockNotFoundException"],
 
                         // Portfolio: 
-                        UserNotFoundException => "User not found ",
+                        UserNotFoundException => _localization["UserNotFoundException"],
 
                         // User.GetUserName in Portfolio/CommentController
-                        UnauthorizedAccessException => "Claims not found", 
+                        UnauthorizedAccessException => _localization["UnauthorizedAccessException"], 
 
                         // ValidationBehaviour MediatR pipeline
-                        ValidationException => "Validation problem",
+                        ValidationException => _localization["ValidationException"],
 
-                        _ => "Implicit internal server error u service/repository"
+                        _ => _localization["OpstaSystemGreskaKojaNijeDefinisana"]
                     },
                     Detail = ex.Message,
                     Instance = context.Request.Path // Koji endpoint je izazvao gresku

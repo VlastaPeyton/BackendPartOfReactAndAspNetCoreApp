@@ -52,12 +52,12 @@ namespace Api.Controllers
         public async Task<IActionResult> GetById([FromRoute] int id, CancellationToken cancellationToken) 
         // Mora bas "id" kao u liniji iznad i moze [FromRoute] jer id obicno prosledim kroz URL, a ne kroz Request body (JSON)
         {
-            var result = await _stockService.GetByIdAsync(id, cancellationToken);
-            if (result.IsFailure)
-                return NotFound(new { message = result.Error });
+            var resultPattern = await _stockService.GetByIdAsync(id, cancellationToken);
+            if (!resultPattern.IsSuccess)
+                return NotFound(new { message = resultPattern.Error });
                 // Frontendu ce biti poslato StatusCode=404 u Response Status Line, a Response Body je JSON "message":"Nije pronadjen Stock by zeljeni id"
 
-            var stockDTOResponse = result.Value;
+            var stockDTOResponse = resultPattern.Value;
 
             return Ok(stockDTOResponse); 
             // Frontendu ce biti poslato StatusCode=200 u Response Status Line, a stock.ToStockDTO (tj StockDTO objekat) u Response Body.
@@ -113,10 +113,11 @@ namespace Api.Controllers
             };
 
             var resultPattern = await _stockService.UpdateAsync(id, command, cancellationToken);
-            if (resultPattern.IsFailure)
+            if (!resultPattern.IsSuccess)
                 return NotFound(new { message = resultPattern.Error });
 
             var stockDtoResponse = resultPattern.Value;
+
             return Ok(stockDtoResponse);
         }
 
@@ -127,7 +128,7 @@ namespace Api.Controllers
         {
             // Iako je write to DB, nema mapiranje, jer samo id je argument 
 
-            var stockDtoResponse = await _stockService.DeleteAsync(id, cancellationToken);
+            await _stockService.DeleteAsync(id, cancellationToken);
 
             return NoContent();
             // Frontendu ce biti poslato StatusCode=204 u Response Status Line, a Response Body prazan.
@@ -152,7 +153,7 @@ namespace Api.Controllers
         {
             // Ne mapiram Request to Query, jer Request object nema potrebe zbog jednog argumenta primitivnog tipa da postoji, vec odma Query objekat pravim i saljem u MediatR pipeline
             var resultPattern = await _sender.Send(new StockGetByIdQuery(id), cancellationToken);
-            if (resultPattern.IsFailure)
+            if (!resultPattern.IsSuccess)
                 return NotFound(new { message = resultPattern.Error });
 
             var result = resultPattern.Value!;
@@ -202,7 +203,7 @@ namespace Api.Controllers
             var command = new StockUpdateCommand(id, commandModel);
 
             var resultPattern = await _sender.Send(command, cancellationToken);
-            if (resultPattern.IsFailure)
+            if (!resultPattern.IsSuccess)
                 return NotFound(new { message = resultPattern.Error });
 
             var result = resultPattern.Value!; 

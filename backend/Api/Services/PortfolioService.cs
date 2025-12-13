@@ -3,9 +3,11 @@ using Api.DTOs.StockDTO;
 using Api.Exceptions_i_Result_pattern;
 using Api.Exceptions_i_Result_pattern.Exceptions;
 using Api.Interfaces;
+using Api.Localization;
 using Api.Mapper;
 using Api.Models;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Localization;
 
 namespace Api.Services
 {
@@ -16,22 +18,28 @@ namespace Api.Services
         private readonly IStockRepository _stockRepository; // Koristi CachedStockRepository, jer je on decorator on top of StockRepository
         private readonly IPortfolioRepository _portfolioRepository;
         private readonly IFinacialModelingPrepService _finacialModelingPrepService;
+        private readonly IStringLocalizer<Resource> _localization; 
 
-        public PortfolioService(UserManager<AppUser> userManager, IStockRepository stockRepository, IPortfolioRepository portfolioRepository, IFinacialModelingPrepService finacialModelingPrepService)
+        public PortfolioService(UserManager<AppUser> userManager, 
+                                IStockRepository stockRepository, 
+                                IPortfolioRepository portfolioRepository, 
+                                IFinacialModelingPrepService finacialModelingPrepService,
+                                IStringLocalizer<Resource> localization)
         {
              _userManager = userManager;
             _stockRepository = stockRepository;
             _portfolioRepository = portfolioRepository;
             _finacialModelingPrepService = finacialModelingPrepService;
+            _localization = localization;
         }
 
-        public async Task<List<StockDTOResponse>> GetUserPortfoliosAsync(string userName, CancellationToken cancellationToken)
+        public async Task<IEnumerable<StockDTOResponse>> GetUserPortfoliosAsync(string userName, CancellationToken cancellationToken)
         {
             var appUser = await _userManager.FindByNameAsync(userName); // Pretrazuje AspNetUsers tabelu da nadje AppUser 
                                                                         // userManager metode nemaju cancellationToken 
 
             if (appUser is null)
-                throw new UserNotFoundException("User not found via userManager");
+                throw new UserNotFoundException($"{_localization["UserNotFoundException"]}");
 
             var stocks = await _portfolioRepository.GetUserPortfoliosAsync(appUser, cancellationToken);
 

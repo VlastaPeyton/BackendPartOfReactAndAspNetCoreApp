@@ -47,9 +47,9 @@ namespace Api.Repository
              
         }
 
-        public async Task<List<Stock>> GetUserPortfoliosAsync(AppUser user, CancellationToken cancellationToken)
+        public async Task<IEnumerable<Stock>> GetUserPortfoliosAsync(AppUser user, CancellationToken cancellationToken)
         {   // Objasnjeno Entity klasama i u OnModelCreating veza izmedju Portfolio-AppUser/Stock 
-            return await _dbContext.Portfolios.AsNoTracking().Where(u => u.AppUserId == user.Id)
+            return await _dbContext.Portfolios.Where(u => u.AppUserId == user.Id)
                                         // Za svaki Portfolio kreira Stock na osnovu podatka iz Portfolio, jer 1 Stock je 1 Portfolio 
                                         .Select(portfolio => new Stock
                                         {
@@ -61,7 +61,7 @@ namespace Api.Repository
                                         Industry = portfolio.Stock.Industry,
                                         MarketCap = portfolio.Stock.MarketCap
                                         // Ne prosledjujem Comments and Portfolios polja, jer portfolio ih nema + imaju default vrednost u Stock bas zato + to su navigation property koja sluze za dohvatanje toga samo kad zatreba
-                                        }).ToListAsync(cancellationToken);
+                                        }).AsNoTracking().ToListAsync(cancellationToken);
             // AsNoTracking, jer ne azuriram nista sto sam procitao iz baze, obzirom da tracking adds overhead and memory
         }
     }

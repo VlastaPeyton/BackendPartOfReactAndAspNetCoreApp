@@ -19,10 +19,10 @@ namespace Api.Repository
 
         // Metoda koja ima Stock?, zato sto compiler warning prikaze ako return moze biti null jer FirstOrDefault moze i null da vrati
 
-        public async Task<List<Stock>> GetAllAsync(StockQueryObject query, CancellationToken cancellationToken)
+        public async Task<IEnumerable<Stock>> GetAllAsync(StockQueryObject query, CancellationToken cancellationToken)
         {   // Iako treba da primi Entity argument, ne moze, jer QueryObject ne moze da se mapira niti u jedan Entity objekat
 
-            var stocks = _dbContext.Stocks.AsNoTracking().Include(c => c.Comments).ThenInclude(c => c.AppUser).AsQueryable(); // Dohvati sve stocks + njihove komentare + AppUser svakog komentara. Ovo je deffered execution
+            var stocks = _dbContext.Stocks.Include(c => c.Comments).ThenInclude(c => c.AppUser).AsNoTracking().AsQueryable(); // Dohvati sve stocks + njihove komentare + AppUser svakog komentara. Ovo je deffered execution
             // Stock ima List<Comment> polje i FK-PK vezu sa Comment i zato moze include. Bez tog polja, moralo bi kompleksiniji LINQ.
             // Include.ThenInclude ne vraca IQueryable, vec IIncludableQueryable, pa mora AsQueryable da zadrzim LINQ osobine, pa mogu kasnije npr stocks.Where/Skip/Take/ToListAsync
             // Ovde nema EF change tracking zbog AsNoTracking, obzirom da ne azuriram ono sto sam dohvatio, pa da neam bespotrebni overhead and memory zbog tracking
@@ -46,7 +46,7 @@ namespace Api.Repository
         {  // Objasnjene za Include je u GetAllAsync
            // FirstOrDefaultAsync moze da vrati null ako ne nadje, pa zato nemam if(stock is null) return null 
            // FindAsync je brze od FirstOrDefaultAsync, ali nakon Include ne moze FindAsync.
-           return await _dbContext.Stocks.AsNoTracking().Include(c => c.Comments).ThenInclude(s => s.AppUser).FirstOrDefaultAsync(i => i.Id == id, cancellationToken); // Dohvati zeljeni stock na osnovu Id polja + njegove komentare                                                                                                                                                         // EF track changes after FirstOrDefaultAsync ali mi to ovde ne treba i zato nema znak jednakosti + AsNoTracking ima jer tracking ubaca overhead and memory bespotrebno ovde
+           return await _dbContext.Stocks.Include(c => c.Comments).ThenInclude(s => s.AppUser).AsNoTracking().FirstOrDefaultAsync(i => i.Id == id, cancellationToken); // Dohvati zeljeni stock na osnovu Id polja + njegove komentare                                                                                                                                                         // EF track changes after FirstOrDefaultAsync ali mi to ovde ne treba i zato nema znak jednakosti + AsNoTracking ima jer tracking ubaca overhead and memory bespotrebno ovde
         }
 
         public async Task<Stock> CreateAsync(Stock stock, CancellationToken cancellationToken)

@@ -9,7 +9,7 @@ namespace Api.CQRS_and_behaviours.Comment.GetAll
     // Query/Result moraju imati polja istog imena i tipa kao Request/Response objekti, kako bih mogao lakse da mapiram
 
     public record CommentGetAllQuery(CommentQueryObject commentQueryObject) : IQuery<CommentGetallResult>; 
-    public record CommentGetallResult(List<CommentDTOResponse> commentResponseDTOs);
+    public record CommentGetallResult(IEnumerable<CommentDTOResponse> commentResponseDTOs);
 
     // Nema validacija za Query, jer je to citanje iz baze
     public class CommentGetAllQueryHandler : IQueryHandler<CommentGetAllQuery, CommentGetallResult>

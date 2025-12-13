@@ -1,0 +1,9 @@
+IEnumerable<T>:
+	- je tip koji naglasava enumeraciju i ne daje pravo da menjas kolekciju kroz taj interfejs. 
+	  Mozes kasnije menjati kolekciju (elemente njene) ako imam original listu ili napravim listu od IEnumerable with ToList.
+	- se koristi kao povratni/input tip metode, ali ne kao tip property.
+	  Ako je povratni tip metode, mogu vratiti iz metode List<T>/Array<T>/LINQ(IEnumerable). Ako vratim List/Array, mogu menjati stanje
+	 elemenata, ali ako vratim LINQ ne mogu menjati dok ne uradim ToList/ToArray da pretvori LINQ u List/Array.
+	- List<T> implementira ovaj interface
+	- Za navigation property ili za bilo koji property, koristim List ili ICollection, jer ne sme IEnumerable, jer ako je IEnumerable, 
+	onda ce u bazu otici nesto sto ne moze da se izmeni, jer nije ovo povratni tip, vec polje klase.

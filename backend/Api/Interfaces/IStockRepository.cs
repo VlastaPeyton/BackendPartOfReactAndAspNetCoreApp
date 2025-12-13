@@ -18,7 +18,7 @@ namespace Api.Interfaces
         // Task, jer u StockRepository metode bice definisane kao async + ce u StockController Endpoint mozda da ih poziva pomocu await
         // Metoda koja ima Stock?, zato sto compiler warning prikaze ako method's return moze biti null jer FirstOrDefault/FindAsync moze i null da vrati 
 
-        Task<List<Stock>> GetAllAsync(StockQueryObject query, CancellationToken cancellationToken); 
+        Task<IEnumerable<Stock>> GetAllAsync(StockQueryObject query, CancellationToken cancellationToken); 
         Task<Stock?> GetByIdAsync(int id, CancellationToken cancellationToken); 
         Task<Stock> CreateAsync(Stock stock, CancellationToken cancellationToken); 
         Task<Stock?> UpdateAsync(int id, Stock stock, CancellationToken cancellationToken); 

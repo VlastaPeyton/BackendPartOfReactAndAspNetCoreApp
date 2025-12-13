@@ -15,7 +15,7 @@ namespace Api.Interfaces
      */
     public interface IPortfolioRepository
     {
-        Task<List<Stock>> GetUserPortfoliosAsync(AppUser user, CancellationToken cancellationToken);
+        Task<IEnumerable<Stock>> GetUserPortfoliosAsync(AppUser user, CancellationToken cancellationToken);
         Task<Portfolio> CreateAsync(Portfolio portfolio, CancellationToken cancellationToken);
         Task<Portfolio?> DeletePortfolioAsync(AppUser appUser, string symbol, CancellationToken cancellationToken); 
     }

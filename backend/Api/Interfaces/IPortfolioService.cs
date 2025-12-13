@@ -7,7 +7,7 @@ namespace Api.Interfaces
     // Objasnjeno u CommentService i StockService
     public interface IPortfolioService
     {
-        Task<List<StockDTOResponse>> GetUserPortfoliosAsync(string userName, CancellationToken cancellationToken);
+        Task<IEnumerable<StockDTOResponse>> GetUserPortfoliosAsync(string userName, CancellationToken cancellationToken);
         Task<Result<PortfolioDtoResponse>> AddPortfolioAsync(string symbol, string userName, CancellationToken cancellationToken);
         Task<Result<PortfolioDtoResponse>> DeletePortfolioAsync(string symbol, string userName, CancellationToken cancellationToken);
 

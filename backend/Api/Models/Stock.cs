@@ -26,8 +26,8 @@ namespace Api.Models
         public long MarketCap { get; set; }
 
         // U FE, search stock by ticker, and selecting on it, i can leave a comment for that stock
-        public List<Comment> Comments { get; set; } = new();   // Navigation property => Include(Comments)
-        public List<Portfolio> Portfolios { get; set; } = new List<Portfolio>(); // Navigation property => Include(Comments)
+        public List<Comment> Comments { get; set; } = new();   // Navigation property => Include(Comments). Pogledaj IEnumerable vs List.txt
+        public List<Portfolio> Portfolios { get; set; } = new List<Portfolio>(); // Navigation property => Include(Comments). Pogledaj IEnumerable vs List.txt
 
         /* Ovo je 1-to-many Stock-Comment veza, jer Stock ima List<Comment> polje, dok Comment ima Stock i StockId polje, pa EF zakljuci ovu vezu na osnovu imena polja bez da moram pisati u OnModelCreating + Comments postane navigational property.
            Ovo je 1-to-many Stock-Portfolio veza, jer Stock ima List<Comment> polje, dok Portfolio ima Stock i StockId polje, ali EF NECE zakljuciti ovu vezu, jer u Portfolio neam Id polje, vec ga pravim u OnModelCreate pa moram tamo definisati ovu vezu + Portfolios postane navigational property

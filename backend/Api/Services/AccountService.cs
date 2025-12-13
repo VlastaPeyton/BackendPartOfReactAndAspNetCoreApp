@@ -8,11 +8,13 @@ using Api.Exceptions;
 using Api.Exceptions_i_Result_pattern;
 using Api.Exceptions_i_Result_pattern.Exceptions;
 using Api.Interfaces;
+using Api.Localization;
 using Api.Models;
 using DotNetEnv;
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
 
 namespace Api.Services
 {
@@ -29,9 +31,17 @@ namespace Api.Services
         private readonly ApplicationDBContext _dbContext; 
         private readonly ILogger<AccountService> _logger;
         private readonly IValidator<LoginCommandModel> _loginValidator; // Za LoginAsync method jer samo tu koristim FluentValidation
+        private readonly IStringLocalizer<Resource> _localization; // Pogledaj Localization.txt
 
-        public AccountService(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, ITokenService tokenService, ILogger<AccountService> logger, IEmailService emailService,
-                              ApplicationDBContext dbContext, IValidator<LoginCommandModel> loginValidator)
+        public AccountService(UserManager<AppUser> userManager, 
+                              SignInManager<AppUser> signInManager, 
+                              ITokenService tokenService, 
+                              ILogger<AccountService> logger, 
+                              IEmailService emailService, 
+                              ApplicationDBContext dbContext, 
+                              IValidator<LoginCommandModel> loginValidator,
+                              IStringLocalizer<Resource> localization
+                             )
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -40,6 +50,7 @@ namespace Api.Services
             _emailService = emailService;
             _dbContext = dbContext;
             _loginValidator = loginValidator;
+            _localization = localization;
         }
         /* UserManager i SignInManager metode ne prihvataju cancellationToken i zato ga nema u endpoints ni ovde.
            Metode nemaju try-catch, pa se exception propagira u Controller odakle se dalje propagira u GlobalExceptionHandlingMidleware - pogledaj Services.txt
@@ -65,12 +76,12 @@ namespace Api.Services
                     CreateAsync behing the scenes attaches appUser to EF Core and populates every column of AspNetUsers table regarding ConcurrencyStamp column koja sprecava race conditions
                 */
                 if (!createdUser.Succeeded)
-                    throw new UserCreatedException($"User creation failed in _userManager: {createdUser.Errors}");
+                    throw new UserCreatedException($"{_localization["UserCreatedException"]}: {createdUser.Errors}");
 
                 // Dodavanje role 
                 var roleResult = await _userManager.AddToRoleAsync(appUser, "User"); // Mogu samo User ili Admin upisati za Role, jer samo te vrednosti su seedovane migracijom u OnModelCreating u AspNetRoles tabelu
                 if (!roleResult.Succeeded)
-                    throw new RoleAssignmentException($"Role assignment failed in _userManager: {roleResult.Errors}");
+                    throw new RoleAssignmentException($"{_localization["RoleAssignmentException"]}: {roleResult.Errors}");
 
                 // Generise token 
                 var accessToken = _tokenService.CreateAccessToken(appUser);
@@ -84,7 +95,7 @@ namespace Api.Services
                 // Moram azurirati appUser u bazi zbog RefreshToken
                 var updateResult = await _userManager.UpdateAsync(appUser); // ConcurrencyStamp column of IdentityUser prevents overwriting if another request wanna update the same user right after registration => race condition prevented
                 if (!updateResult.Succeeded)
-                    throw new UserCreatedException("Failed to update refresh token");
+                    throw new UserCreatedException($"{_localization["UserCreatedException"]} = Failed to update refresh token");
 
                 await transaction.CommitAsync();
 
@@ -110,7 +121,7 @@ namespace Api.Services
                                                                                  // appUser je ocitao sve kolone iz zeljene vrste AspNetUsers tabele, medju kojima je i ConcurrencyStamp koji sprecava race conditions
             if (appUser is null)
                 //throw new WrongUsernameException($"Invalid username"); - umesto exception, koristim Result pattern jer nije neocekivana greska systema, vec biznis logika
-                return Result<NewUserDTO>.Fail("Invalid username");
+                return Result<NewUserDTO>.Fail("Password nije zadovoljio standarde");
 
             // Ako UserName dobar, proverava password tj hashes it and compares it with PasswordHash column in AspNetUsers jer ne postoji Password kolona u AspNetUsers vec samo PasswordHash zbog sigurnosti
             var result = await _signInManager.CheckPasswordSignInAsync(appUser, command.Password, false);
@@ -145,7 +156,7 @@ namespace Api.Services
             // If email is not found, just send "success" mesage to FE da zavaramo trag napadacu.
             // user sadrzi celu vrstu iz AspNetUsers tabele medju kojom je ConcurrencyStamp kolona koja sprecava race conditions 
             if (user is null)          
-                throw new ForgotPasswordException("Reset password link is sent to your email ali ne znas da l je uspesno ili nije jer fora je da zavaram trag");
+                throw new ForgotPasswordException($"{_localization["ForgotPasswordException"]}");
             
             // If email found, generate a secure & time-limited (by default to 1day) reset token, send email and success message to FE
             var passwordResetToken = await _userManager.GeneratePasswordResetTokenAsync(user); // token je samo za ovog usera validan i nije skladisten u bazi 
@@ -172,7 +183,7 @@ namespace Api.Services
             if (user is null)
             {
                 _logger.LogError("User not found during password reset ali posalji 200 klijentu da zavara trag");
-                throw new ResetPasswordException("If the email exists in our system, the password has been reset");
+                throw new ResetPasswordException($"{_localization["ResetPasswordException2"]}");
             }
 
             var result = await _userManager.ResetPasswordAsync(user, command.ResetPasswordToken, command.NewPassword);
@@ -184,7 +195,7 @@ namespace Api.Services
             if (!result.Succeeded)
             {
                 _logger.LogError("Password reset failed: {Errors}", string.Join(", ", result.Errors.Select(e => e.Description)));
-                throw new ResetPasswordException("If the email exists in our system, the password has been reset");
+                throw new ResetPasswordException($"{_localization["ResetPasswordException2"]}");
             }
         }
 
@@ -197,13 +208,13 @@ namespace Api.Services
             var appUser = await _userManager.Users.FirstOrDefaultAsync(u => u.RefreshTokenHash == hashedRefreshToken);
 
             if (appUser is null || appUser.RefreshTokenExpiryTime <= DateTime.UtcNow) 
-                throw new RefreshTokenException("User not found during refreshtoken or invalid refreshToken");
+                throw new RefreshTokenException($"{_localization["RefreshTokenException2"]}");
             
             // Prevent double use: LastRefreshTokenUsedAt u Login/Register postavljeno kao inicijalna vrednost null, oznavajuci da RefreshToken nije koriscen
             if (appUser.LastRefreshTokenUsedAt.HasValue && (DateTime.UtcNow - appUser.LastRefreshTokenUsedAt.Value).TotalSeconds < 10)
             {   /* Uslov je 10s za real-world apps koji osigurava da ne moze unutar 10s 2 ili vise puta da ovaj endpoint bude pozvan. Sprecavam abuse ovim. 
                     Ovo je u skladu sa 30s JWT expiry time u AxiosWithJWTForBackend.tsx u FE, jer ako nije, onda problem. */
-                throw new RefreshTokenException("RefreshToken used too frequentyl");
+                throw new RefreshTokenException($"{_localization["RefreshTokenException3"]}");
             }
 
             // Token rotation
@@ -221,7 +232,7 @@ namespace Api.Services
                 // Update appUser in DB
                 var updateResult = await _userManager.UpdateAsync(appUser); // Prevents a race condition, jer azurira automatski ConcurrencyStamp kolonu, wheen two refresh requests try to update refresh token field simultaneously.
                 if (!updateResult.Succeeded)
-                    throw new RefreshTokenException("Failed to update refresh token");
+                    throw new RefreshTokenException($"{_localization["RefreshTokenException4"]}");
 
                 await transaction.CommitAsync();
             }
@@ -239,7 +250,7 @@ namespace Api.Services
             // Ocita informacija o Google login koje je Google Auth Handler smestio u HttpContext
             var info = await _signInManager.GetExternalLoginInfoAsync();
             if (info is null)
-                throw new GoogleLoginException("Error loading external login information");
+                throw new GoogleLoginException($"{_localization["GoogleLoginException2"]}");
 
             // Izvlaci provider podatke 
             var loginProvider = info.LoginProvider; // "Google"
@@ -248,7 +259,7 @@ namespace Api.Services
             // Izvlaci email iz Google claims
             var email = info.Principal.FindFirstValue(ClaimTypes.Email);
             if (string.IsNullOrEmpty(email))
-                throw new GoogleLoginException("Google account dont provide an email");
+                throw new GoogleLoginException($"{_localization["GoogleLoginException3"]}");
 
             // Provera da li korisnik vec postoji i to povezan sa Google nalogom
             var appUser = await _userManager.FindByLoginAsync(loginProvider, providerKey);
@@ -272,18 +283,18 @@ namespace Api.Services
 
                         var createResult = await _userManager.CreateAsync(appUser);
                         if (!createResult.Succeeded)
-                            throw new GoogleLoginException("Failed to create user");
+                            throw new GoogleLoginException($"{_localization["GoogleLoginException4"]}");
 
                         // Dodavanje role 
                         var roleResult = await _userManager.AddToRoleAsync(appUser, "User");
                         if (!roleResult.Succeeded)
-                            throw new GoogleLoginException("Failed to assign a role");
+                            throw new GoogleLoginException($"{_localization["GoogleLoginException5"]}");
                     }
 
                     // Povezuje Google nalog sa korisnikom
                     var addLoginResult = await _userManager.AddLoginAsync(appUser, info);
                     if (!addLoginResult.Succeeded)
-                        throw new GoogleLoginException("Failed to link google account");
+                        throw new GoogleLoginException($"{_localization["GoogleLoginException6"]}");
 
                     // Commit transaction 
                     await transaction.CommitAsync();

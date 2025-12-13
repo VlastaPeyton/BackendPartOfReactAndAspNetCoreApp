@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Identity;
 namespace Api.CQRS_and_behaviours.Portfolio.GetUserPortfolios
 {   
     public record PortfolioGUPQuery(string UserName) : IQuery<PortfolioGUPResult>;
-    public record PortfolioGUPResult(List<StockDTOResponse> StockDTOResponses); 
+    public record PortfolioGUPResult(IEnumerable<StockDTOResponse> StockDTOResponses); 
 
     public class PortfolioGUPQueryHandler : IQueryHandler<PortfolioGUPQuery, PortfolioGUPResult>
     {

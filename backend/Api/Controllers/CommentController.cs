@@ -45,7 +45,8 @@ namespace Api.Controllers
         [Authorize] // Moram se login/register da dobijem JWT i RefreshToken i uneti JWT u Authorize dugme u Swagger da bi mogo da pokrenem ovaj Endpoint
         public async Task<IActionResult> GetAll([FromQuery] CommentQueryObject query, CancellationToken cancellationToken)
         {   /* Mora [FromQuery], jer GET Axios Request u ReactTS ne moze imati Body, vec samo Header, pa ne moze [FromBody]. 
-               Kroz Query Parameters u FE (posle ? in URL), moram proslediti vrednosti za svako polje iz CommentQueryObject (iako neka imaju default value) redosledom i imenom iz CommentQueryObject
+               Kroz Query Parameters u FE (posle ? in URL), moram proslediti vrednosti za svako polje iz CommentQueryObject (iako neka imaju default value) redosledom i imenom iz CommentQueryObject.
+               Umesto query objekta, mogo sam primiti sve argumente kao posebno, ali je glupo i zauzima mesta, jer .NET automatski iz url query binduje u query objekat - pogledaj Query objects folder.
                U ReactTS, zbog [Authorize], moram proslediti i JWT kroz Request Header u commentsGetAPI funkciji.
                .NET automatski napravi CommentQueryObject iz URL query params.
             */
@@ -88,7 +89,7 @@ namespace Api.Controllers
             };
 
             var resultPattern = await _commentService.CreateAsync(userName, symbol, command, cancellationToken);
-            if (resultPattern.IsFailure)
+            if (!resultPattern.IsSuccess)
                 return BadRequest(resultPattern.Error);
 
             var commentDTOResponse = resultPattern.Value!; 
@@ -109,7 +110,7 @@ namespace Api.Controllers
             var userName = User.GetUserName(); // Pogledaj HttpContext.txt
 
             var resultPattern = await _commentService.DeleteAsync(id, userName, cancellationToken);
-            if (resultPattern.IsFailure)
+            if (!resultPattern.IsSuccess)
                 return BadRequest(resultPattern.Error);
 
             var commentDTOResponse = resultPattern.Value;
@@ -135,7 +136,7 @@ namespace Api.Controllers
             };
 
             var resultPattern = await _commentService.UpdateAsync(id, commandModel, cancellationToken);
-            if (resultPattern.IsFailure)
+            if (!resultPattern.IsSuccess)
                 return NotFound("Comment not found");
                 // Frontendu ce biti poslato StatusCode=400 u Response Status Line, a "Comment not found" u Response Body.
 
@@ -186,7 +187,7 @@ namespace Api.Controllers
             var command = new CommentCreateCommand(userName, symbol, commandModel);
 
             var resultPattern = await _sender.Send(command, cancellationToken); // Aktivira se prvo Validacija, pa Handler 
-            if (resultPattern.IsFailure)
+            if (!resultPattern.IsSuccess)
                 return BadRequest(new { message = resultPattern.Error });
 
             var result = resultPattern.Value!;
@@ -206,7 +207,7 @@ namespace Api.Controllers
 
             // Ne mapiram Request to Query, jer Request nema potrebe da postoji zbog jednog argumenta primitivnog tipa da postoji jer endpoint prima id direktno, vec odma Query objekat pravim i saljem u MediatR pipeline
             var resultPattern = await _sender.Send(new CommentDeleteCommand(id, userName)); // Prvo pokrene validaciju, pa Handler 
-            if (resultPattern.IsFailure)
+            if (!resultPattern.IsSuccess)
                 return NotFound(new { message = resultPattern.Error });
 
             var result = resultPattern.Value; // CommentDeleteResult ima ista polja kao CommentDTOResponse 
@@ -230,7 +231,7 @@ namespace Api.Controllers
             var command = new CommentUpdateCommand(id, commandModel);
 
             var resultPattern = await _sender.Send(command, cancellationToken);
-            if (resultPattern.IsFailure)
+            if (!resultPattern.IsSuccess)
                 return NotFound(resultPattern.Error);
 
             var result = resultPattern.Value!.CommentDTOResponse; // CommentDTOResponse

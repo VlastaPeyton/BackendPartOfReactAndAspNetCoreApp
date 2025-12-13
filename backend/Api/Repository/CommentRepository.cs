@@ -32,11 +32,11 @@ namespace Api.Repository
            Metoda koja ima Task<Comment?>, zato sto compiler warning ce prikaze ako method's return moze biti null jer FirstOrDefault/FindAsync moze i null da vrati
           Ovo je dobra praksa da compiler ne prikazuje warning.
          */
-        public async Task<List<Comment>> GetAllAsync(CommentQueryObject commentQueryObject, CancellationToken cancellationToken)
+        public async Task<IEnumerable<Comment>> GetAllAsync(CommentQueryObject commentQueryObject, CancellationToken cancellationToken)
         {   // Iako Repository prima/vraca samo Entity objekte, CommentQueryObject nisam mogao mapirati u odgovarajuci Entity objekat
             // Sada koristim Soft delete, definisan u OnModelCreating da ocitava samo redove koji imaju IsDeleted=false
 
-            var comments = _dbContext.Comments.AsNoTracking().Include(c => c.AppUser).Include(c => c.Stock).AsQueryable();  // Include is Eager loading. Deffered execution.
+            var comments = _dbContext.Comments.Include(c => c.AppUser).Include(c => c.Stock).AsNoTracking().AsQueryable();  // Include is Eager loading. Deffered execution.
             // Comment ima AppUser polje i PK-FK vezu sa AppUser, pa zato moze Include(c => c.AppUser)
             // AsQueryable mora nakon Include kako bih zadrzao LINQ osobine, da mogu kasnije npr comments.Where(...), comments.OrderByDescending(...) itd.
             // Ovde nema EF tracking jer sam stavio AsNoTracking posto necu da modifikujem/brisem comments nakon ocitavanja iz baze, pa da ne dodajem overhead and memory zbog tracking
@@ -57,7 +57,7 @@ namespace Api.Repository
         public async Task<Comment?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {   // Sada koristim Soft delete, definisan u OnModelCreating da ocitava samo redove koji imaju IsDeleted=false
             // FindAsync pretrazuje samo by Id i brze je od FirstOrDefaultAsync, ali ne moze ovde jer ima Include, pa mora FirstOrDefaultASync
-            var existingComment = await _dbContext.Comments.AsNoTracking().Include(c => c.AppUser).FirstOrDefaultAsync(c => c.Id == CommentId.Of(id), cancellationToken); //  Mora ovako poredjenje jer Id je tipa CommentId
+            var existingComment = await _dbContext.Comments.Include(c => c.AppUser).AsNoTracking().FirstOrDefaultAsync(c => c.Id == CommentId.Of(id), cancellationToken); //  Mora ovako poredjenje jer Id je tipa CommentId
             // Id je PK i Index tako da pretrazuje bas brzo O(1) ili O(logn) u zavisnosti koja je struktura za index uzeta
             // EF start tracking changes done in existingComment after FirstOrDefaultAsync, ali ovde ne menjam/brisem objekat pa sam dodao AsNoTracking, jer tracking dodaje overhead and uses memory
             

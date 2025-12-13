@@ -199,6 +199,9 @@ builder.Services.AddOptions<MessageBrokerSettings>()
 // Zbog ovoga, u MassTransitExtensions.cs moze GetRequiredService<MessageBrokerSettings>, a ne mora GetRequiredService<IOptions<MessageBrokerSettings>>().Value
 builder.Services.AddSingleton(resolver => resolver.GetRequiredService<IOptions<MessageBrokerSettings>>().Value);
 
+// Localization - pogledaj Localization.txt
+builder.Services.AddLocalization(options => options.ResourcesPath = "Localization");
+
 var app = builder.Build();
 
 // Dodavanje middleware u pipeline bitan redosled jer request ide nizvodno ovde, a response uzvodno - pogledaj Middleware.txt 

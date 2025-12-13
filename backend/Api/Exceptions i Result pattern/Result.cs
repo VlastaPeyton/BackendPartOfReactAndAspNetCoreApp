@@ -6,7 +6,6 @@
     public class Result<T>
     {
         public bool IsSuccess { get; }
-        public bool IsFailure => !IsSuccess;
         public string? Error { get; }
         public T? Value { get; }
         private Result(bool isSuccess, T? value, string? error)

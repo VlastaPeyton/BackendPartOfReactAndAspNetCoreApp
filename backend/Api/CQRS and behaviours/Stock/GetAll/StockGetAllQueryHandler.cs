@@ -7,7 +7,7 @@ using Api.Mapper;
 namespace Api.CQRS_and_behaviours.Stock.GetAll
 {   
     public record StockGetAllQuery(StockQueryObject StockQueryObject) : IQuery<StockGetAllResult>;
-    public record StockGetAllResult(List<StockDTOResponse> StockDTOResponses);
+    public record StockGetAllResult(IEnumerable<StockDTOResponse> StockDTOResponses);
     public class StockGetAllQueryHandler : IQueryHandler<StockGetAllQuery, StockGetAllResult>
     {   
         private readonly IStockRepository _stockRepository; // Koristice CachedStockRepository, jer je on decorator on top of StockRepository 

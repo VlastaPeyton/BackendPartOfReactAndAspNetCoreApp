@@ -1,0 +1,7 @@
+Napravim Resource.resx file koji je tabela sa key-value pairs. 
+napravim Resource klasu da bi IStringLocalizer<Resource> se koristio u svakoj klasi, bez da pravim 
+IStringLocalizer<SvakaKlasa>, jer ako zelim IStringLocalizer<Resource> dovoljno je sve u Resource.resx da upisem, jer mapira
+ime klase i ime .resx fajla. Ako zelim posebno, za svaku zeljenu klasu gde koristim .resx file, pravim .resx file njenog imena. 
+Sve sto bih napisao u Exception ili tako negde, upisem u Resource.resx i pomocu IStringLocalizer<Resource> dohvatim.
+U Program.cs "builder.Services.AddLocalization(options => options.ResourcesPath = "Localization");" gde "Localization" 
+je ima foldera gde je Resource.resx file i Resource prazna klasa.

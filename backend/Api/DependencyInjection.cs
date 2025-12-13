@@ -101,7 +101,7 @@ namespace Api
                     ValidIssuer = configuration["JWT:Issuer"], // Iz appsettings.json 
                     ValidateAudience = true,
                     ValidAudience = configuration["JWT:Audience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(configuration["JWT:SigningKey"]))
+                    IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(configuration["JWT:SigningKey"]!))
                 };
             });
 

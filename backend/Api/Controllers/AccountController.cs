@@ -114,11 +114,11 @@ namespace Api.Controllers
             };
             // Odavde saljem dobre/lose odgovore vezane za Result pattern, a neocekivane greske se propagiraju u GlobalExceptionHandlingMiddleware odakle se salju klijentu
 
-            var result = await _accountService.LoginAsync(command); // result pattern 
-            if (result.IsFailure)
-                return Unauthorized(new { message = result.Error }); // Salje objekat da bi se automatski napravio u JSON jer response body uvek JSON treba biti
+            var resultPattern = await _accountService.LoginAsync(command); // result pattern 
+            if (!resultPattern.IsSuccess)
+                return Unauthorized(new { message = resultPattern.Error }); // Salje objekat da bi se automatski napravio u JSON jer response body uvek JSON treba biti
 
-            var appUser = result.Value!; // NewUserDTO
+            var appUser = resultPattern.Value!; // NewUserDTO
 
             string refreshToken = appUser.RefreshToken!; 
 

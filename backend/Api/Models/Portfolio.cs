@@ -14,11 +14,14 @@ namespace Api.Models
     {
         // U ApplicationDbContext OnModelCreating definisacu PK (i automatski Index bice) kao kombinaciju AppUserId i StockId, jer to ovde ne moze.
         public string AppUserId { get; set; } = default!;// AppUserId je string, jer AppUser.Id (IdentityUser.Id) String.
-        public AppUser? AppUser { get; set; } // Navigation property => Portfolio.Include(AppUser)
+        public AppUser AppUser { get; set; } = default!; // Navigation property => Portfolio.Include(AppUser)
         public int StockId { get; set; }   // StockId je int, jer u Stock Id je int. Sada sam dodao StockId umesto int.
         public Stock Stock { get; set; } = default!; // Navigation property => Portfolio.Include(Stock)
 
-        /* Ovo je 1-to-many AppUser-Portfolio veza, jer Portfolio ima AppUser i AppUserId polje, dok AppUser ima List<Portfolio> polje, pa EF zakljuci ovu vezu na osnovu imena polja bez da moram pisati u OnModelCreating.
+        /* AppUser i Stock ne mogu biti sa "?", jer moraju postojati za svaki Portfolio, jer AppUser.Id i Stock.Id moraju postojati vec u bazi kako bih ih povezao sa AppUserId i StockId
+          jer AppUserId+StockId je composite PK koji pravim rucno u OnModelCreating.
+
+           Ovo je 1-to-many AppUser-Portfolio veza, jer Portfolio ima AppUser i AppUserId polje, dok AppUser ima List<Portfolio> polje, pa EF zakljuci ovu vezu na osnovu imena polja bez da moram pisati u OnModelCreating.
            Ovo je 1-to-many Stock-Portfolio veza, jer Portfolio ima Stock i StockIde polje, dok Stock ima List<Portfolio> polje, pa EF zakljuci ovu vezu na osnovu imena polja bez da moram pisati u OnModelCreating.
          */
     }

@@ -3,9 +3,11 @@ using Api.Exceptions;
 using Api.Exceptions_i_Result_pattern;
 using Api.Helpers;
 using Api.Interfaces;
+using Api.Localization;
 using Api.Mapper;
 using Api.Models;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Localization;
 
 namespace Api.Services
 {   
@@ -16,19 +18,24 @@ namespace Api.Services
         private readonly IStockRepository _stockRepository;  // Koristi CachedStockRepository, jer je on decorator on top of StockRepository
         private readonly UserManager<AppUser> _userManager;
         private readonly IFinacialModelingPrepService _finacialModelingPrepService;
-        
-        public CommentService(ICommentRepository commentRepository, IStockRepository stockRepository, UserManager<AppUser> userManager,
-                              IFinacialModelingPrepService finacialModelingPrepService)
+        private readonly IStringLocalizer<Resource> _localization; 
+
+        public CommentService(ICommentRepository commentRepository, 
+                              IStockRepository stockRepository, 
+                              UserManager<AppUser> userManager,
+                              IFinacialModelingPrepService finacialModelingPrepService,
+                              IStringLocalizer<Resource> localization)
         {
             _commentRepository = commentRepository;
             _stockRepository = stockRepository;
             _userManager = userManager;
             _finacialModelingPrepService = finacialModelingPrepService;
+            _localization = localization;
         }
 
         // Servis prima DTO iz kontroler ako je read endpoint
         // Controller mapira DTO u command i salje servisu, ako je write endpoint, a onda servis mapira command model u entity ako treba i salje u repository
-        public async Task<List<CommentDTOResponse>> GetAllAsync(CommentQueryObject commentQueryObject, CancellationToken cancellationToken)
+        public async Task<IEnumerable<CommentDTOResponse>> GetAllAsync(CommentQueryObject commentQueryObject, CancellationToken cancellationToken)
         {
             var comments = await _commentRepository.GetAllAsync(commentQueryObject, cancellationToken); // Iako Repository prima/vraca samo Entity objekte, CommentQueryObject nisam mogao mapirati u odgovarajuci Entity objekat
             var commentResponseDTOs = comments.Select(x => x.ToCommentDTOResponse()).ToList(); // Iz IEnumerable (lista u bazi) pretvaram u listu zbog povratnog tipa metode
@@ -39,7 +46,7 @@ namespace Api.Services
         {
             var comment = await _commentRepository.GetByIdAsync(id, cancellationToken);
             if (comment is null)
-                throw new CommentNotFoundException("Comment not found");
+                throw new CommentNotFoundException($"{_localization["CommentNotFoundException"]}");
 
             // Mapiram Comment entity u CommentResponseDTO
             var commentResponseDTO = comment.ToCommentDTOResponse();
