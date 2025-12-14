@@ -5,10 +5,12 @@ using Api.Data;
 using Api.DTOs.AccountDTOs;
 using Api.Extensions;
 using Api.Interfaces;
+using Api.Interfaces.IRepositoryBase;
 using Api.MessageBroker;
 using Api.Middlewares;
 using Api.Models;
 using Api.Repository;
+using Api.Repository.BaseRepository;
 using Api.Service;
 using Api.Services;
 using DotNetEnv;
@@ -128,18 +130,24 @@ builder.Services.AddScoped<IStockService, StockService>();
 // Add StockRepository i IStockRepository
 builder.Services.AddScoped<IStockRepository, StockRepository>();
 // Add CachedStockRepository via Scrutor - pogledaj Redis, Proxy & Decorator patterns.txt i pogledaj CachedStockRepository
-builder.Services.Decorate<IStockRepository, CachedStockRepository>(); 
+builder.Services.Decorate<IStockRepositoryBase, CachedStockRepository>(); // dok nisam napravio BaseRepository, koristio sam IStockRepository 
 // Add IDistributedCache za CachedStockRepository from StackExchangeRedis NuGet kako bih povezao Redis with IDistributedCache
 builder.Services.AddStackExchangeRedisCache(config =>
 {   
     config.Configuration = builder.Configuration.GetConnectionString("Redis");
 });
+// Add StockRepositoryBase i IStockRepositoryBase
+builder.Services.AddScoped<IStockRepositoryBase, StockRepositoryBase>();
+
+
 // Add AccountService i IAccountService 
 builder.Services.AddScoped<IAccountService, AccountService>(); 
 // Add CommentService i ICommentService
 builder.Services.AddScoped<ICommentService, CommentService>();
 // Add CommentRepository i ICommentRepository
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
+// Add CommentRepositoryBase i ICommentRepositoryBase 
+builder.Services.AddScoped<ICommentRepositoryBase, CommentRepositoryBase>();
 // Add TokenService i ITokenService
 builder.Services.AddScoped<ITokenService, TokenService>();
 // Add EmailService as IEmailSender after Env.Load()

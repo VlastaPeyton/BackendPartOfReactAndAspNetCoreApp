@@ -2,6 +2,7 @@
 using Api.DTOs.CommentDTOs;
 using Api.Exceptions_i_Result_pattern;
 using Api.Interfaces;
+using Api.Interfaces.IRepositoryBase;
 using Api.Mapper;
 using Api.Models;
 using FluentValidation;
@@ -24,12 +25,14 @@ namespace Api.CQRS_and_behaviours.Comment.Create
 
     public class CommentCreateCommandHandler : ICommandHandler<CommentCreateCommand, Result<CommentCreateResult>>
     {
-        private readonly ICommentRepository _commentRepository;
-        private readonly IStockRepository _stockRepository;
+        private readonly ICommentRepositoryBase _commentRepository; // Koristim ovo i IStockRepositoryBase umesto IStock/CommentRepository - pogledaj BaseRepository folder
+        private readonly IStockRepositoryBase _stockRepository;    
         private readonly IFinacialModelingPrepService _finacialModelingPrepService;
         private readonly UserManager<AppUser> _userManager;
-        public CommentCreateCommandHandler(ICommentRepository commentRepository, IStockRepository stockRepository, 
-                                           IFinacialModelingPrepService fmpService, UserManager<AppUser> userManager)
+        public CommentCreateCommandHandler(ICommentRepositoryBase commentRepository, 
+                                           IStockRepositoryBase stockRepository, 
+                                           IFinacialModelingPrepService fmpService, 
+                                           UserManager<AppUser> userManager)
         {
             _commentRepository = commentRepository;
             _stockRepository = stockRepository;

@@ -3,6 +3,7 @@ using Api.Data;
 using Api.DTOs.StockDTO;
 using Api.Helpers;
 using Api.Interfaces;
+using Api.Interfaces.IRepositoryBase;
 using Api.Mapper;
 using Api.Models;
 using Api.Value_Objects;
@@ -12,14 +13,14 @@ using Newtonsoft.Json; // Jer u Controllers endpoint koristim ovaj NuGet, pa ne 
 namespace Api.Repository
 {
     // Pogledaj Redis, Proxy & Decorator patterns.txt i JSON engine.txt
-    public class CachedStockRepository : IStockRepository
+    public class CachedStockRepository : IStockRepositoryBase
     {
-        private readonly IStockRepository _stockRepository;
+        private readonly IStockRepositoryBase _stockRepository; // Moze i IStockRepository, 
         // CachedStockRepository dodaje cache logiku on top of StockRepository with Decorator pattern, pa u StockService/CQRS poziva se CachedStockRepository => moram koristim StockRepository tj IStockRepository jer u Program.cs IStockRepository registrovan kao StockRepository
         private readonly IDistributedCache _cache;
         // Program.cs with AddStackExchangeRedisCache konektujem Redis in Docker with IDistributedCache
         
-        public CachedStockRepository(IStockRepository stockRepository, IDistributedCache cache)
+        public CachedStockRepository(IStockRepositoryBase stockRepository, IDistributedCache cache)
         {
             _stockRepository = stockRepository;    
             _cache = cache;  
@@ -68,6 +69,12 @@ namespace Api.Repository
             // Nema potrebe cache ovde, jer GetAllAsync u StockRepository nema smisla za cache
             var listStocks = await _stockRepository.GetAllAsync(query, cancellationToken);
             return listStocks;
+        }
+
+        // Ovo mi ne treba, ali mora da stoji, jer IStockRepositoryBase je nasledio iz IBaseRepository 
+        public async Task<IEnumerable<Stock>> GetAllAsync(CancellationToken cancellationToken)
+        {
+            return await _stockRepository.GetAllAsync(cancellationToken);
         }
 
         public async Task<Stock?> GetByIdAsync(int id, CancellationToken cancellationToken)

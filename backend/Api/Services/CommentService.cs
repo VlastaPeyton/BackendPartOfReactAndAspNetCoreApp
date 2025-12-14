@@ -3,6 +3,7 @@ using Api.Exceptions;
 using Api.Exceptions_i_Result_pattern;
 using Api.Helpers;
 using Api.Interfaces;
+using Api.Interfaces.IRepositoryBase;
 using Api.Localization;
 using Api.Mapper;
 using Api.Models;
@@ -14,14 +15,14 @@ namespace Api.Services
     // Objasnjeno u AccountService
     public class CommentService : ICommentService
     {
-        private readonly ICommentRepository _commentRepository;
-        private readonly IStockRepository _stockRepository;  // Koristi CachedStockRepository, jer je on decorator on top of StockRepository
+        private readonly ICommentRepositoryBase _commentRepository; // Moze i ICommentRepository
+        private readonly IStockRepositoryBase _stockRepository;  // Koristi CachedStockRepository, jer je on decorator on top of StockRepository tj StockRepositoryBase sada
         private readonly UserManager<AppUser> _userManager;
         private readonly IFinacialModelingPrepService _finacialModelingPrepService;
         private readonly IStringLocalizer<Resource> _localization; 
 
-        public CommentService(ICommentRepository commentRepository, 
-                              IStockRepository stockRepository, 
+        public CommentService(ICommentRepositoryBase commentRepository, 
+                              IStockRepositoryBase stockRepository, 
                               UserManager<AppUser> userManager,
                               IFinacialModelingPrepService finacialModelingPrepService,
                               IStringLocalizer<Resource> localization)

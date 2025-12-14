@@ -3,6 +3,7 @@ using Api.DTOs.StockDTO;
 using Api.Exceptions_i_Result_pattern;
 using Api.Exceptions_i_Result_pattern.Exceptions;
 using Api.Interfaces;
+using Api.Interfaces.IRepositoryBase;
 using Api.Localization;
 using Api.Mapper;
 using Api.Models;
@@ -15,13 +16,13 @@ namespace Api.Services
     public class PortfolioService : IPortfolioService
     {
         private readonly UserManager<AppUser> _userManager; // Moze jer AppUser:IdentityUser
-        private readonly IStockRepository _stockRepository; // Koristi CachedStockRepository, jer je on decorator on top of StockRepository
+        private readonly IStockRepositoryBase _stockRepository; // Koristi CachedStockRepository, jer je on decorator on top of StockRepository tj StockRepositoryBase sada
         private readonly IPortfolioRepository _portfolioRepository;
         private readonly IFinacialModelingPrepService _finacialModelingPrepService;
         private readonly IStringLocalizer<Resource> _localization; 
 
         public PortfolioService(UserManager<AppUser> userManager, 
-                                IStockRepository stockRepository, 
+                                IStockRepositoryBase stockRepository, 
                                 IPortfolioRepository portfolioRepository, 
                                 IFinacialModelingPrepService finacialModelingPrepService,
                                 IStringLocalizer<Resource> localization)

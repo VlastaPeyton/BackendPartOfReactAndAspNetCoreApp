@@ -2,6 +2,7 @@
 using Api.DTOs.CommentDTOs;
 using Api.Helpers;
 using Api.Interfaces;
+using Api.Interfaces.IRepositoryBase;
 using Api.Mapper;
 
 namespace Api.CQRS_and_behaviours.Comment.GetAll
@@ -16,8 +17,8 @@ namespace Api.CQRS_and_behaviours.Comment.GetAll
     {
         // CQRS Handler poziva CommentRepository, a ne CommentService, jer ako radim CQRS, ne koristim Service ! 
 
-        private readonly ICommentRepository _commentRepository;
-        public CommentGetAllQueryHandler(ICommentRepository commentRepository) => _commentRepository = commentRepository;
+        private readonly ICommentRepositoryBase _commentRepository; // Moze i ICommentRepository - pogledaj BaseRepository 
+        public CommentGetAllQueryHandler(ICommentRepositoryBase commentRepository) => _commentRepository = commentRepository;
         
         // Metoda mora zbog interface
         public async Task<CommentGetallResult> Handle(CommentGetAllQuery query, CancellationToken cancellationToken)

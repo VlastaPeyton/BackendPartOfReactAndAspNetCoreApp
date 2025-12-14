@@ -3,6 +3,7 @@ using Api.DTOs.StockDTO;
 using Api.DTOs.StockDTOs;
 using Api.Exceptions_i_Result_pattern;
 using Api.Interfaces;
+using Api.Interfaces.IRepositoryBase;
 using Api.Mapper;
 using FluentValidation;
 
@@ -21,8 +22,8 @@ namespace Api.CQRS_and_behaviours.Stock.Update
 
     public class StockUpdateCommandHandler : ICommandHandler<StockUpdateCommand, Result<StockUpdateResult>>
     {
-        private readonly IStockRepository _stockRepository; // Koristice CachedStockRepository, jer je on decorator on top of StockRepository 
-        public StockUpdateCommandHandler(IStockRepository stockRepository) => _stockRepository  = stockRepository;
+        private readonly IStockRepositoryBase _stockRepository; // Koristice CachedStockRepository, jer je on decorator on top of StockRepository tj StockRepositoryBase sada
+        public StockUpdateCommandHandler(IStockRepositoryBase stockRepository) => _stockRepository  = stockRepository;
 
         public async Task<Result<StockUpdateResult>> Handle(StockUpdateCommand command, CancellationToken cancellationToken)
         {

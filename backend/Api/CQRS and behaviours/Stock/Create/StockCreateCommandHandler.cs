@@ -2,6 +2,7 @@
 using Api.DTOs.StockDTO;
 using Api.DTOs.StockDTOs;
 using Api.Interfaces;
+using Api.Interfaces.IRepositoryBase;
 using Api.Mapper;
 using FluentValidation;
 
@@ -20,8 +21,8 @@ namespace Api.CQRS_and_behaviours.Stock.Create
 
     public class StockCreateCommandHandler : ICommandHandler<StockCreateCommand, StockCreateResult>
     {
-        private readonly IStockRepository _stockRepository; // Koristice CachedStockRepository, jer je on decorator on top of StockRepository 
-        public StockCreateCommandHandler(IStockRepository stockRepository) => _stockRepository = stockRepository;
+        private readonly IStockRepositoryBase _stockRepository; // Koristice CachedStockRepository, jer je on decorator on top of StockRepository tj on StockRepositoryBase sada
+        public StockCreateCommandHandler(IStockRepositoryBase stockRepository) => _stockRepository = stockRepository;
         
         public async Task<StockCreateResult> Handle(StockCreateCommand command, CancellationToken cancellationToken)
         {

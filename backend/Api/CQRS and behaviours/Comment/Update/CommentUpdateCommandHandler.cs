@@ -2,6 +2,7 @@
 using Api.DTOs.CommentDTOs;
 using Api.Exceptions_i_Result_pattern;
 using Api.Interfaces;
+using Api.Interfaces.IRepositoryBase;
 using Api.Mapper;
 using FluentValidation;
 
@@ -22,8 +23,8 @@ namespace Api.CQRS_and_behaviours.Comment.Update
 
     public class CommentUpdateCommandHandler : ICommandHandler<CommentUpdateCommand, Result<CommentUpdateResult>>
     {
-        private readonly ICommentRepository _commentRepository;
-        public CommentUpdateCommandHandler(ICommentRepository commentRepository) => _commentRepository = commentRepository;
+        private readonly ICommentRepositoryBase _commentRepository; // Moze i ICommentRepository - pogledaj BaseRepository 
+        public CommentUpdateCommandHandler(ICommentRepositoryBase commentRepository) => _commentRepository = commentRepository;
              
         public async Task<Result<CommentUpdateResult>> Handle(CommentUpdateCommand command, CancellationToken cancellationToken)
         {

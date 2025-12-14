@@ -5,6 +5,7 @@ using Api.Exceptions_i_Result_pattern;
 using Api.Exceptions_i_Result_pattern.Exceptions;
 using Api.Helpers;
 using Api.Interfaces;
+using Api.Interfaces.IRepositoryBase;
 using Api.Localization;
 using Api.Mapper;
 using Microsoft.Extensions.Localization;
@@ -14,9 +15,9 @@ namespace Api.Services
     // Objasnjeno u CommentService
     public class StockService : IStockService
     {   
-        private readonly IStockRepository _stockRepository; // Koristice CachedStockRepository, jer je on decorator on top of StockRepository 
+        private readonly IStockRepositoryBase _stockRepository; // Koristice CachedStockRepository, jer je on decorator on top of StockRepository (StockRepositoryBase)
         private readonly IStringLocalizer<Resource> _localization;
-        public StockService(IStockRepository stockRepository, 
+        public StockService(IStockRepositoryBase stockRepository, 
                             IStringLocalizer<Resource> localizer)
         {
             _stockRepository = stockRepository;

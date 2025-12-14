@@ -4,6 +4,7 @@ using Api.Exceptions;
 using Api.Exceptions_i_Result_pattern;
 using Api.Exceptions_i_Result_pattern.Exceptions;
 using Api.Interfaces;
+using Api.Interfaces.IRepositoryBase;
 using Api.Models;
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
@@ -26,9 +27,9 @@ namespace Api.CQRS_and_Validation.Comment.Delete
     public class CommentDeleteCommandHandler : ICommandHandler<CommentDeleteCommand, Result<CommentDeleteResult>>
     {
         // CQRS Handler poziva Repository, a ne service, jer ako radim CQRS, ne koristim Service.
-        private readonly ICommentRepository _commentRepository;
+        private readonly ICommentRepositoryBase _commentRepository; // Moze i ICommentRepository - pogledaj BaseRepository 
         private readonly UserManager<AppUser> _userManager;
-        public CommentDeleteCommandHandler(ICommentRepository commentRepository, UserManager<AppUser> userManager)
+        public CommentDeleteCommandHandler(ICommentRepositoryBase commentRepository, UserManager<AppUser> userManager)
         {
             _commentRepository = commentRepository; 
             _userManager = userManager;

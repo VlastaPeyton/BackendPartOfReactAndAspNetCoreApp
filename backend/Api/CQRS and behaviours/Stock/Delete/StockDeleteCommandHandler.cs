@@ -2,6 +2,7 @@
 using Api.DTOs.StockDTO;
 using Api.Exceptions_i_Result_pattern.Exceptions;
 using Api.Interfaces;
+using Api.Interfaces.IRepositoryBase;
 using Api.Mapper;
 using FluentValidation;
 
@@ -20,8 +21,8 @@ namespace Api.CQRS_and_behaviours.Stock.Delete
 
     public class StockDeleteCommandHandler : ICommandHandler<StockDeleteCommand, StockDeleteResult> 
     {
-        private readonly IStockRepository _stockRepository; // Koristice CachedStockRepository, jer je on decorator on top of StockRepository 
-        public StockDeleteCommandHandler(IStockRepository stockRepository) => _stockRepository = stockRepository;
+        private readonly IStockRepositoryBase _stockRepository; // Koristice CachedStockRepository, jer je on decorator on top of StockRepository tj StockRepositoryBase sada
+        public StockDeleteCommandHandler(IStockRepositoryBase stockRepository) => _stockRepository = stockRepository;
 
         public async Task<StockDeleteResult> Handle(StockDeleteCommand command, CancellationToken cancellationToken)
         {

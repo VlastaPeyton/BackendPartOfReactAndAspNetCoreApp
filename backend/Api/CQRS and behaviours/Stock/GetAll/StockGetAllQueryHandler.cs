@@ -2,6 +2,7 @@
 using Api.DTOs.StockDTO;
 using Api.Helpers;
 using Api.Interfaces;
+using Api.Interfaces.IRepositoryBase;
 using Api.Mapper;
 
 namespace Api.CQRS_and_behaviours.Stock.GetAll
@@ -10,8 +11,8 @@ namespace Api.CQRS_and_behaviours.Stock.GetAll
     public record StockGetAllResult(IEnumerable<StockDTOResponse> StockDTOResponses);
     public class StockGetAllQueryHandler : IQueryHandler<StockGetAllQuery, StockGetAllResult>
     {   
-        private readonly IStockRepository _stockRepository; // Koristice CachedStockRepository, jer je on decorator on top of StockRepository 
-        public StockGetAllQueryHandler(IStockRepository stockRepository) => _stockRepository = stockRepository;
+        private readonly IStockRepositoryBase _stockRepository; // Koristice CachedStockRepository, jer je on decorator on top of StockRepository tj StockRepositoryBase sada
+        public StockGetAllQueryHandler(IStockRepositoryBase stockRepository) => _stockRepository = stockRepository;
        
         public async Task<StockGetAllResult> Handle(StockGetAllQuery query, CancellationToken cancellationToken)
         {

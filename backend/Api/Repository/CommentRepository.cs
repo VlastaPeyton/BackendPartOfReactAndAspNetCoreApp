@@ -80,7 +80,7 @@ namespace Api.Repository
               Ako nesto pukne izmedju SaveChangesAsync i Publish, event nikad ne ode u message broker jer ga Publish ne upise u Outbox. */
             await _publishEndpoint.Publish(new CommentCreatedIntegrationEvent { Text = "Komentar upisan" }, cancellationToken);
             
-            return comment;
+            return comment; // isti comment, samo sa azuriranim Id poljem kojem baza automatski dodeli vrednost
         }
 
         public async Task<Comment?> DeleteAsync(int id, CancellationToken cancellationToken)

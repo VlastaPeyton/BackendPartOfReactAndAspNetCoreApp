@@ -3,6 +3,7 @@ using Api.DTOs.CommentDTOs;
 using Api.Exceptions;
 using Api.Exceptions_i_Result_pattern;
 using Api.Interfaces;
+using Api.Interfaces.IRepositoryBase;
 using Api.Mapper;
 
 namespace Api.CQRS_and_Validation.Comment
@@ -13,8 +14,8 @@ namespace Api.CQRS_and_Validation.Comment
     // Nema validacija, jer Query cita iz baze
     public class CommentGetByIdQueryHandler : IQueryHandler<CommentGetByIdQuery, CommentGetByIdResult>
     {   
-        private readonly ICommentRepository _commentRepository; 
-        public CommentGetByIdQueryHandler(ICommentRepository commentRepository) => _commentRepository = commentRepository;
+        private readonly ICommentRepositoryBase _commentRepository;  // Moze i ICommentRepository - pogledaj BaseRepository 
+        public CommentGetByIdQueryHandler(ICommentRepositoryBase commentRepository) => _commentRepository = commentRepository;
         
         // Mora metoda zbog interface. 
         public async Task<CommentGetByIdResult> Handle(CommentGetByIdQuery query, CancellationToken cancellationToken)

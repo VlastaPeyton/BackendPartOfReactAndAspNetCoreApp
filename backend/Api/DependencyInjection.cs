@@ -2,6 +2,7 @@
 using Api.CQRS_and_Validation;
 using Api.Data;
 using Api.Interfaces;
+using Api.Interfaces.IRepositoryBase;
 using Api.MessageBroker;
 using Api.Middlewares;
 using Api.Models;
@@ -119,7 +120,7 @@ namespace Api
             // Add StockRepository i IStockRepository
             services.AddScoped<IStockRepository, StockRepository>();
             // Add CachedStockRepository via Scrutor - pogledaj Redis, Proxy & Decorator patterns.txt i pogledaj CachedStockRepository
-            services.Decorate<IStockRepository, CachedStockRepository>();
+            services.Decorate<IStockRepositoryBase, CachedStockRepository>();
             // Add IDistributedCache za CachedStockRepository from StackExchangeRedis NuGet kako bih povezao Redis with IDistributedCache
             services.AddStackExchangeRedisCache(config =>
             {
