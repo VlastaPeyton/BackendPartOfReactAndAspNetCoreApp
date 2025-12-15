@@ -23,6 +23,8 @@ namespace Api.MessageBroker
                     o.QueryDelay = TimeSpan.FromSeconds(5); // Koliko cesto MassTransit built-in background worker proverava ima li noviteta u Outbox tabeli
                     o.UseSqlServer(); // Jer SQL Server koristim i za Consumer i za Publisher
 
+                    o.UseBusOutbox(); // IPublishEndpoint.Publish(integrationEvent) ce samo upisati Integration Event u Outbox on Publisher side, dok MassTransit background worker ce periodicno proveravati Outbox i slati odatle u RabbitMQ
+
                     // Disable Inbox cleanup za Publisher 
                     if (consumerAssembly is null)
                         o.DisableInboxCleanupService(); // Ne treba mi, jer u OnModelCreating Publishera necu staviti Inbox tabele

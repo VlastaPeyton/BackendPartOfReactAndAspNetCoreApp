@@ -3,5 +3,5 @@ SQL Function:
 	Stored in DB.
 
 SQL Stored procedure: 
-	can query and write DB. Not used inside SELECT. "EXEC" keyford for SQL Server. 
+	can query and write DB. Not used inside SELECT. "EXEC" keyword for SQL Server. 
 	Stored in DB.

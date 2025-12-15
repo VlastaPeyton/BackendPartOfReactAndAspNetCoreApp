@@ -12,7 +12,7 @@ namespace Api.Repository.BaseRepository
 
     // Kao i IBaseRepository, samo za Stock/CommentRepository cu napraviit, jer Portfolio nema CRUD
     public abstract class BaseRepository<T> : IBaseRepository<T> where T : class
-    {   
+    {   // Ne mora biti abstract, ali pozeljno da bih znao da ne treba mi instanca ove klase, vec samo kao roditelj da sluzi ova klasa
         protected readonly ApplicationDBContext _dbContext;
 
         protected BaseRepository(ApplicationDBContext dbContext)

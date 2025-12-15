@@ -6,33 +6,42 @@ MassTransit:
 	Napravim MassTransitExtensions.cs 
 
 Outbox/Inbox pattern:
+	Ako BE koristi vise baza ili jednu DB koja ima vise shards, do skoro se koristio 2PC(2 Phase Commit) koji je nesiguran (pogledaj na 
+   netu zasto), pa se Outbox/Inbox pattern uveo kao bolje resenje.
+	Svaki microservice (po pravilu) ima svoju bazu, a ako write to it's Db zahteva write to some other microservice's Db, svaka Db mora
+   imati svoju Outbox table ako upis u nju zahteva upis u bar 1 drugu Db. Ako jedan microservice(modular monolith module) ima vise baza 
+   unutar sebe, onda samo Outbox table je u glavnoj bazi. 
+
 	Ako nemam Outbox pattern u Publisher microservice i Inbox pattern u Consumer microservice:
-	  Publisher modifikuje bazu, pa posalje event na message broker. 
-	  Ako pukne upis u bazu, a event se posalje, Consumer ce da ga primi ali baza nepromenjena. 
-	  Ovo izaziva consistency i jako je lose.
+	  Publisher modifikuje svoju bazu, pa posalje event na message broker. 
+	  Ako pukne upis u bazu, a event se posalje, Consumer ce da ga primi ali Publisher baza nepromenjena. 
+	  Ovo izaziva consistency i jako je lose da se desi.
 
 	Ako imam Outbox pattern u Publisher microservice i Inbox pattern u Consumer microservice:
-	  Publisher modifikuje bazu i ima samo Outbox tabele, ali pre nego sto posalje event, u istoj transakciji sa modifikacijom upisuje taj event u 
-	 u Outbox u svojoj bazi. Pa ako nesto od ova 2 upisa pukne, nista se ne upisuje u bazu. 
-	  Background job custom, MassTransit ili Debezium CDC (koji je za Kafka napravljen mahom), cita periodicno Outbox i ako ima noviteta 
-	 onda nove evente salje u message broker i oznaci kao poslate, ali ako upis u bazu puko i nema novi event u Outbox, onda nema sta da posalje.
-	  Consumer ima samo Inbox tabelu, koja ne zna sadrzaj poruke, ali zna koje events je Consumer vec obradio i periodicno cita iz Inbox pomocu pozadinskog procesa da vidi 
-	 je l ima neki neobradjen event.
+	  Publisher modifikuje svoju bazu u kojoj ima i Outbox table, ali pre nego sto posalje event u message broker, u istoj transakciji sa
+	 modifikacijom svoje baze upisuje taj event u u Outbox u svojoj bazi. Pa ako nesto od ova 2 upisa pukne, nista se ne upisuje u bazu. 
+	  Background job custom, MassTransit ili Debezium CDC (koji je za Kafka napravljen mahom), upisuje u Outbox / cita periodicno iz Outbox 
+	 i ako ima noviteta onda nove evente salje u message broker i oznaci kao poslate, ali ako upis u bazu puko i nema novi event u Outbox, 
+	 onda nema sta da posalje.
+	  Consumer ima Inbox tabelu, koja ne zna sadrzaj poruke, ali zna koje events je Consumer vec obradio i periodicno cita iz Inbox pomocu 
+	 background job da vidi je l ima neki neobradjen event.
 	  Inbox sprecava da Consumer 2x obradi isti event. 
 
-	Ako mikroservis i salje i prima events od message broker, onda on ima u svojoj DB Outbox i Inbox, ali ako samo prima onda Inbox samo, a ako samo salje onda Outbox, jer tehnicki
-   moze uvek imati oba, ali sta ce mu ako mu ne treba.
+	Ako mikroservis i salje i prima events od message broker, onda on ima u svojoj Db ima Outbox i Inbox, ali ako samo prima onda Inbox samo, 
+   a ako samo salje onda Outbox, jer tehnicki moze uvek imati oba, ali sta ce mu ako mu ne treba.
 
 	Inbox/Outbox + MassTransit:
-	  Posto MassTransit se koristi za publish event from Publisher microservice to message broker, napravljen je i da automatski napravi Inbox/Outbox tabele 
-	u Consumer/Publisher microservisima i da automatski upisuje u Outbox tabelu i da svojim built-in background workerom salje neposlate event iz Outbox u message broker i 
-	automatski ih flaguje kao poslate. Isto built-in sve radi i na Inbox strani.
-	  Ne moram rucno praviti ni tabele, ni upis u njih, a ni slanje event iz njih u mesasge broker.
+	  Posto MassTransit se koristi za publish Integration Event from Publisher microservice to message broker, napravljen je i da automatski napravi Inbox/Outbox tabele 
+	u Consumer/Publisher microservisima i da automatski upisuje u Outbox tabelu i da svojim built-in background workerom salje neposlate integration event iz Outbox u 
+	message broker i automatski ih flaguje kao poslate. Isto MassTransit built-in sve radi i na Subscriber strani gde iz RabbitMQ upise Integration Event u 
+	Inbox table, pa proveri da l taj event vec obradjen mozda, ako nije obradjen, poziva IntegrationEventHandler koji upisuje promenu u Subscriber microservice Db.
+	  Ne moram rucno praviti ni tabele, ni upis u njih, a ni slanje event iz njih u mesasge broker, jer to u jednoj liniji koda sve MassTransit radi.
 	  Koraci:
 		  Instaliram MassTransit.EntityFrameworkCore
 		  Modifikujem MassTransitExtensions.cs i u Consumer i u Publisher microservice, ali u Publisher ugasim cleanup za inbox
 		  Modifikujem OnModelCreating sa Outbox tabelama u Publisher microservice
 		  Modifikujem OnModelCreating sa Inbox tabelama u Consumer microservice
-		  Uradim migracije u oba microservisa.
-		  Sada publishEndpoint.Publish(event) upise u Outbox, a pozadinski proces ocitava tabelu i salje neposlate events u message broker.
+		  Uradim migracije u oba microservisa da bih Outbox/Inbox tabelu dodao u bazu.
+		  Sada publishEndpoint.Publish(event) upise Integration Event u Outbox, a pozadinski built-in MassTransit proces ocitava Outbox periodicno
+		 i salje neposlate Integration Events u message broker. Tek nakon SaveChangesAsync, Outbox tabela omoguci pozadinskom procesu da vidi novi event.
 

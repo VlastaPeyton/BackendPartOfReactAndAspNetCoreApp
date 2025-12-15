@@ -30,7 +30,7 @@ namespace Api.Services
         private readonly IEmailService _emailService;
         private readonly ApplicationDBContext _dbContext; 
         private readonly ILogger<AccountService> _logger;
-        private readonly IValidator<LoginCommandModel> _loginValidator; // Za LoginAsync method jer samo tu koristim FluentValidation
+        private readonly IValidator<LoginCommandModel> _loginValidator; // Za LoginAsync method jer samo tu koristim FluentValidation tj LoginCommandModelValidator
         private readonly IStringLocalizer<Resource> _localization; // Pogledaj Localization.txt
 
         public AccountService(UserManager<AppUser> userManager, 

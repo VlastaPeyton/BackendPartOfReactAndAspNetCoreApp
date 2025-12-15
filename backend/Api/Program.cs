@@ -129,6 +129,8 @@ builder.Services.AddMassTransitRabbitMQAndOutboxInbox<ApplicationDBContext>(buil
 builder.Services.AddScoped<IStockService, StockService>(); 
 // Add StockRepository i IStockRepository
 builder.Services.AddScoped<IStockRepository, StockRepository>();
+// Add StockRepositoryBase i IStockRepositoryBase
+builder.Services.AddScoped<IStockRepositoryBase, StockRepositoryBase>();
 // Add CachedStockRepository via Scrutor - pogledaj Redis, Proxy & Decorator patterns.txt i pogledaj CachedStockRepository
 builder.Services.Decorate<IStockRepositoryBase, CachedStockRepository>(); // dok nisam napravio BaseRepository, koristio sam IStockRepository 
 // Add IDistributedCache za CachedStockRepository from StackExchangeRedis NuGet kako bih povezao Redis with IDistributedCache
@@ -136,8 +138,6 @@ builder.Services.AddStackExchangeRedisCache(config =>
 {   
     config.Configuration = builder.Configuration.GetConnectionString("Redis");
 });
-// Add StockRepositoryBase i IStockRepositoryBase
-builder.Services.AddScoped<IStockRepositoryBase, StockRepositoryBase>();
 
 
 // Add AccountService i IAccountService 
