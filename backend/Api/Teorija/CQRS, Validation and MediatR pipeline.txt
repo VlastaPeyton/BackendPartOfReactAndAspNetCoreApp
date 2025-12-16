@@ -26,5 +26,8 @@ Request obicno ne postoji ako endpoint prima argumente prostog tipa i nema ih mn
 Ako ima mnogo argumenata onda napravim Request klasu, ali ako nema mnogo (a vise od 1) onda [FromQuery] i automatski binduje u Request objekat, a ako ih bas mnogo ima 
 onda [FromBody]
 
-Logging/ValidationBehaviour se "middleware" za MediatR pipeline. Ovo je aplikativni sloj, dok obican .NET middleware je web sloj.
+Logging/Validation/UnitOfWorkBehaviour se "middleware" za MediatR pipeline. Ovo je aplikativni sloj, dok obican .NET middleware je web sloj.
 RequestHandlerDelegate je isto sto i RequestDelegate u GlobalExceptionHandler middleware.
+
+Request udje u ValidationBehaviour jer on prvi registrovan, pa ide u LoggingBehavior jer on 2gi registrovan, pa u UnitOfWorkBehaviour jer on poslednji
+regisrovan, pa u Handler metodu, pa se vraca nazad kroz UnitOfWorkBehaviour -> LoggingBehaviour -> ValidationBehaviour i salje response.

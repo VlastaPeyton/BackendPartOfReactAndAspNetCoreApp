@@ -1,10 +1,9 @@
 ﻿using Api.Data;
-using Api.Events.IntegrationEvents;
+using Api.DTOs.CommentDTOs;
 using Api.Helpers;
 using Api.Interfaces.IRepositoryBase;
 using Api.Models;
 using Api.Value_Objects;
-using MassTransit;
 using Microsoft.EntityFrameworkCore;
 
 namespace Api.Repository.BaseRepository
@@ -13,20 +12,10 @@ namespace Api.Repository.BaseRepository
     {
         // Nasledio BaseRepository<Stock> kako bih koristio sve njegove metode, osim onih koje moram da override. 
         // Implementirao ICommentRepositoryBase, zbog SOLID, da bih u Service/CQRS mogo koristiti ICommentRepositoryBase, a da se poziva CommentRepositoryBase
-
-        private readonly IPublishEndpoint _publishEndpoint;
-        public CommentRepositoryBase(ApplicationDBContext context, IPublishEndpoint publishEndpoint) : base(context)
+        // Objasnjene metode u CommentRepository jer ista su tela
+        public CommentRepositoryBase(ApplicationDBContext context) : base(context)
         {
-            _publishEndpoint = publishEndpoint;
-        }
-
-        public override async Task<Comment> CreateAsync(Comment comment, CancellationToken cancellationToken)
-        {
-            await _dbContext.Comments.AddAsync(comment, cancellationToken);
-            await _dbContext.SaveChangesAsync(cancellationToken);
-            await _publishEndpoint.Publish(new CommentCreatedIntegrationEvent { Text = "Komentar upisan" }, cancellationToken);
-
-            return comment;
+       
         }
 
         // Overload metod iz (I)BaseRepository, pa imacu GetAllAsync iz ICommentRepositoryBase i iz IBaseRepository, ali mi treba ovaj
@@ -49,30 +38,34 @@ namespace Api.Repository.BaseRepository
             return await _dbContext.Comments.Include(c => c.AppUser).AsNoTracking().FirstOrDefaultAsync(c => c.Id == CommentId.Of(id), cancellationToken);
         }
 
-        public override async Task<Comment?> UpdateAsync(int id,  Comment comment, CancellationToken cancellationToken)
+        public override async Task<Comment> CreateAsync(Comment comment, CancellationToken cancellationToken)
+        {
+            await _dbContext.Comments.AddAsync(comment, cancellationToken);
+            
+            return comment;
+        }
+
+        // Overload metod iz (I)BaseRepository, pa imacu UpdateAsync iz ICommentRepository i iz IBaseRepository, ali mi treba ovaj
+        public async Task<Comment?> UpdateAsync(int id, UpdateCommentCommandModel commandModel, CancellationToken cancellationToken)
         {
             var existingComment = await _dbContext.Comments.FindAsync(id, cancellationToken); 
+
             if (existingComment is null)
                 return null;
 
-            existingComment.Title = comment.Title;
-            existingComment.Content = comment.Content;
-
-            await _dbContext.SaveChangesAsync(cancellationToken); 
+            existingComment.Title = commandModel.Title;
+            existingComment.Content = commandModel.Content;
 
             return existingComment;
         }
 
         public override async Task<Comment?> DeleteAsync(int id, CancellationToken cancellationToken)
         {
-            var comment = await _dbContext.Comments.Include(c => c.AppUser).FirstOrDefaultAsync(c => c.Id == CommentId.Of(id), cancellationToken);  
-            
+            var comment = await _dbContext.Comments.Include(c => c.AppUser).FirstOrDefaultAsync(c => c.Id == CommentId.Of(id), cancellationToken);  // Mora ovako poredjenje jer Id je tipa CommentId
             if (comment is null)
                 return null;
 
-            comment.IsDeleted = true; 
-
-            await _dbContext.SaveChangesAsync(cancellationToken); 
+            comment.IsDeleted = true;
 
             return comment;
         }

@@ -1,4 +1,5 @@
 using System.Threading.RateLimiting;
+using Api.CQRS_and_behaviours.Behaviours.UnitOfWork_behaviour;
 using Api.CQRS_and_Validation;
 using Api.CQRS_and_Validation.Logging;
 using Api.Data;
@@ -173,6 +174,8 @@ builder.Services.AddMediatR(config =>
     config.AddOpenBehavior(typeof(ValidationBehaviour<,>)); 
     // Dodam LoggingBehavior to MediatR pipeline koje se pokrece automatski iz ValidationBehaviour
     config.AddOpenBehavior(typeof(LoggingBehaviour<,>));   
+    // Dodam UnitOfWorkBehaviour to MediatR pipeline koje se pokrece automatski iz LoggingBehaviour, ali necu, jer ako mi zatreba vise SaveChangesAsync vise puta u Handle onda ovo ne moze
+    //config.AddOpenBehavior(typeof(UnitOfWorkBehavior<,>));
 });
 
 // Add Rate Limiter 

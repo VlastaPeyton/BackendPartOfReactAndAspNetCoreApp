@@ -97,6 +97,7 @@ namespace Api.Services
                 if (!updateResult.Succeeded)
                     throw new UserCreatedException($"{_localization["UserCreatedException"]} = Failed to update refresh token");
 
+                // Fali metoda za SaveChangesAsync (vidi treba li UoW) da bi se u EF ChangeTracker sacuvale promene, jer CommitAsync u bazi cuva samo
                 await transaction.CommitAsync();
 
                 // Service ne radi nista sa Cookies (refreshToken), vec to ostaje odgovornost of AccountController. Service samo prosledi not-hashed refreshToken, jer to ide u Cookie.

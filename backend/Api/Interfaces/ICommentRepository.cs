@@ -1,11 +1,12 @@
-﻿using Api.Helpers;
+﻿using Api.DTOs.CommentDTOs;
+using Api.Helpers;
 using Api.Models;
 
 namespace Api.Interfaces
 {
     /* Repository pattern kako bi, umesto u CommentController, u CommentRepository definisali tela Endpoint metoda tj DB calls smestili u Repository.
        Koriscenje interface mora zbog SOLID + testiranje(xUnit,Moq/FakeItEasy) bez koriscenja baze + loose coupling.
-       Ne koristim CommentDTO, vec Comment, jer Repository direktno sa bazom komunicira.
+       Ne koristim CommentDTO, vec Comment, jer Repository direktno sa bazom komunicira, osim bas kad mora da prosledim u repo metodu Dto.
        
        Objasnjenje za CancellationToken pogledaj u CommentController. 
 
@@ -19,6 +20,6 @@ namespace Api.Interfaces
         Task<Comment?> GetByIdAsync(int id, CancellationToken cancellationToken);
         Task<Comment> CreateAsync(Comment comment, CancellationToken cancellationToken);
         Task<Comment?> DeleteAsync(int id, CancellationToken cancellationToken); 
-        Task<Comment?> UpdateAsync(int id, Comment comment, CancellationToken cancellationToken);
+        Task<Comment?> UpdateAsync(int id, UpdateCommentCommandModel commandModel, CancellationToken cancellationToken);
     }
 }

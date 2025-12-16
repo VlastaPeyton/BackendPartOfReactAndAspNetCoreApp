@@ -1,4 +1,5 @@
 ﻿
+using Api.Data;
 using Api.DTOs.StockDTO;
 using Api.DTOs.StockDTOs;
 using Api.Exceptions_i_Result_pattern;
@@ -17,11 +18,15 @@ namespace Api.Services
     {   
         private readonly IStockRepositoryBase _stockRepository; // Koristice CachedStockRepository, jer je on decorator on top of StockRepository (StockRepositoryBase)
         private readonly IStringLocalizer<Resource> _localization;
+        private readonly ApplicationDBContext _dbContext;  // Jer Repository nema SaveChangesAsync da bih smanjio br round trip ka Db - pogledaj Transakcija.txt i UnitOfWork.txt
+
         public StockService(IStockRepositoryBase stockRepository, 
-                            IStringLocalizer<Resource> localizer)
+                            IStringLocalizer<Resource> localizer,
+                            ApplicationDBContext dbContext)
         {
             _stockRepository = stockRepository;
             _localization = localizer;
+            _dbContext = dbContext;
         }
 
         public async Task<IEnumerable<StockDTOResponse>> GetAllAsync(StockQueryObject query, CancellationToken cancellationToken)
@@ -49,15 +54,19 @@ namespace Api.Services
             var stock = command.ToStockFromCreateStockRequestDTO();
 
             await _stockRepository.CreateAsync(stock, cancellationToken); // Iako CreateAsync ima return, ne treba "var result = _stockRepository.CreateAsync(stock), jer stock je Reference type, stoga promena stock u CreateAsync uticace i ovde
+            await _dbContext.SaveChangesAsync(cancellationToken);
 
             var stockDtoResponse = stock.ToStockDtoResponse();
 
             return stockDtoResponse;
         }
 
-        public async Task<Result<StockDTOResponse>> UpdateAsync(int id, UpdateStockCommandModel command, CancellationToken cancellationToken)
+        public async Task<Result<StockDTOResponse>> UpdateAsync(int id, UpdateStockCommandModel commandModel, CancellationToken cancellationToken)
         {
-            var stock = await _stockRepository.UpdateAsync(id, command.ToStockFromUpdateStockRequestDTO(), cancellationToken);
+            var stock = await _stockRepository.UpdateAsync(id, commandModel, cancellationToken);
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
             if (stock is null)
                 return Result<StockDTOResponse>.Fail("Not found stock");
 
@@ -68,6 +77,7 @@ namespace Api.Services
         public async Task<StockDTOResponse> DeleteAsync(int id, CancellationToken cancellationToken)
         {
             var stock = await _stockRepository.DeleteAsync(id, cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken); 
             if (stock is null)
                 throw new StockNotFoundException($"{_localization["StockNotFoundException"]}");
             

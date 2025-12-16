@@ -43,8 +43,9 @@ namespace Api.Controllers
         [Authorize] // I da nisam stavio [Authorize], zbog User.GetUserName() moralo bi da se JWT prosledi sa Frontend prilikom gadjanja ovog Endpoint, ali treba staviti [Authorize] jer osigurava da userName!=null, jer forsira Frontend da salje JWT.
         public async Task<IActionResult> AddPortfolio([FromQuery] string symbol, CancellationToken cancellationToken)  // 1 Portfolio = 1 Stock, a glavna stvar Stock-a je Symbol polje
         {   // Da nema [FromQuery], obzirom da symbol je string, .NET bi prihvatamo i [FromRoute], [FromQuery] i [FromBody]. Zbog [FromQuery] u portfolioAddApi u FE moram poslati symbol nakon ? in URL
-            var userName = User.GetUserName(); // User i GetUserName come from ControllerBase ClaimsPrincipal tj user info from request i zahteva od FE da posalje JWT jer su u njemu claims
             
+            var userName = User.GetUserName(); // User i GetUserName come from ControllerBase ClaimsPrincipal tj user info from request i zahteva od FE da posalje JWT jer su u njemu claims - pogledaj HttpContex.txt
+
             var resultPattern = await _portfolioService.AddPortfolioAsync(symbol, userName, cancellationToken);
             if (!resultPattern.IsSuccess)
                 return BadRequest(new {message = resultPattern.Error});

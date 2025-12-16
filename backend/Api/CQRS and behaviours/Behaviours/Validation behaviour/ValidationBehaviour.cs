@@ -41,7 +41,7 @@ namespace Api.CQRS_and_Validation
             if (failures.Any())
                 throw new ValidationException(failures); // ValidationException je built-in. Propagira uzvodno do prvog catch koji se nalazi u GlobaleExceptionHandlingMiddleware
 
-            // next() will run next MediatR pipeline behaviour (ako postoji) registrovan nakon ValidationBehaviour u Program.cs, pa tek na kraju CommandHandler's Handle metodu jer ona je uvek na kraju pipeline
+            // next() will run next MediatR pipeline behaviour (ako postoji) registrovan nakon ValidationBehaviour u Program.cs (a to je LoggingBehaviour)
             return await next();
         }
     }

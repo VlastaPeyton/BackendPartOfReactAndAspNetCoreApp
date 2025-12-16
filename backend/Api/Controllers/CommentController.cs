@@ -106,10 +106,10 @@ namespace Api.Controllers
         {   
             // Iako je write to DB, nema mapiranje, jer samo id je argument 
 
-            // Zbog authorization u CQRS kako user moze samo svoj komentar brisati 
-            var userName = User.GetUserName(); // Pogledaj HttpContext.txt
+            // Zbog authorization kako user moze samo svoj komentar brisati - ne treba, jer comment.AppUser smanjuje br round trips to Db
+            //var userName = User.GetUserName(); -  Pogledaj HttpContext.txt
 
-            var resultPattern = await _commentService.DeleteAsync(id, userName, cancellationToken);
+            var resultPattern = await _commentService.DeleteAsync(id, cancellationToken);
             if (!resultPattern.IsSuccess)
                 return BadRequest(resultPattern.Error);
 
@@ -174,7 +174,7 @@ namespace Api.Controllers
         [Authorize]
         public async Task<IActionResult> CreateCqrs([FromRoute] string symbol, [FromBody] CreateCommentRequestDTO request, CancellationToken cancellationToken)
         {
-            // Write to DB endpoint, pa mapiram CreateCommentRequestDTO u CommandModel da razdvojim slojeve lepo.
+            // Write to DB endpoint, pa mapiram CreateCommentRequestDTO u CommandModel da razdvojim slojeve lepo, ali nije obavezno.
             var commandModel = new CreateCommentCommandModel
             {
                 Title = request.Title,
@@ -202,11 +202,11 @@ namespace Api.Controllers
         {
             // Iako je write to DB, nema mapiranje, jer samo id je argument 
 
-            // Zbog authorization da user moze samo svoj komentar brisati 
-            var userName = User.GetUserName(); 
+            // Zbog authorization da user moze samo svoj komentar brisati - ne treba, jer comment.AppUser smanji br round trips to Db
+            //var userName = User.GetUserName(); 
 
             // Ne mapiram Request to Query, jer Request nema potrebe da postoji zbog jednog argumenta primitivnog tipa da postoji jer endpoint prima id direktno, vec odma Query objekat pravim i saljem u MediatR pipeline
-            var resultPattern = await _sender.Send(new CommentDeleteCommand(id, userName)); // Prvo pokrene validaciju, pa Handler 
+            var resultPattern = await _sender.Send(new CommentDeleteCommand(id)); // Prvo pokrene validaciju, pa Handler 
             if (!resultPattern.IsSuccess)
                 return NotFound(new { message = resultPattern.Error });
 

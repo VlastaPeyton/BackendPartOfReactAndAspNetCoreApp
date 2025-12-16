@@ -1,6 +1,7 @@
 ﻿using System.Reflection.Metadata.Ecma335;
 using Api.Data;
 using Api.DTOs.StockDTO;
+using Api.DTOs.StockDTOs;
 using Api.Helpers;
 using Api.Interfaces;
 using Api.Interfaces.IRepositoryBase;
@@ -19,7 +20,7 @@ namespace Api.Repository
         // CachedStockRepository dodaje cache logiku on top of StockRepository with Decorator pattern, pa u StockService/CQRS poziva se CachedStockRepository => moram koristim StockRepository tj IStockRepository jer u Program.cs IStockRepository registrovan kao StockRepository
         private readonly IDistributedCache _cache;
         // Program.cs with AddStackExchangeRedisCache konektujem Redis in Docker with IDistributedCache
-        
+
         public CachedStockRepository(IStockRepositoryBase stockRepository, IDistributedCache cache)
         {
             _stockRepository = stockRepository;    
@@ -34,6 +35,8 @@ namespace Api.Repository
 
             // Prvo, upisem u bazu Stock pomocu StockRepository metode
             await _stockRepository.CreateAsync(stock, cancellationToken); // Ne treba mi povratna vrednost ove metode i zato nisam naveo
+
+            // SaveChangesAsync bice u Service/CQRS 
 
             // Drugo, upisemu Redis StockDTO, gde je value tipa string(JSON) jer samo ova metoda je built-in preko IDistributedCache
             var stockDtoJson = JsonConvert.SerializeObject(stock.ToStockDtoResponse(), new JsonSerializerSettings
@@ -57,6 +60,8 @@ namespace Api.Repository
 
             // Prvo, delete from DB
             var stock = await _stockRepository.DeleteAsync(id, cancellationToken);
+
+            // SaveChangesAsync bice u Service/CQRS 
 
             // Drugo, delete from Redis based on a key 
             await _cache.RemoveAsync($"stock:{id}", cancellationToken);
@@ -138,6 +143,7 @@ namespace Api.Repository
             return stockExists;
         }
 
+        // Ovu metodu ne koristim, ali ne mogu je brisem, jer IStockRepositoryBase tj IBaseRepository ima ovaj potpis, ali sam u IStockRepositoryBase je overloaded 
         public async Task<Stock?> UpdateAsync(int id, Stock stock, CancellationToken cancellationToken)
         {
             // Cache-aside with invalidation za write 
@@ -146,6 +152,8 @@ namespace Api.Repository
             var dbStock = await _stockRepository.UpdateAsync(id, stock, cancellationToken);
             if (dbStock is null)
                 return null; // Ako ga nema u bazi, nema smisla ni cache menjati 
+
+            // SaveChangesAsync bice u Service/CQRS 
 
             // Drugo, invalidiram cache, gde nakon sledec GET ce se staviti u cache iz baze - dobra praksa jer stock ne azuriram cesto
             await _cache.RemoveAsync($"stock:{id}", cancellationToken); // Ako ga nema u Redis, ne baca gresku 
@@ -181,6 +189,24 @@ namespace Api.Repository
             
             return dbStock;
             */
+        }
+
+        // Ovo koristim u StockService.UpdateAsync/StockUpdateCommandHandler, a ne UpdateAsync iznad
+        public async Task<Stock?> UpdateAsync(int id, UpdateStockCommandModel commandModel, CancellationToken cancellationToken)
+        {
+            // Cache-aside with invalidation za write 
+
+            // Prvo, azuriram bazu 
+            var dbStock = await _stockRepository.UpdateAsync(id, commandModel.ToStockFromUpdateStockRequestDTO(), cancellationToken);
+            if (dbStock is null)
+                return null;
+
+            // SaveChangesAsync bice u Service/CQRS 
+
+            // Drugo, invalidiram cache, gde nakon sledec GET ce se staviti u cache iz baze - dobra praksa jer stock ne azuriram cesto
+            await _cache.RemoveAsync($"stock:{id}", cancellationToken); // Ako ga nema u Redis, ne baca gresku 
+
+            return dbStock;
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Api.CQRS;
+using Api.Data;
 using Api.DTOs.StockDTO;
 using Api.Exceptions_i_Result_pattern.Exceptions;
 using Api.Interfaces;
@@ -22,11 +23,19 @@ namespace Api.CQRS_and_behaviours.Stock.Delete
     public class StockDeleteCommandHandler : ICommandHandler<StockDeleteCommand, StockDeleteResult> 
     {
         private readonly IStockRepositoryBase _stockRepository; // Koristice CachedStockRepository, jer je on decorator on top of StockRepository tj StockRepositoryBase sada
-        public StockDeleteCommandHandler(IStockRepositoryBase stockRepository) => _stockRepository = stockRepository;
+        private readonly ApplicationDBContext _dbContext;  // Jer Repository nema SaveChangesAsync da bih smanjio br round trip ka Db - pogledaj Transakcija.txt i UnitOfWork.txt
+
+        public StockDeleteCommandHandler(IStockRepositoryBase stockRepository, ApplicationDBContext dBContext)
+        {
+            _stockRepository = stockRepository;
+            _dbContext = dBContext;
+        }
 
         public async Task<StockDeleteResult> Handle(StockDeleteCommand command, CancellationToken cancellationToken)
         {
             var stock = await _stockRepository.DeleteAsync(command.Id, cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
             if (stock is null)
                 throw new StockNotFoundException("Nije nadjen stock");
 

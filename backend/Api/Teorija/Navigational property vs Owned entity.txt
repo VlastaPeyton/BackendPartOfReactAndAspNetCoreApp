@@ -28,6 +28,7 @@ EF Core does not fetch navigational property automatcially, thats why Eager / La
 		Include/ThenInclude u LINQ koristim, jer znam da mi treba B property istovremeno kada ocitavam A tabelu.
 		Eager loading reduces round trips to DB as Include is SQL JOIN command, rather than separate queries.
 		Ako je navigation attribute B ogromno i retko se koristi, ne isplati se ovaj pristup. 
+		Ovo smanjuje br round trips ka bazi.
 
 	2. Lazy:
 		Lazy loading unosi N+1 problem, jer ako je B lista, onda ce za svaki element pozivati bazu. 

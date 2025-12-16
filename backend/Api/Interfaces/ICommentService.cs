@@ -11,7 +11,7 @@ namespace Api.Interfaces
         Task<IEnumerable<CommentDTOResponse>> GetAllAsync(CommentQueryObject commentQueryObject, CancellationToken cancellationToken);
         Task<CommentDTOResponse> GetByIdAsync(int id, CancellationToken cancellationToken);
         Task<Result<CommentDTOResponse>> CreateAsync(string userName, string symbol, CreateCommentCommandModel command, CancellationToken cancellationToken);
-        Task<Result<CommentDTOResponse>> DeleteAsync(int id, string userName, CancellationToken cancellationToken);
-        Task<Result<CommentDTOResponse>> UpdateAsync(int id, UpdateCommentCommandModel command, CancellationToken cancellationToken);
+        Task<Result<CommentDTOResponse>> DeleteAsync(int id, CancellationToken cancellationToken);
+        Task<Result<CommentDTOResponse>> UpdateAsync(int id, UpdateCommentCommandModel commandModel, CancellationToken cancellationToken);
     }
 }

@@ -1,17 +1,11 @@
 ﻿using Api.Data;
 using Api.Interfaces;
 using Api.Models;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 
 namespace Api.Repository
-{   /* Repository pattern kako bi, umesto u PortfolioController, u PortfolioRepository definisali tela Endpoint metoda tj DB calls smestili u Repository.
-    
-       Ne korisitm DTO klase, vec Entity klase, jer Repository direkt sa bazom komunicira. 
-       Objasnjenje za CancellationToken pogledaj u StockRepository. 
-      
-      Controller radi mapiranje entity klasa u DTO osim ako koristim CQRS, jer nije dobro da repository vrati DTO obzriom da on radi sa domain i treba samo za entity klase da zna
-    */
+{   
+    // Objasnjeno u CommentRepository 
     public class PortfolioRepository : IPortfolioRepository
     {   
         private readonly ApplicationDBContext _dbContext;
@@ -24,9 +18,12 @@ namespace Api.Repository
         public async Task<Portfolio> CreateAsync(Portfolio portfolio, CancellationToken cancellationToken)
         {
             await _dbContext.Portfolios.AddAsync(portfolio, cancellationToken); // EF starts tracking portfolio changes. 
-            /* Portfolio ima composite PK (AppUserId+StockId) + AppUserId i StockId su FK, defined in OnModelCreating, ali nema nikad automatsku dodelu vrednosti kao za non-composite Id, 
-            pa stoga, DB will not insert value to composite PK jer to morao sam ja da odradim pre toga, obzirom da je composite PK. Tj moram da imam vec AppUser i Stock u bazi pre toga. */
-            await _dbContext.SaveChangesAsync(cancellationToken); // Sacuvan portfolio u bazi i autonatski mu popuni composide PK (Id) polje => EF azurira portfolio objekat
+            /* Portfolio ima composite PK (AppUserId+StockId) i 2 FK (AppUserId i StockId), defined in OnModelCreating, ali nema nikad automatsku dodelu vrednosti 
+            kao za non-composite Id prilikom SaveChangesAsync Db ne zna kako da dodeli vrednost u composite PK, pa stoga mora u Db vec postojati AppUser i Stock 
+            kako bi postojali AppUserId i StockId. */
+            
+            //await _dbContext.SaveChangesAsync(cancellationToken); 
+            
             return portfolio; 
         }
 
@@ -41,7 +38,8 @@ namespace Api.Repository
                 return null;
 
             _dbContext.Portfolios.Remove(portfolio); // EF stop tracking portfolio and set its tracking to Detached
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            
+            // waits for SaveChangesAsync to apply changes in Db
 
             return portfolio;
              
@@ -63,6 +61,13 @@ namespace Api.Repository
                                         // Ne prosledjujem Comments and Portfolios polja, jer portfolio ih nema + imaju default vrednost u Stock bas zato + to su navigation property koja sluze za dohvatanje toga samo kad zatreba
                                         }).AsNoTracking().ToListAsync(cancellationToken);
             // AsNoTracking, jer ne azuriram nista sto sam procitao iz baze, obzirom da tracking adds overhead and memory
+        }
+
+        public async Task<Portfolio?> GetPortfolioBySymbol(string symbol, CancellationToken cancellationToken)
+        {
+            var portfolio = await _dbContext.Portfolios.FirstOrDefaultAsync(p => p.Stock.Symbol.ToLower() ==  symbol.ToLower(), cancellationToken);
+
+            return portfolio;
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Api.CQRS;
+using Api.Data;
 using Api.DTOs.PortfolioDTOs;
 using Api.Exceptions_i_Result_pattern;
 using Api.Interfaces;
@@ -25,11 +26,15 @@ namespace Api.CQRS_and_behaviours.Portfolio.Delete
     {
         private readonly UserManager<AppUser> _userManager;
         private readonly IPortfolioRepository _portfolioRepository;
+        private readonly ApplicationDBContext _dbContext; // Repository write metods nemaju SaveChangesAsync, pa to ovde pisem da smanjim No round trips ka Db - pogledaj Transakcije.txt i UnitOfWork.txt
 
-        public PortfolioDeleteCommandHandler(UserManager<AppUser> userManager, IPortfolioRepository portfolioRepository)
+        public PortfolioDeleteCommandHandler(UserManager<AppUser> userManager, 
+                                             IPortfolioRepository portfolioRepository,
+                                             ApplicationDBContext dbContext)
         {
             _userManager = userManager;
             _portfolioRepository = portfolioRepository;
+            _dbContext = dbContext;
         }
 
         public async Task<Result<PortfolioDeleteResult>> Handle(PortfolioDeleteCommand command, CancellationToken cancellationToken)
@@ -47,6 +52,7 @@ namespace Api.CQRS_and_behaviours.Portfolio.Delete
                 var deletedPortfolio = await _portfolioRepository.DeletePortfolioAsync(appUser, command.Symbol, cancellationToken);
                 if (deletedPortfolio is not null)
                 {
+                    await _dbContext.SaveChangesAsync(cancellationToken);
                     var deletedPortfolioDtoReponse = deletedPortfolio.ToPortfolioDtoResponse();
                     return Result<PortfolioDeleteResult>.Success(new PortfolioDeleteResult(deletedPortfolioDtoReponse));
                 }

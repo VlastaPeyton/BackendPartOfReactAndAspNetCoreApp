@@ -35,7 +35,8 @@ Outbox/Inbox pattern:
 	u Consumer/Publisher microservisima i da automatski upisuje u Outbox tabelu i da svojim built-in background workerom salje neposlate integration event iz Outbox u 
 	message broker i automatski ih flaguje kao poslate. Isto MassTransit built-in sve radi i na Subscriber strani gde iz RabbitMQ upise Integration Event u 
 	Inbox table, pa proveri da l taj event vec obradjen mozda, ako nije obradjen, poziva IntegrationEventHandler koji upisuje promenu u Subscriber microservice Db.
-	  Ne moram rucno praviti ni tabele, ni upis u njih, a ni slanje event iz njih u mesasge broker, jer to u jednoj liniji koda sve MassTransit radi.
+	  Ne moram rucno praviti ni tabele, ni upis u njih, a ni slanje integration event iz njih u mesasge broker, jer to kroz IPublishEndpoint.Publish MassTransit radi.
+	  Outbox tabela ima gomilu kolona, ali sadrzaj integration eventa se upise u Body kolonu 
 	  Koraci:
 		  Instaliram MassTransit.EntityFrameworkCore
 		  Modifikujem MassTransitExtensions.cs i u Consumer i u Publisher microservice, ali u Publisher ugasim cleanup za inbox

@@ -1,4 +1,5 @@
 ﻿using Api.Data;
+using Api.DTOs.StockDTOs;
 using Api.Helpers;
 using Api.Interfaces;
 using Api.Interfaces.IRepositoryBase;
@@ -11,6 +12,7 @@ namespace Api.Repository.BaseRepository
     {
         // Nasledio BaseRepository<Stock> kako bih koristio sve njegove metode, osim onih koje moram da override. 
         // Implementirao IStockRepositoryBase, zbog SOLID, da bih u Service/CQRS mogo koristiti IStockRepositoryBase, a da se poziva StockRepositoryBase
+        // Objasnjene metode u StockRepository jer ista su im tela kao ovde
 
         public StockRepositoryBase(ApplicationDBContext dBContext) : base(dBContext) { }
 
@@ -44,20 +46,19 @@ namespace Api.Repository.BaseRepository
             return await _dbContext.Stocks.Include(c => c.Comments).ThenInclude(s => s.AppUser).AsNoTracking().FirstOrDefaultAsync(i => i.Id == id, cancellationToken);                                                                                                                                                          // EF track changes after FirstOrDefaultAsync ali mi to ovde ne treba i zato nema znak jednakosti + AsNoTracking ima jer tracking ubaca overhead and memory bespotrebno ovde
         }
 
-        public override async Task<Stock?> UpdateAsync(int id, Stock stock, CancellationToken cancellationToken)
+        // Overload metod, pa imacu UpdateAsync iz IStockRepositoryBase i iz IBaseRepository, ali mi treba ovaj
+        public  async Task<Stock?> UpdateAsync(int id, UpdateStockCommandModel commandModel, CancellationToken cancellationToken)
         {
             var existingStock = await _dbContext.Stocks.FindAsync(id, cancellationToken);
             if (existingStock is null) 
                 return null;
 
-            existingStock.Symbol = stock.Symbol;
-            existingStock.CompanyName = stock.CompanyName;
-            existingStock.Purchase = stock.Purchase;
-            existingStock.Dividend = stock.Dividend;
-            existingStock.Industry = stock.Industry;
-            existingStock.MarketCap = stock.MarketCap;
-
-            await _dbContext.SaveChangesAsync(cancellationToken); 
+            existingStock.Symbol = commandModel.Symbol;
+            existingStock.CompanyName = commandModel.CompanyName;
+            existingStock.Purchase = commandModel.Purchase;
+            existingStock.Dividend = commandModel.Dividend;
+            existingStock.Industry = commandModel.Industry;
+            existingStock.MarketCap = commandModel.MarketCap;
 
             return existingStock;
         }
@@ -65,12 +66,10 @@ namespace Api.Repository.BaseRepository
         public override async Task<Stock?> DeleteAsync(int id, CancellationToken cancellationToken)
         {
             var stock = await _dbContext.Stocks.FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
-            
             if (stock is null)
                 return null;
 
-            _dbContext.Stocks.Remove(stock);      
-            await _dbContext.SaveChangesAsync(cancellationToken); 
+            _dbContext.Stocks.Remove(stock);
 
             return stock;
         }

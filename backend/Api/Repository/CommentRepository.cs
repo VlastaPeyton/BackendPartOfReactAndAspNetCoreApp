@@ -1,7 +1,9 @@
 ﻿using Api.Data;
+using Api.DTOs.CommentDTOs;
 using Api.Events.IntegrationEvents;
 using Api.Helpers;
 using Api.Interfaces;
+using Api.Mapper;
 using Api.Models;
 using Api.Value_Objects;
 using MassTransit;
@@ -9,23 +11,24 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Api.Repository
 {
-    /* Repository pattern kako bi, umesto u CommentController/CommentService, u CommentRepository definisali tela endpoint metoda + DB calls u Repository se rade i zato
+    /* Repository pattern kako bi, umesto u CommentController/CommentService/CQRS, u CommentRepository definisali tela endpoint metoda + DB calls u Repository se rade i zato
       ovde ne ide CommentDTO, vec samo Comment, jer (Models) Entity klase se koriste za EF Core tj Repository radi sa entity klasam jer direktno interaguje sa bazom.
                
-      Service prima/vraca DTO iz/u controller, mapira DTO u Entity i obratno, a Repository prima/vraca Entity iz/u Service !
+      Service/CQRS prima/vraca DTO iz/u controller, mapira DTO u Entity i obratno, a Repository prima/vraca Entity iz/u Service/CQRS.
                  
-      Repository ne baca custom exception niti vraca Result pattern, vec vraca null ako nema necega u bazi. Repository moze baciti implicitni exception ako pukne nesto u bazi sto nije do nas, ali to cu uhvatiti kao Exception u GlobalExceptionHandlingMiddleware.
+      Repository ne baca custom exception niti vraca Result pattern, vec vraca null/entity/value. Repository moze baciti implicitni exception ako pukne nesto u bazi sto nije do nas, 
+     ali to cu uhvatiti kao Exception u GlobalExceptionHandlingMiddleware.
       Service/CQRS Handler baca exception ili vraca Result pattern u zavisnosti sta mu repository vrati. 
+
+      Repository za Write metode nece sadrzati SaveChangesAsync u vecini slucajeva, vec to bice u Service/CQRS ili Unit of work - pogledaj Transakcije.txt i UnitOfWork.txt
      */
     public class CommentRepository : ICommentRepository
     {   
         private readonly ApplicationDBContext _dbContext;
-        private readonly IPublishEndpoint _publishEndpoint; // Jer koristim Outbox pattern pomocu MassTransit
 
-        public CommentRepository(ApplicationDBContext context, IPublishEndpoint publishEndpoint)
+        public CommentRepository(ApplicationDBContext context)
         {   
             _dbContext = context;
-            _publishEndpoint = publishEndpoint;
         }
 
         /* Sve metode su async, jer u StockController bice pozvace pomocu await. 
@@ -60,27 +63,20 @@ namespace Api.Repository
             var existingComment = await _dbContext.Comments.Include(c => c.AppUser).AsNoTracking().FirstOrDefaultAsync(c => c.Id == CommentId.Of(id), cancellationToken); //  Mora ovako poredjenje jer Id je tipa CommentId
             // Id je PK i Index tako da pretrazuje bas brzo O(1) ili O(logn) u zavisnosti koja je struktura za index uzeta
             // EF start tracking changes done in existingComment after FirstOrDefaultAsync, ali ovde ne menjam/brisem objekat pa sam dodao AsNoTracking, jer tracking dodaje overhead and uses memory
-            
-            if (existingComment is null) // Nepotrebno, jer FirstOrDefaultAsync vrati null ako ne nadje
-                return null;
 
             return existingComment;
         }
 
         public async Task<Comment> CreateAsync(Comment comment, CancellationToken cancellationToken)
         {
-            await _dbContext.Comments.AddAsync(comment, cancellationToken); 
-            /* EF start tracking comment object => Ako baza uradi nesto u vrsti koja predstavlja comment, EF to aplikuje u comment, i obratno 
-             EF change tracker marks comment tracking state to Added. Ne smem AsNoTracking, jer AddAsync(comment) nece hteti ako entity object nije tracked.
+            await _dbContext.Comments.AddAsync(comment, cancellationToken);
+            /* EF start tracking comment object => Ako baza uradi nesto u vrsti koja predstavlja comment, EF to aplikuje u comment object i obratno. 
+             EF change tracker marks comment tracking state to Added. Ne smem AsNoTracking, jer AddAsync(comment) nece hteti ako entity object nije tracked, 
+             jer AsNoTracking se koristi samo za Read from Db metode gde ChangeTracker nepotreban.
             */
-            await _dbContext.SaveChangesAsync(cancellationToken); // DB doda vrednost u Id column for row corresponding to comment object => EF updates Id field in comment object
 
-            /* Outbox pattern via MassTransit + Publish event to message broker via MassTransit, pa MassTransit presretne event u Publish metodi i prvo upise u Outbox tabelu, pa posalje tek event na message broker
-              (MassTransit ima background job koji periodicno proverava Outbox table i salje neposlate evente u message broker) pa ga onda background job posalje u message broker i oznaci kao poslat u Outbox table.
-              Ako nesto pukne izmedju SaveChangesAsync i Publish, event nikad ne ode u message broker jer ga Publish ne upise u Outbox. */
-            await _publishEndpoint.Publish(new CommentCreatedIntegrationEvent { Text = "Komentar upisan" }, cancellationToken);
-            
-            return comment; // isti comment, samo sa azuriranim Id poljem kojem baza automatski dodeli vrednost
+            // waits SaveChangesAsync to be updated in Db
+            return comment; // Jos nema Id dodeljen u Db, ali nakon SaveChangesAsync ce mu biti zbog EF ChangeTracker
         }
 
         public async Task<Comment?> DeleteAsync(int id, CancellationToken cancellationToken)
@@ -99,23 +95,23 @@ namespace Api.Repository
             // Umesto Remove, koristim Soft delete 
             comment.IsDeleted = true; // Zbog HasQueryFilter u OnModelCreating, selektuje redove gde IsDeleted=false
 
-            await _dbContext.SaveChangesAsync(cancellationToken); // zbog _dbContext.Comments.Remove(comment), comment is no longer tracked by EF, izbrisan u bazi, ali comment objekat ostaje do kraja ove metode da zivi
+            // waits for SaveChangesAsync to apply changes to IsDeleted column of row of comment object
 
             return comment;
         }
 
-        public async Task<Comment?> UpdateAsync(int id, Comment comment, CancellationToken cancellationToken)
+        public async Task<Comment?> UpdateAsync(int id, UpdateCommentCommandModel commandModel, CancellationToken cancellationToken)
         {
             var existingComment = await _dbContext.Comments.FindAsync(id, cancellationToken); // Brze nego FirstOrDefaultAsync + samo za Id polje moze
-            // EF starts tracking changes in existingComment object, so any changes made to existingComment will be applied to its corresponding row in DB after SaveChangesAsync
+            
             if (existingComment is null)
                 return null;
 
-            // Azuriram samo polja navedena u UpdateCommentRequestDTO
-            existingComment.Title = comment.Title;
-            existingComment.Content = comment.Content;
+            existingComment.Title = commandModel.Title;
+            existingComment.Content = commandModel.Content;
+            // Ostala existingComment polja nisam mapirao i ona ostaju kao u bazi
 
-            await _dbContext.SaveChangesAsync(cancellationToken); // Apply changes in DB row
+            // waits for SaveChangesAsync to apply changes to column represented by existingComment object
 
             return existingComment;
         }

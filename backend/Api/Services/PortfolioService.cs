@@ -1,4 +1,5 @@
-﻿using Api.DTOs.PortfolioDTOs;
+﻿using Api.Data;
+using Api.DTOs.PortfolioDTOs;
 using Api.DTOs.StockDTO;
 using Api.Exceptions_i_Result_pattern;
 using Api.Exceptions_i_Result_pattern.Exceptions;
@@ -19,19 +20,21 @@ namespace Api.Services
         private readonly IStockRepositoryBase _stockRepository; // Koristi CachedStockRepository, jer je on decorator on top of StockRepository tj StockRepositoryBase sada
         private readonly IPortfolioRepository _portfolioRepository;
         private readonly IFinacialModelingPrepService _finacialModelingPrepService;
-        private readonly IStringLocalizer<Resource> _localization; 
-
+        private readonly IStringLocalizer<Resource> _localization;
+        private readonly ApplicationDBContext _dbContext; // Jer Repository nema SaveChangesAsync da bih smanjio br round trip ka Db - pogledaj Transakcija.txt i UnitOfWork.txt
         public PortfolioService(UserManager<AppUser> userManager, 
                                 IStockRepositoryBase stockRepository, 
                                 IPortfolioRepository portfolioRepository, 
                                 IFinacialModelingPrepService finacialModelingPrepService,
-                                IStringLocalizer<Resource> localization)
+                                IStringLocalizer<Resource> localization,
+                                ApplicationDBContext dBContext)
         {
              _userManager = userManager;
             _stockRepository = stockRepository;
             _portfolioRepository = portfolioRepository;
             _finacialModelingPrepService = finacialModelingPrepService;
             _localization = localization;
+            _dbContext = dBContext;
         }
 
         public async Task<IEnumerable<StockDTOResponse>> GetUserPortfoliosAsync(string userName, CancellationToken cancellationToken)
@@ -86,11 +89,14 @@ namespace Api.Services
 
             await _portfolioRepository.CreateAsync(portfolio, cancellationToken); // ne treba mi da dohvatim povratnu vrednost iz CreateAsync, jer portfolio je reference type pa je njegova promena u CreateAsync applied i ovde odma
 
+            await _dbContext.SaveChangesAsync(cancellationToken); 
+
             return Result<PortfolioDtoResponse>.Success(portfolio.ToPortfolioDtoResponse());
         }
 
         public async Task<Result<PortfolioDtoResponse>> DeletePortfolioAsync(string symbol, string userName, CancellationToken cancellationToken)
-        {
+        {   
+            // Mora ovako naci appUser, jer AppUser-Portfolio je 1:Many veza, pa ne moze iz portfolio.Stock.Symbol naci AppUser jer ima mnogo AppUser sa istim Stock
             var appUser = await _userManager.FindByNameAsync(userName); // Ne podrzava cancellationToken
             if (appUser is null)
                 return Result<PortfolioDtoResponse>.Fail("AppUser does not exist"); 
@@ -102,8 +108,10 @@ namespace Api.Services
             if (stockInPortfolios.Count == 1) // is not null jer samo 1 Stock unique stock moze biti u portfolios list, jer AddPortfolio metoda iznad to ogranicila
             {
                 var deletedPortfolio = await _portfolioRepository.DeletePortfolioAsync(appUser, symbol, cancellationToken);
+                
                 if (deletedPortfolio is not null)
                 {
+                    await _dbContext.SaveChangesAsync(cancellationToken);
                     var deletedPortfolioDtoReponse = deletedPortfolio.ToPortfolioDtoResponse();
                     return Result<PortfolioDtoResponse>.Success(deletedPortfolioDtoReponse);
                 }

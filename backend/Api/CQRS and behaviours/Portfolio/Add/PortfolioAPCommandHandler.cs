@@ -1,4 +1,5 @@
 ﻿using Api.CQRS;
+using Api.Data;
 using Api.DTOs.PortfolioDTOs;
 using Api.Exceptions_i_Result_pattern;
 using Api.Interfaces;
@@ -26,13 +27,19 @@ namespace Api.CQRS_and_behaviours.Portfolio.AddPortfolio
         private readonly IPortfolioRepository _portfolioRepository;
         private readonly IStockRepository _stockRepository; // CachedStockRepository jer je decorator on top of StockRepository
         private readonly IFinacialModelingPrepService _finacialModelingPrepService;
-        public PortfolioAPCommandHandler(UserManager<AppUser> userManager, IPortfolioRepository portfolioRepository, 
-                                         IStockRepository stockRepository, IFinacialModelingPrepService finacialModelingPrepService)
+        private readonly ApplicationDBContext _dbContext; // Repository write metods nemaju SaveChangesAsync, pa to ovde pisem da smanjim No round trips ka Db - pogledaj Transakcije.txt i UnitOfWork.txt
+
+        public PortfolioAPCommandHandler(UserManager<AppUser> userManager, 
+                                         IPortfolioRepository portfolioRepository, 
+                                         IStockRepository stockRepository, 
+                                         IFinacialModelingPrepService finacialModelingPrepService,
+                                         ApplicationDBContext dbContext)
         {
             _userManager = userManager; 
             _portfolioRepository = portfolioRepository;
             _stockRepository = stockRepository;
             _finacialModelingPrepService = finacialModelingPrepService;
+            _dbContext = dbContext;
         }
 
         public async Task<Result<PortfolioApResult>> Handle(PortfolioApCommand command, CancellationToken cancellationToken)
@@ -70,6 +77,7 @@ namespace Api.CQRS_and_behaviours.Portfolio.AddPortfolio
             };
 
             await _portfolioRepository.CreateAsync(portfolio, cancellationToken); // ne treba mi da dohvatim povratnu vrednost iz CreateAsync, jer portfolio je reference type pa je njegova promena u CreateAsync applied i ovde odma
+            await _dbContext.SaveChangesAsync(cancellationToken);
 
             return Result<PortfolioApResult>.Success(new PortfolioApResult(portfolio.ToPortfolioDtoResponse()));
         }

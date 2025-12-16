@@ -1,4 +1,5 @@
 ﻿using Api.Data;
+using Api.DTOs.StockDTOs;
 using Api.Helpers;
 using Api.Interfaces;
 using Api.Models;
@@ -7,7 +8,6 @@ using Microsoft.EntityFrameworkCore;
 namespace Api.Repository
 {
     // Objasnjeno u CommentRepository
-    
     public class StockRepository : IStockRepository
     {
         private readonly ApplicationDBContext _dbContext; 
@@ -53,12 +53,13 @@ namespace Api.Repository
         {
             await _dbContext.Stocks.AddAsync(stock, cancellationToken); // EF starts tracking stock object i sve sto baza promeni u vrsti koja se odnosi na ovaj object, EF ce da promeni u stock object i obratno.
             // EF in Change Tracker marks stock tracking state to Added. Ne sme AsNoTracking, jer to samo se radi za reading from DB + sto ne bi moglo SaveChangesAsync onda.
-            await _dbContext.SaveChangesAsync(cancellationToken); // DB doda vrednost u Id kolonu nove vrste koja se odnosi na stock object => EF doda tu vrednost u Id polje of stock object zbog change tracking
             
+            // waits for SaveChangesAsync to be applyied in Db
+
             return stock; // isti stock, samo sa azuriranim Id poljem, jer EF does tracking
         }
 
-        public async Task<Stock?> UpdateAsync(int id, Stock stock, CancellationToken cancellationToken)
+        public async Task<Stock?> UpdateAsync(int id, UpdateStockCommandModel commandModel, CancellationToken cancellationToken)
         {   // FindAsync moze da vrati null i zato Stock? da compiler se ne buni 
             var existingStock = await _dbContext.Stocks.FindAsync(id, cancellationToken); // Brze nego FirstOrDefaultAsync, ali nema Include (jer ne trazim Comments/Portfolios pa mi ne treba), pa moze FindAsync 
             // EF will track existingStock after FindAsync, so any change made to existingStock will apply to DB after SaveChangesAsync. Ne sme AsNoTracking, jer azuriram objekat u tabeli.
@@ -67,14 +68,14 @@ namespace Api.Repository
                 return null;
 
             // Azuriram samo polja koja su navedena u UpdateStockRequestDTO
-            existingStock.Symbol = stock.Symbol;
-            existingStock.CompanyName = stock.CompanyName;
-            existingStock.Purchase = stock.Purchase;
-            existingStock.Dividend = stock.Dividend;
-            existingStock.Industry = stock.Industry;
-            existingStock.MarketCap = stock.MarketCap;
+            existingStock.Symbol = commandModel.Symbol;
+            existingStock.CompanyName = commandModel.CompanyName;
+            existingStock.Purchase = commandModel.Purchase;
+            existingStock.Dividend = commandModel.Dividend;
+            existingStock.Industry = commandModel.Industry;
+            existingStock.MarketCap = commandModel.MarketCap;
 
-            await _dbContext.SaveChangesAsync(cancellationToken); // Due to EF change tracking existingStock, this will apply changes in existingStock to corresponding row in DB Stocks table
+            // waits for SaveChangesAsync da upise promene u bazu za vrstu koja odgovara existingStock
 
             return existingStock;
         }
@@ -89,8 +90,9 @@ namespace Api.Repository
             if (stock is null)
                 return null;
 
-            _dbContext.Stocks.Remove(stock);     // EF in Change Tracker marks stock tracking state to Deleted 
-            await _dbContext.SaveChangesAsync(cancellationToken); // stock is no longer tracked by EF
+            _dbContext.Stocks.Remove(stock); // EF in Change Tracker marks stock tracking state to Deleted
+            
+            // needs SaveChangesAsync to be removed from Db
 
             return stock;
         }

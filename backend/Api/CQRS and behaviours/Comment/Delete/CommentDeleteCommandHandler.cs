@@ -1,9 +1,6 @@
 ﻿using Api.CQRS;
-using Api.CQRS_and_behaviours.Comment.Create;
-using Api.Exceptions;
+using Api.Data;
 using Api.Exceptions_i_Result_pattern;
-using Api.Exceptions_i_Result_pattern.Exceptions;
-using Api.Interfaces;
 using Api.Interfaces.IRepositoryBase;
 using Api.Models;
 using FluentValidation;
@@ -11,7 +8,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace Api.CQRS_and_Validation.Comment.Delete
 {
-    public record CommentDeleteCommand(int Id, string userName) : ICommand<Result<CommentDeleteResult>>;
+    public record CommentDeleteCommand(int Id) : ICommand<Result<CommentDeleteResult>>;
     
     // Mogo sam CommentDTOResponse da stavim u Result object, ali sam namerno ovako da pokazem i flat polja 
     public record CommentDeleteResult(int Id, int? StockId, string Title, string Content, DateTime CreatedOn, string CreatedBy);
@@ -28,11 +25,12 @@ namespace Api.CQRS_and_Validation.Comment.Delete
     {
         // CQRS Handler poziva Repository, a ne service, jer ako radim CQRS, ne koristim Service.
         private readonly ICommentRepositoryBase _commentRepository; // Moze i ICommentRepository - pogledaj BaseRepository 
-        private readonly UserManager<AppUser> _userManager;
-        public CommentDeleteCommandHandler(ICommentRepositoryBase commentRepository, UserManager<AppUser> userManager)
+        private readonly ApplicationDBContext _dbContext; // Repository write metods nemaju SaveChangesAsync, pa to ovde pisem da smanjim No round trips ka Db - pogledaj Transakcije.txt i UnitOfWork.txt
+
+        public CommentDeleteCommandHandler(ICommentRepositoryBase commentRepository, ApplicationDBContext dBContext)
         {
             _commentRepository = commentRepository; 
-            _userManager = userManager;
+            _dbContext = dBContext;
         }
 
         public async Task<Result<CommentDeleteResult>> Handle(CommentDeleteCommand command, CancellationToken cancellationToken)
@@ -42,19 +40,21 @@ namespace Api.CQRS_and_Validation.Comment.Delete
             // Pronadji zeljeni komentar u bazi 
             var comment = await _commentRepository.GetByIdAsync(command.Id, cancellationToken);
             if (comment is null)
-                return Result<CommentDeleteResult>.Fail("Comment not found"); 
+                return Result<CommentDeleteResult>.Fail("Comment not found");
 
             // Pronadji trenutnog usera koji oce da obrise comment
-            var appUser = await _userManager.FindByNameAsync(command.userName);
+            var appUser = comment.AppUser; 
             if (appUser is null)
-                return Result<CommentDeleteResult>.Fail("User not found in userManager");
+                return Result<CommentDeleteResult>.Fail("User not found from comment entity");
 
             // User moze obrisati samo svoj komentar
             if (comment.AppUserId != appUser.Id)
                 return Result<CommentDeleteResult>.Fail("You can only delete your own comments");  
-                
+             
             // Obrisi svoj komentar 
             var deletedComment = await _commentRepository.DeleteAsync(command.Id, cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken); // Ako neka od write repo metoda iznad fail, ovaj commit nece uspeti
+
             if (deletedComment is null)
                 return Result<CommentDeleteResult>.Fail("Comment not found"); 
 

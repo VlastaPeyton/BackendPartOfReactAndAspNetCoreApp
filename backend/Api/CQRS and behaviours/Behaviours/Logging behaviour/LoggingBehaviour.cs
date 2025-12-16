@@ -25,7 +25,8 @@ namespace Api.CQRS_and_Validation.Logging
             var timer = new Stopwatch();
             timer.Start();
 
-            var response = await next(); // Poziva se Handle metod u Command/QueryHandler jer je LogginBehaviour poslednji "middleware" u mediator pipeline
+            var response = await next(); // Poziva se UnitOfWorkBehaviour Handle metod ako je  CommandHandler jer UnitOfWorkBehavioru je poslednji "middleware" u mediator pipeline
+                                         // Poziva se Handle metod ako je QueryHandler jer UnitOfWorkBehaviour se ne radi za njega
             timer.Stop();
 
             var timeTaken = timer.Elapsed;
@@ -35,7 +36,7 @@ namespace Api.CQRS_and_Validation.Logging
 
             _logger.LogInformation($" Handled Request={typeof(TRequest).Name} with Response={typeof(TResponse).Name}");
 
-            return response;
+            return response; // Vraca se u prethodno registrovani ValidationBehaviour
         }
     }
 }

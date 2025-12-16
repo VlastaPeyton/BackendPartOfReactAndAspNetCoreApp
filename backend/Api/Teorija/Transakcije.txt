@@ -1,8 +1,28 @@
 Koriste u Service klasi, ne u Repository, jer Repository ne sme znati da li je deo transakcije.
 
-Ako koristim SaveChangesAsync, bez explicitne transakcije, on je transakcija + commit koji ne moze rollback.
-Ako koristim explicitnu transakciju i unutar nje 1 ili vise SaveChangesAsync, onda svaki SaveChangesAsync samo upise u bazu ali ne commit, 
-i moze rollback, dok commit moram explicitno napisati na kraju transakcije.
-Ako imam vise SaveChangesAsync u explicitnoj transakciji, to znaci da svaki SaveChangesAsync zavisi od od prethodnog npr ako prvi upise novu vrstu, 
-ta vrsta dobije novi Id automatski, a naredna linija koda koristi taj Id pa se na osnovu toga i neku drugi red zameni i onda SaveChangesAsync zameni 
-taj drugi red. 
+U pocetku sam imao Repository methods gde svaka je imala SaveChangesAsync i to ne valja, jer u Service/CQRS metodi ako pozovem vise repository metoda, 
+za svaku repo metodu ide Db round trip (zbog SaveChangesAsync), sto je skupo i sporo jer SaveChangesAsync (van explicitne transakcije) azurira EF 
+ChangeTracker + upise u bazu + Commit(uspesno sve nakon cega ne moze Rollback) tj van explicitne transakcije SaveChangesAsync pravi implicitnu transakciju
+gde ili sve uspeva ili nista. U explicitnoj transaction u AccountService kada sam koristio 
+Repository methods, njihovi SaveChangesAsync nisu napravili Commit (jer su repo methods pozvane unutar explicitne transakcije), vec samo azurirali EF 
+ChangeTracker i bazu, dok CommitAsync na kraju transakcije ce da oznaci sve kao uspesno (nakon cega nema Rollback).
+Bolje je da Repository metode nemaju SaveChangesAsync, vec da koristim UnitOfWork (pogledaj UnitOfWork.txt) pattern ili ako ne koristim UoW da u 
+Service/CQRS ubacim ApplicationDbContext ciji SaveChangesAsync ce promene u bazi izvrsiti samo kada ja hocu, a ne u svakoj 
+repository metodi. Ovime postizem, bez obzira postoji li explicitna transakcija ili ne, minimalan br round trips to Db.
+
+Ako u explicitnoj transakciji treba da se prvo nesto upise u bazu kako bi Db generisala novi Id, onda nakon toga uradim SaveChangesAsync, pa nastavljam ispod 
+da dohvatim taj Id, i na kraju opet SaveChangesAsync uradim konacni kao i uvek sto treba. Tacnije, explicitna transakcija mi treba ako:
+	- imam vise SaveChangesAsync poziva sa istim DbContext unutar istog bloka koda
+	- umesto EF koristim Dapper.
+	- koristim razlicite DbContexte tj imam razlicite baze 
+
+Commit omogucava da sve promene, putem SaveChangesAsync, postanu trajne u Db i ChangeTracker, ali ako bar jedna promena se nije izvrsila, onda Rollback ide 
+da povrati sve kako je bilo pre svih promena koje smo zeleli. Ako ne koristim explicitnu transakciju, SaveChangesAsync radi i azuriranje ChangeTracker/Baze + 
+Commit i onda nema mogucnost za Rollback.
+
+SaveChangesAsync moze u repository metod samo bas kad zatreba.
+
+SaveChangesAsync za CQRS mogu direktno DbContext.SaveChangesAsync a mogu i UnitOfWorkBehaviour koje registrujem na kraju mediatr pipeline i u njemu pozivam
+ovu metodu automatski nakon CommandHandler cime izbegavam da EF curi u CQRS.
+
+SaveChangesAsync za Service mogu direknto kao DbContext.SaveChangesAsync a mogu i UnitOfWork pattern da EF ne curi u Service.

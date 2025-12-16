@@ -1,4 +1,5 @@
 ﻿using Api.DTOs.Stock;
+using Api.DTOs.StockDTOs;
 using Api.Helpers;
 using Api.Models;
 
@@ -21,7 +22,7 @@ namespace Api.Interfaces
         Task<IEnumerable<Stock>> GetAllAsync(StockQueryObject query, CancellationToken cancellationToken); 
         Task<Stock?> GetByIdAsync(int id, CancellationToken cancellationToken); 
         Task<Stock> CreateAsync(Stock stock, CancellationToken cancellationToken); 
-        Task<Stock?> UpdateAsync(int id, Stock stock, CancellationToken cancellationToken); 
+        Task<Stock?> UpdateAsync(int id, UpdateStockCommandModel commandModel, CancellationToken cancellationToken); 
         Task<Stock?> DeleteAsync(int id, CancellationToken cancellationToken); 
         Task<bool> StockExists(int id, CancellationToken cancellationToken);
         Task<Stock?> GetBySymbolAsync(string symbol, CancellationToken cancellationToken); 

@@ -1,4 +1,11 @@
 DbContext je Unit of work by default. 
-Moze i rucno da se napravi Unit of work, ali ako imam razlicite baze jer svaka baza ima svoj DbContext (u mom slucaju mogo bih odvojiti 
-Identity i auth jednu bazu i ostale stvari druga baza, ali ne zelim da prekomplikujem bezveze.
+Moze i rucno da se napravi Unit of work - pogledaj Transakcije.txt
 Registrujem kao AddScoped jer Unit of work wrapps DbContext koji je AddScoped takodje.
+
+Do sada sam imao u Service/CQRS DbContext.SaveChangesAsync, dok Repository nema SaveChangesAsync (pogledaj Transakcije.txt), ali da sprecim
+"curenje" EF (DbContext) u Service/CQRS, pravi se IUnitOfWork i UnitOfWork koji sadrzi SaveChangesAsync.
+
+Explicitni UoW treba ako imam vise razlicith baza tj razlicith DbContext
+
+Kod CQRS, ne moram u svakoj CommandHandler da pisem dbContext.SaveChangesAsync, vec da napravim UnitOfWorkBehaviour koji ce to da uradi i da ga
+registrujem na kraj MediatR pipeline.

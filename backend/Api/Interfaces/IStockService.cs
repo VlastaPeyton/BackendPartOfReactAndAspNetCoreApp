@@ -11,7 +11,7 @@ namespace Api.Interfaces
         public Task<IEnumerable<StockDTOResponse>> GetAllAsync(StockQueryObject query, CancellationToken cancellationToken);
         public Task<Result<StockDTOResponse>> GetByIdAsync(int id, CancellationToken cancellationToken);
         public Task<StockDTOResponse> CreateAsync(CreateStockCommandModel command, CancellationToken cancellationToken);
-        public Task<Result<StockDTOResponse>> UpdateAsync(int id, UpdateStockCommandModel command,CancellationToken cancellationToken);
+        public Task<Result<StockDTOResponse>> UpdateAsync(int id, UpdateStockCommandModel commandModel,CancellationToken cancellationToken);
         public Task<StockDTOResponse> DeleteAsync(int id, CancellationToken cancellationToken);
     }
 }
