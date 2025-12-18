@@ -38,10 +38,10 @@ namespace Api.Service
   
                     var stocks = JsonConvert.DeserializeObject<FinancialModelingPrepStockDTO[]>(content);
                     // Convert JSON to list of FinancialModelingPrepStock objects, jer FinancialModelingPrep API vraca niz tipa FinancialModelingPrepStockDTO, ali nam samo prvi element treba jer 1 element ocemo
-                    var stock = stocks?.FirstOrDefault(); // jer nam samo prvi elem treba posto je to nas stock trazeni. Moze stocks[0] ali ako stocks prazan niz, bice greska, a ovako vrati null
+                    var stockFmpDto = stocks?.FirstOrDefault(); // jer nam samo prvi elem treba posto je to nas stock trazeni. Moze stocks[0] ali ako stocks prazan niz, bice greska, a ovako vrati null
                     
-                    if (stock is not null)
-                        return stock?.ToStockFromFinancialModelingPrepStockDTO(); // stock? - jer moze stocks biti prazan niz, a samim tim i stock biti 
+                    if (stockFmpDto is not null)
+                        return stockFmpDto.ToStockFromFinancialModelingPrepStockDTO(); // stock? - jer moze stocks biti prazan niz, a samim tim i stock biti 
                     else
                         return null;
                 }

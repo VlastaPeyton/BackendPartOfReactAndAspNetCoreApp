@@ -11,7 +11,10 @@
         // Of umesto public construktora je Rich domain model koristim
         public static CommentId Of(int value) // Koristim u CommentRepository kada trazim c.Id = CommentId.Of(id) jer tako primeni HasConversion kad cita iz baze sto je i def u OnModelCreating
         {
-            ArgumentNullException.ThrowIfNull(value); // Ovo je Domain layer i mora validacija u njemu zbog rich domain model
+            /* Validacija za ValueObject se radi unutar Value Object, ali necu je raditi jer u CommentRepository.Create metodi 
+             logika je takva da EF ChangeTracker generise random Id (koji je obicno negativan ili 0) i onda nakon SaveChangesAsync 
+             u CommentService/CQRS Create metodi baza generise pravu vrednost koje ChangeTracker odma vidi. Ako uradim validaciju da 
+             id mora >=0 bice uvek error.*/
             return new CommentId(value);
         }
     }

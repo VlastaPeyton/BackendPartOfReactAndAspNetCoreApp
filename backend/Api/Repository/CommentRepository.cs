@@ -102,8 +102,9 @@ namespace Api.Repository
 
         public async Task<Comment?> UpdateAsync(int id, UpdateCommentCommandModel commandModel, CancellationToken cancellationToken)
         {
-            var existingComment = await _dbContext.Comments.FindAsync(id, cancellationToken); // Brze nego FirstOrDefaultAsync + samo za Id polje moze
-            
+            var existingComment = await _dbContext.Comments.Include(c => c.AppUser).FirstOrDefaultAsync(c => c.Id == CommentId.Of(id), cancellationToken); // Jer type(Comment.Id) = CommentId + HasConversion u OnModelCreating mora
+            // Dohvatam Comment.AppUser nav atribut, jer zelim u CommentDTORepsonse da navedem i UserName
+
             if (existingComment is null)
                 return null;
 

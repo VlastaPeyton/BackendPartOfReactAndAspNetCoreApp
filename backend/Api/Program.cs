@@ -24,7 +24,6 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models; // Add this using directive
 using Serilog;
-using Serilog.Context;
 using Serilog.Events;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -115,7 +114,7 @@ builder.Services.AddAuthentication(options =>
     options.Scope.Add("email"); 
     options.Scope.Add("profile"); 
 
-    options.CallbackPath = "api/account/login/google/callback";
+    options.CallbackPath = "/api/account/login/google/callback";
 });
 
 // Objasnjeno u JSON engine.txt 
@@ -203,7 +202,7 @@ builder.Services.AddRateLimiter(options =>
 });
 
 // Custom middleware koji nasledi IMiddleware mora biti registrovan AddTransient u DI
-builder.Services.AddTransient<IMiddleware, GlobalExceptionHandlingMiddleware>();
+builder.Services.AddTransient<GlobalExceptionHandlingMiddleware>(); // Nema <IMiddleware, GEHMiddleware> jer middleware pipeline trazi konkretnu klasu, jer moze vise custom middleware da nasledi IMiddleware
 
 // Options pattern for MessageBrokerSettings
 // Registruj u DI IOptions<MessageBrokerSettings> i proveri da l su polja dobro upisana u appsettings.json 

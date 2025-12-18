@@ -57,17 +57,22 @@ namespace Api.CQRS_and_behaviours.Comment.Create
                 stock = await _finacialModelingPrepService.FindStockBySymbolAsync(command.Symbol, cancellationToken);
                 if (stock is null) 
                     return Result<CommentCreateResult>.Fail("Nepostojeci stock symbol koji nema ni na netu ili FMP API ne radi mozda");
-                else 
-                    await _stockRepository.CreateAsync(stock, cancellationToken);
+
+                // Ako ga naso na netu, konvertovao FmpDto to Stock ali bez Id i ubaca ga u bazu
+                await _stockRepository.CreateAsync(stock, cancellationToken); // Baza nije jos uvek dodelila Stock.Id jer ceka SaveChangesAsync, dok ChangeTracker stavio Stock.Id neku privremeno
+                await _dbContext.SaveChangesAsync(cancellationToken); // Baza generisala Stock.Id i ChangeTracker sad vidi tu vrednost
+
             }
+            // stock.Id postoji bilo da je FMP naso stock pa upisan u bazu ili da l vec postojao u bazi 
+
             var appUser = await _userManager.FindByNameAsync(command.UserName);
             if (appUser is null)
                 return Result<CommentCreateResult>.Fail("User not found in userManager");
             
-            var comment = command.CreateCommenCommandModel.ToCommentFromCreateCommentRequestDTO(stock.Id);
+            var comment = command.CreateCommenCommandModel.ToCommentFromCreateCommentRequestDTO(stock.Id); 
             comment.AppUserId = appUser.Id;
 
-            await _commentRepository.CreateAsync(comment, cancellationToken);
+            await _commentRepository.CreateAsync(comment, cancellationToken); // Comment.Id ima neku temp vrednost u ChangeTracker privremeno dok SaveChangesAsync ne upise u bazi pravu
 
             /*  Outbox pattern via MassTransit + Publish event to message broker via MassTransit, pa MassTransit presretne event u Publish metodi i prvo upise u Outbox tabelu, pa 
              MassTransit built-in background job periodicno proverava Outbox tabelu i salje neposlati integration event na message broker i oznaci kao poslat u Outbox table.
@@ -76,8 +81,9 @@ namespace Api.CQRS_and_behaviours.Comment.Create
             await _publishEndpoint.Publish(new CommentCreatedIntegrationEvent { Text = "Komentar upisan" }, cancellationToken);
 
             await _dbContext.SaveChangesAsync(cancellationToken); // Ako neka od write repo metoda iznad fail, ovaj commit nece uspeti 
-
-            // Moram mapirati Comment Entity u CommentDTOResponse pre nego sto CQRS Handler vrati podatke Controlleru
+            // Baza dodelila Id u Comment i ChangeTracker tu vrednost sad vidi
+            
+            // Moram mapirati Comment Entity u CommentDTOResponse + SaveChangesAsync u comment dodao Id 
             var commentDTOResponse = comment.ToCommentDTOResponse();
 
             return Result<CommentCreateResult>.Success(new CommentCreateResult(commentDTOResponse));

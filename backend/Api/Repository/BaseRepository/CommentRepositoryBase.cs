@@ -5,6 +5,7 @@ using Api.Interfaces.IRepositoryBase;
 using Api.Models;
 using Api.Value_Objects;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace Api.Repository.BaseRepository
 {
@@ -48,7 +49,8 @@ namespace Api.Repository.BaseRepository
         // Overload metod iz (I)BaseRepository, pa imacu UpdateAsync iz ICommentRepository i iz IBaseRepository, ali mi treba ovaj
         public async Task<Comment?> UpdateAsync(int id, UpdateCommentCommandModel commandModel, CancellationToken cancellationToken)
         {
-            var existingComment = await _dbContext.Comments.FindAsync(id, cancellationToken); 
+            var existingComment = await _dbContext.Comments.Include(c => c.AppUser).FirstOrDefaultAsync(c => c.Id == CommentId.Of(id), cancellationToken); // Jer type(Comment.Id) = CommentId + HasConversion u OnModelCreating mora
+            // Dohvatam Comment.AppUser nav atribut, jer zelim u CommentDTORepsonse da navedem i UserName
 
             if (existingComment is null)
                 return null;

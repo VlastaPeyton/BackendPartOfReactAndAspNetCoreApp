@@ -70,13 +70,16 @@ namespace Api.Services
             // ako nije naso "tsla" stock u bazi, nadje ga na netu pomocu FinancialModelingPrepService, pa ga ubaca u bazu, pa onda uzima ga iz baze da bih mi se pojavio na ekranu i da mogu da udjem u njega da comment ostavim
             if (stock is null)
             {   
-                stock = await _finacialModelingPrepService.FindStockBySymbolAsync(symbol, cancellationToken);
+                stock = await _finacialModelingPrepService.FindStockBySymbolAsync(symbol, cancellationToken); 
                 if (stock is null) // Ako nije ga naso na netu, onda smo lose ukucali u search i to je biznis greska
-                    return Result<CommentDTOResponse>.Fail("Nepostojeci stock symbol koji nema ni na netu ili FMP API ne radi mozda"); 
+                    return Result<CommentDTOResponse>.Fail("Nepostojeci stock symbol koji nema ni na netu ili FMP API ne radi mozda");
 
-                else // Ako ga naso na netu, ubaca ga u bazu
-                    await _stockRepository.CreateAsync(stock, cancellationToken);
+                // Ako ga naso na netu, konvertovao FmpDto to Stock ali bez Id i ubaca ga u bazu
+                await _stockRepository.CreateAsync(stock, cancellationToken); // Baza nije jos uvek dodelila Stock.Id jer ceka SaveChangesAsync, dok ChangeTracker stavio Stock.Id neku privremeno
+                await _dbContext.SaveChangesAsync(cancellationToken); // Baza generisala Stock.Id i ChangeTracker sad vidi tu vrednost
             }
+
+            // stock.Id postoji bilo da je FMP naso stock pa upisan u bazu ili da l vec postojao u bazi 
 
             // Mora ovako, jer AppUser ima many Portfolios(Stock), pa ne moze preko stock da nadjem appUser 
             var appUser = await _userManager.FindByNameAsync(userName); // Pretrazi AspNetUser tabelu da nadje usera na osnovu userName
@@ -85,10 +88,10 @@ namespace Api.Services
                 return Result<CommentDTOResponse>.Fail("User not found in userManager"); 
 
             // Moram mapirati DTO(command) u Comment Entity jer Repository prima Entity kad god moze
-            var comment = command.ToCommentFromCreateCommentRequestDTO(stock.Id);
+            var comment = command.ToCommentFromCreateCommentRequestDTO(stock.Id); 
             comment.AppUserId = appUser.Id;
 
-            await _commentRepository.CreateAsync(comment, cancellationToken);  // EF change tracking, ali SaveChangesAsync taj Id dodaje u bazu
+            await _commentRepository.CreateAsync(comment, cancellationToken); // Comment.Id ima neku temp vrednost u ChangeTracker privremeno dok SaveChangesAsync ne upise u bazi pravu
 
             /*  Outbox pattern via MassTransit + Publish event to message broker via MassTransit, pa MassTransit presretne event u Publish metodi i prvo upise u Outbox tabelu, pa 
              MassTransit built-in background job periodicno proverava Outbox tabelu i salje neposlati integration event na message broker i oznaci kao poslat u Outbox table.
@@ -97,13 +100,14 @@ namespace Api.Services
             await _publishEndpoint.Publish(new CommentCreatedIntegrationEvent { Text = "Komentar upisan" }, cancellationToken);
 
             await _dbContext.SaveChangesAsync(cancellationToken); // Ako neka od write repo metoda iznad fail, ovaj commit nece uspeti 
+            // Baza dodelila Id u Comment i ChangeTracker tu vrednost sad vidi
 
-            // Moram mapirati Comment Entity u CommentDTOResponse + SaveChangesAsync u comment dodao Id 
+            // Moram mapirati Comment Entity u CommentDTOResponse jer imam Comment.Id i Comment.StockId
             var commentDTOResponse = comment.ToCommentDTOResponse();
 
             return Result<CommentDTOResponse>.Success(commentDTOResponse);
         }
-        public async Task<Result<CommentDTOResponse>> DeleteAsync(int id, CancellationToken cancellationToken)
+        public async Task<Result<CommentDTOResponse>> DeleteAsync(int id, string userName, CancellationToken cancellationToken)
         {
             // Authorization kako user moze samo svoj komentar brisati 
 
@@ -112,23 +116,24 @@ namespace Api.Services
             if (comment is null)
                 return Result<CommentDTOResponse>.Fail("Comment not found");
 
-            // Pronadji trenutnog usera koji oce da obrise comment
-            var appUser = comment.AppUser; 
+            // Pronadji trenutn logged usera koji oce da obrise comment, jer ako nije loggedin ne sme 
+            var appUser = await _userManager.FindByNameAsync(userName);
 
             if (appUser is null)
-                return Result<CommentDTOResponse>.Fail("User not found from comment entity");
+                return Result<CommentDTOResponse>.Fail("User not found in userManager");
 
-            // User moze obrisati samo svoj komentar
+            // Logged user moze obrisati samo svoj komentar
             if (comment.AppUserId != appUser.Id) 
                 return Result<CommentDTOResponse>.Fail("You can only delete your own comments");
             
             // Obrisi svoj komentar 
             var deletedComment = await _commentRepository.DeleteAsync(id, cancellationToken);
-            await _dbContext.SaveChangesAsync(cancellationToken); // Ako neka od write repo metoda iznad fail, ovaj commit nece uspeti
 
             if (deletedComment is null)
                 return Result<CommentDTOResponse>.Fail("Comment not found");
-            
+
+            await _dbContext.SaveChangesAsync(cancellationToken); // Ako neka od write repo metoda iznad fail, ovaj commit nece uspeti
+
             // Moram mapirati Comment Entity u DTO 
             return Result<CommentDTOResponse>.Success(comment.ToCommentDTOResponse());
 
@@ -137,10 +142,10 @@ namespace Api.Services
         {   
             var commentUpdated = await _commentRepository.UpdateAsync(id, commandModel, cancellationToken);
 
-            await _dbContext.SaveChangesAsync(cancellationToken); //Ako write repo metoda iznad fail, ovaj commit nece uspeti
-
             if (commentUpdated is null)
-                return Result<CommentDTOResponse>.Fail("Comment not found"); 
+                return Result<CommentDTOResponse>.Fail("Comment not found");
+
+            await _dbContext.SaveChangesAsync(cancellationToken); //Ako write repo metoda iznad fail, ovaj commit nece uspeti
 
             // Moram mapirati Comment Entity u DTO 
             return Result<CommentDTOResponse>.Success(commentUpdated.ToCommentDTOResponse());

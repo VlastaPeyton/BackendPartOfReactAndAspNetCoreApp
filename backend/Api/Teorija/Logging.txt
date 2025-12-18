@@ -10,10 +10,9 @@ Serilog: { "Message": "User logged in", "Username": "John", "Time": "10:30", "Us
 NuGets: Serilog, Serilog.AspNetCore, Serilog.Sinks.MSSqlServer, Serilog.Settings.Configuration, Serilog.Sinks.Console
 
 Ovako se loguje pravilno, a ne string interpolacijom: 
-_logger.LogInformation("Korisnik {Username} se prijavio sa IP adrese {IpAddress}", 
-    username, ipAddress);
+_logger.LogInformation("Korisnik {Username} se prijavio sa IP adrese {IpAddress}", username, ipAddress);
 
-U appsettings.json konfigurisem i u Program.cs registrujem Serilog
+U appsettings.json konfigurisem i u Program.cs registrujem Serilog => kada DI ILogger<T> to u pozadini koristi Serilog
 
 Kada Serilog kreira tabelu, bez dodatne konfiguracije, njene kolone su:
     Id

@@ -50,11 +50,11 @@ namespace Api.Repository
         }
 
         public async Task<Stock> CreateAsync(Stock stock, CancellationToken cancellationToken)
-        {
+        {   // Stock nema setovano Id polje jer to baza sama popuni nakon SaveChangesAsync 
             await _dbContext.Stocks.AddAsync(stock, cancellationToken); // EF starts tracking stock object i sve sto baza promeni u vrsti koja se odnosi na ovaj object, EF ce da promeni u stock object i obratno.
             // EF in Change Tracker marks stock tracking state to Added. Ne sme AsNoTracking, jer to samo se radi za reading from DB + sto ne bi moglo SaveChangesAsync onda.
             
-            // waits for SaveChangesAsync to be applyied in Db
+            // waits for SaveChangesAsync to be applyied in Db and to later apply that Id to ChangeTracker jer trenutno ChangeTracker ima Stock.Id=0 jer Id je tipa int
 
             return stock; // isti stock, samo sa azuriranim Id poljem, jer EF does tracking
         }

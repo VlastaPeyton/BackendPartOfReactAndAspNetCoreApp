@@ -38,7 +38,7 @@ namespace Api.Data
                 entity.Property(c => c.Id).HasConversion(
                     id => id.Value,                 // Write to DB  (CommentId -> int)
                     value => CommentId.Of(value)    // Read from DB (int -> CommentId) - pogledaj GetById i Delete metode 
-                ).ValueGeneratedOnAdd(); // Obezbedi da u CommentRepository CreateComment metodi automatski se generise Id vrednost kao dok je Id of Comment bio int tipa.
+                ).ValueGeneratedOnAdd(); // Obezbedi da u CommentRepository CreateComment metodi automatski se generise Id vrednost kao dok je Id of Comment bio int tipa i da ne moram Guid.NewGuid() pisati u ctoru
                 
                 entity.HasQueryFilter(c => !c.IsDeleted); // Soft delete, da automatski ne gleda redove gde IsDeleted=true, ali da svi redovi ostanu u bazi
 
