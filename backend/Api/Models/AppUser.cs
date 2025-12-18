@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using System.Security.Principal;
+using Microsoft.AspNetCore.Identity;
 
 namespace Api.Models
 {   
@@ -36,5 +37,9 @@ namespace Api.Models
         public DateTime? LastRefreshTokenUsedAt { get; set; } // Moze i bez null, jer "?" to automatski omoguci
 
         // Nakon dodavanja RefreshToken kolona, pokrenem migraciju da u AppUser tabeli u bazi ih dodam
+
+        // Dodajem polja za SoftDelete => Migracija da bi se ovo u bazu primenilo
+        public bool IsDeleted { get; set; } = false; // Ne stavljam global query filter u OnModelCreating na AppUser(Identity ume da pravi upite gde filter pravi probleme). Umesto toga, u login/refresh proveri IsDeleted.
+        public DateTime? DeletedAt { get; set; }
     }
 }

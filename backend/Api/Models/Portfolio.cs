@@ -18,6 +18,10 @@ namespace Api.Models
         public int StockId { get; set; }   // StockId je int, jer u Stock Id je int. Sada sam dodao StockId umesto int.
         public Stock Stock { get; set; } = default!; // Navigation property => Portfolio.Include(Stock)
 
+        // Soft delete => Migracija da dodam ove kolone u bazu
+        public bool IsDeleted { get; set; } = false; // Posto je PK=(AppUserId, StockId), kad user ponovo doda isti stock, radis restore (IsDeleted=false), a ne INSERT (jer red vec postoji).
+        public DateTime? DeletedAt { get; set; } 
+
         /* AppUser i Stock ne mogu biti sa "?", jer moraju postojati za svaki Portfolio, jer AppUser.Id i Stock.Id moraju postojati vec u bazi kako bih ih povezao sa AppUserId i StockId
           jer AppUserId+StockId je composite PK koji pravim rucno u OnModelCreating.
 

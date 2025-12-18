@@ -26,3 +26,6 @@ SaveChangesAsync za CQRS mogu direktno DbContext.SaveChangesAsync a mogu i UnitO
 ovu metodu automatski nakon CommandHandler cime izbegavam da EF curi u CQRS.
 
 SaveChangesAsync za Service mogu direknto kao DbContext.SaveChangesAsync a mogu i UnitOfWork pattern da EF ne curi u Service.
+
+Svaki EF Select je pristup bazi (1 round trip) i SaveChangesAsync je (1 round trip) => 2 round trip. 
+Begin Transaction je pristup bazi (1 round trip) i CommitAsync je pristup bazi (1 round trip) => 2 round trip samo za transaction.

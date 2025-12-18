@@ -34,8 +34,9 @@ namespace Api.Service
             var claims = new List<Claim>
             {   
                 new Claim(JwtRegisteredClaimNames.Email, appUser.Email!),
-                new Claim(JwtRegisteredClaimNames.GivenName, appUser.UserName!)
-                // U ClaimsExtension.cs samo mogu dohvatiti Email ili GivenName jer samo sam njih ovde setovao
+                new Claim(JwtRegisteredClaimNames.GivenName, appUser.UserName!),
+                new Claim(JwtRegisteredClaimNames.Sub, appUser.Id), // U ClaimsExtension ovo dohvatim sa NameIdentifier jer Sub se mapira u NameIdentifier
+                // U ClaimsExtension.cs samo mogu dohvatiti Email/ GivenName/ NameIdentifier jer samo sam njih ovde setovao
             };
 
             // Signing credentials = type of Encryption

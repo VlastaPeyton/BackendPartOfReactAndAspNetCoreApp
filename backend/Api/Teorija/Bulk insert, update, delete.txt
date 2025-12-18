@@ -1,0 +1,27 @@
+﻿Obicno koristim EF Core ChangeTracker logiku koja ima bar 2 round tripa:
+	var objekat = await dbContext.Tabela.Select(...).ToListAsync()  // round trip No1 
+	objekat.modifikacija
+
+	dbContext.SaveChangesAsync // round trip No2
+
+SaveChangesAsync u Service/CQRS (jer samo tu sme da postoji) zahteva minimum 1 round trip pod uslovom da sve ChangeTracking promene mogu da stanu
+u velicinu batcha, a ako ne mogu, onda SaveChangesAsync je vise od 1 round trip. ToListAsync, FirstAsync, SingleAsync, AnyAsync, CountAsync, 
+FindAsync itd su 1 round trip.
+
+Za neke situacije su mi >1 round tripa mnogo, jer je to najskuplja operacija.
+
+Da bi se smanjio broj round trips to Db, posebno ako menjam vise redova u bazu, mozemo uraditi sledece stvari da izbegnemo ChangeTracking + SaveChangesAsync:
+	1. Bulk insert:
+		EF Core nema ovo, vec moram koristiti NuGet koje omogucavaju.
+
+	2. Bulk update:
+		Pogledaj User/Portfolio/CommentRepository. 
+		Ne radim explicitni select kao obicno, pa da EF Core ChageTrackuje taj objekat, pa SaveChangesAsync da promene nad tim objektom upise u bazu. 
+		Vec radim ExecuteUpdateAsync gde se vrsta iz baze ne prevodi u objekat, vec direkt se pristupa bazi i nad bazom se vrse izmene.
+		
+	3. Bulk delete:
+		Ne radim explicitni select kao obicno, pa da EF Core ChangeTrackuje taj objekat, pa SaveChangesAsync da promene nad tim objektom upise u bazu.
+		Vec radim ExecuteDeleteAsync gde se vrsta iz baze ne prevodi u objekat, vec direkt se pristupa bazi i nad bazom se vrse izmene.
+
+Ova 3 se nazivaju Batch processing.
+Ako zelim Batch processing with ChangeTracker, moram ocistiti tracker memory i ugasiti ga za batch kako ne bi usporavao proces.

@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using Api.DTOs.Account;
 using Api.DTOs.AccountDTOs;
+using Api.Extensions;
 using Api.Interfaces;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
@@ -252,6 +253,20 @@ namespace Api.Controllers
             newUserDto.RefreshToken = null;
 
             return Ok(newUserDto);
+        }
+
+        [HttpPut("deleteUser")]
+        public async Task<IActionResult> SoftDeleteMe(CancellationToken cancellationToken)
+        {   // Ne treba argument, jer sebe zelim obrisati sa FE
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier); // U TokenService JwtRegisteredClaimNames.Sub, ali kad ocitavam JWT to se pretvori u CalimTypes.NameIdentifier automatski
+
+            if (string.IsNullOrWhiteSpace(userId))
+                return Unauthorized();
+
+            await _accountService.SoftDeleteUserAsync(userId, cancellationToken);
+
+            return NoContent();
         }
     }
 }

@@ -9,5 +9,8 @@ namespace Api.Interfaces.IRepositoryBase
         // Overloaded method iz IBaseRepository, pa u CommentRepositoryBase imacu GetAllAsync/UpdateAsync odavde i iz IBaseRepository, ali koristicu samo ovaj
         Task<IEnumerable<Comment>> GetAllAsync(CommentQueryObject commentQueryObject, CancellationToken cancellationToken);
         Task<Comment?> UpdateAsync(int id, UpdateCommentCommandModel commandModel, CancellationToken cancellationToken);
+
+        // Ovaj metod postoji samo u ICommentRepositorybase
+        Task DeleteByUserIdAsync(string userId, DateTime utcNow, CancellationToken cancellationToken);
     }
 }

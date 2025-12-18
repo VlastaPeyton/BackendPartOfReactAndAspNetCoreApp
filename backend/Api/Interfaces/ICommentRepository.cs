@@ -21,5 +21,6 @@ namespace Api.Interfaces
         Task<Comment> CreateAsync(Comment comment, CancellationToken cancellationToken);
         Task<Comment?> DeleteAsync(int id, CancellationToken cancellationToken); 
         Task<Comment?> UpdateAsync(int id, UpdateCommentCommandModel commandModel, CancellationToken cancellationToken);
+        Task DeleteByUserIdAsync(string userId, DateTime utcNow, CancellationToken cancellationToken);
     }
 }

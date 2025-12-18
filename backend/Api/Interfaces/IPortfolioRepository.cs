@@ -19,6 +19,7 @@ namespace Api.Interfaces
         Task<Portfolio> CreateAsync(Portfolio portfolio, CancellationToken cancellationToken);
         Task<Portfolio?> DeletePortfolioAsync(AppUser appUser, string symbol, CancellationToken cancellationToken);
         Task<Portfolio?> GetPortfolioBySymbol(string symbol, CancellationToken cancellationToken);
+        Task SoftDeleteByUserIdAsync(string userId, DateTime utcNow, CancellationToken cancellationToken);
 
     }
 }

@@ -95,6 +95,7 @@ namespace Api.Middlewares
 
                     // Login endpoint 
                     //WrongPasswordException or WrongUsernameException => StatusCodes.Status401Unauthorized, - postalo Result pattern jer nije neocekivana greska systema, vec biznis logika
+                    UserDeletedException => StatusCodes.Status401Unauthorized,  
 
                     // ForgotPassword endpoint 
                     ForgotPasswordException => StatusCodes.Status200OK,
@@ -144,9 +145,10 @@ namespace Api.Middlewares
                         ResetPasswordException => _localization["ResetPasswordException"],
                         RefreshTokenException => _localization["RefreshTokenException"],
                         GoogleLoginException => _localization["GoogleLoginException"],
+                        UserDeletedException => _localization["UserDeletedException"],
 
                         // Comment:
-                            // nema nistaa 
+                        // nema nistaa 
 
                         // Stock:
                         StockNotFoundException => _localization["StockNotFoundException"],
@@ -154,7 +156,7 @@ namespace Api.Middlewares
                         // Portfolio: 
                         UserNotFoundException => _localization["UserNotFoundException"],
 
-                        // User.GetUserName in Portfolio/CommentController
+                        // User.GetUserName/GetUserId in Portfolio/Comment/AccountController
                         UnauthorizedAccessException => _localization["UnauthorizedAccessException"], 
 
                         // ValidationBehaviour MediatR pipeline

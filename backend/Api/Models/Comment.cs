@@ -17,8 +17,11 @@ namespace Api.Models
         public DateTime CreatedOn { get; set; } = DateTime.Now;
         public string AppUserId { get; set; } = default!; // AppUserId je string, jer AppUser.Id je string. Ovo je FK koji gadja Id u AppUser klasi
         public AppUser? AppUser { get; set; } // Navigational property => Comment.Include(AppUser)
-        public bool IsDeleted { get; set; } = false; // Soft delete. Necu da brisem iz baze fizicki, vec IsDelete=true i u OnModelCreating stavim da ocitava samo redove gde je false i onda kao da sam ih izbrisao
-                                                     // Migraciju uradi posle IsDelete jer sam dodao je naknadno 
+
+        // Soft delete. Necu da brisem iz baze fizicki, vec IsDelete=true i u OnModelCreating stavim da ocitava samo redove gde je ova kolona false i onda kao da sam ih izbrisao
+        // Migraciju uradi posle IsDelete jer sam dodao je naknadno 
+        public bool IsDeleted { get; set; } = false; 
+        public DateTime? DeletedAt { get; set; } 
 
         /*
           Ovo je 1-to-1 AppUser-Comment relationship jer Comment ima AppUser i AppUserId polje, pa EF zakljuci ovu vezu na osnovu imena polja bez da moram pisati u OnModelCreating.

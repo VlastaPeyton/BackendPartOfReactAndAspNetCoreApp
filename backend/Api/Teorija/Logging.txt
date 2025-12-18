@@ -1,0 +1,26 @@
+﻿ILogger, koji sam koristio kao pocetnik, je built-in apstrakcija koja ne definise kako se logovi skladiste/formatiraju/salju, vec to radi konkretni
+NuGet. Najcesci NuGet je Serilog (ili NLog) koji se kaci na ILogger. Serilog loguje kao JSON formata sto je odlicno za pretragu po logovima.
+Moze logirati u vise destinacija istovremeno (baza, fajl, console...). Odlicna performansa, jer async login.
+Serilog se samo definise, a u kodu se koristi ILogger koji u pozadini koristi Serilog.
+
+Razlika ILogger vs Serilog:
+ILogger: "User John logged in at 10:30"
+Serilog: { "Message": "User logged in", "Username": "John", "Time": "10:30", "UserId": 123 }
+
+NuGets: Serilog, Serilog.AspNetCore, Serilog.Sinks.MSSqlServer, Serilog.Settings.Configuration, Serilog.Sinks.Console
+
+Ovako se loguje pravilno, a ne string interpolacijom: 
+_logger.LogInformation("Korisnik {Username} se prijavio sa IP adrese {IpAddress}", 
+    username, ipAddress);
+
+U appsettings.json konfigurisem i u Program.cs registrujem Serilog
+
+Kada Serilog kreira tabelu, bez dodatne konfiguracije, njene kolone su:
+    Id
+    Message - formatirana poruka loga iz npr _logger.Informatio("porukaaa")
+    MessageTemplate - Template poruke sa placeholders
+    Level - Information/Warning/Error zavisi u appsettings sta stoji npr Informatioj jer _logger.Information("porukaaa")
+    TimeStamp 
+    Exception - stack trace ako ima exception
+    Properties - u xml formatu. iskljucim je
+    LogEvent - ovo sam dodao, jer Properties sam iskljucio, da ceo log event u JSON format

@@ -40,7 +40,18 @@ namespace Api.Data
                     value => CommentId.Of(value)    // Read from DB (int -> CommentId) - pogledaj GetById i Delete metode 
                 ).ValueGeneratedOnAdd(); // Obezbedi da u CommentRepository CreateComment metodi automatski se generise Id vrednost kao dok je Id of Comment bio int tipa.
                 
-                entity.HasQueryFilter(c => !c.IsDeleted); // Soft delete, da automatski ne gleda redove gde IsDeleted=true
+                entity.HasQueryFilter(c => !c.IsDeleted); // Soft delete, da automatski ne gleda redove gde IsDeleted=true, ali da svi redovi ostanu u bazi
+
+                entity.HasOne(c => c.AppUser)
+                      .WithMany()
+                      .HasForeignKey(c => c.AppUserId)
+                      .OnDelete(DeleteBehavior.Restrict); // Ne mogu hard delete AppUser iz baze ako postoji njegov comment u bazi
+
+                entity.HasOne(c => c.Stock)
+                       .WithMany(s => s.Comments)
+                       .HasForeignKey(c => c.StockId)
+                       .OnDelete(DeleteBehavior.Restrict); // Ne mogu hard delete Stock iz baze ako postoji Comment njegov u bazi
+
             });
 
             // Portfolio configuration stavljam u blok jer lakse je za pratiti
@@ -60,12 +71,14 @@ namespace Api.Data
 
                 entity.HasOne(u => u.AppUser) // 1 Portfolio belongs to 1 AppUser (Portfolio ima AppUser polje)
                       .WithMany(u => u.Portfolios) // 1 AppUser has many Portfolios (AppUser ima List<Portfolio> Portfolios polje) 
-                      .HasForeignKey(p => p.AppUserId); // FK in Portfolio is AppUserId koji automatski gadja AppUser.Id (na osnovu imena EF ih mapira ), jer Porftolio ima AppUserId polje
+                      .HasForeignKey(p => p.AppUserId) // FK in Portfolio is AppUserId koji automatski gadja AppUser.Id (na osnovu imena EF ih mapira ), jer Porftolio ima AppUserId polje
+                      .OnDelete(DeleteBehavior.Cascade); // HardDelete AppUsera brise i njegove Portfolios automatski, ali neam nikad HardDelete za AppUser, vec samo SoftDelete
 
                 entity.HasOne(u => u.Stock) // 1 Portfolio bolongs to 1 Stock (Porftolio ima Stock polje)
                       .WithMany(u => u.Portfolios) // 1 Stock can belong to many Portfolios (Stock ima list<Portoflio> Portfolios polje)
-                      .HasForeignKey(p => p.StockId); // FK in Porftolio is StockId koji automatski gadaj Stock.Id (na osnovu imena EF ih mapira), jer Portfolio ima StockId polje
-               
+                      .HasForeignKey(p => p.StockId) // FK in Porftolio is StockId koji automatski gadaj Stock.Id (na osnovu imena EF ih mapira), jer Portfolio ima StockId polje
+                      .OnDelete(DeleteBehavior.Restrict); // Ne mogu hard izbrisati Stock iz baze ako postoji Portfolio koji koristi taj Stock
+
                 // Zbog ova 2 iznad + List<Portfolios> u AppUser/Stock, kada radim LINQ za AppUser/Stock, pomocu Include (eager loading) dohvatam i Portfolio.
             });
 

@@ -79,7 +79,7 @@ namespace Api.Controllers
                 return BadRequest(ModelState);
                 // Frontendu ce biti poslato StatusCode=400 u Response Status, a ModelState ce biti poslat u Response Body sa CreateCommentRequestDTO poljima u "errors" delu of Response
 
-            var userName = User.GetUserName(); // Pogledaj HttpContext.txt
+            var userName = User.GetUserName(); // Pogledaj HttpContext.txt + ovo je extension metoda za claim
 
             // Write to DB endpoint, pa mapiram CreateCommentRequestDTO u CommandModel - pogledaj Services.txt + DTO vs entity klase.txt 
             var command = new CreateCommentCommandModel
@@ -107,7 +107,7 @@ namespace Api.Controllers
             // Iako je write to DB, nema mapiranje, jer samo id je argument 
 
             // Zbog authorization kako user moze samo svoj komentar brisati - ne treba, jer comment.AppUser smanjuje br round trips to Db
-            //var userName = User.GetUserName(); -  Pogledaj HttpContext.txt
+            //var userName = User.GetUserName(); 
 
             var resultPattern = await _commentService.DeleteAsync(id, cancellationToken);
             if (!resultPattern.IsSuccess)
@@ -148,7 +148,7 @@ namespace Api.Controllers
 
         // CQRS endpoints
 
-        [HttpGet]
+        [HttpGet("cqrs")]
         [Authorize]
         public async Task<IActionResult> GetAllCqrs([FromQuery] CommentQueryObject commentQueryObject, CancellationToken cancellationToken)
         {
@@ -159,7 +159,7 @@ namespace Api.Controllers
             return Ok(response.commentResponseDTOs);
         }
 
-        [HttpGet("{id:int}")] // Ne moze ista route kao za GetById, jer nece moci se testirati u Postman, ali ovo je samo moja nadmoc da pokazem da znam i CQRS
+        [HttpGet("cqrs/{id:int}")] 
         [Authorize]
         public async Task<IActionResult> GetByIdCqrs([FromRoute] int id, CancellationToken cancellationToken)
         {
@@ -170,7 +170,7 @@ namespace Api.Controllers
             return Ok(response.commentDTOResponse);
         }
 
-        [HttpPost("{symbol:alpha}")] // Ne moze ista route kao za Create, jer nece moci se testirati u Postman, ali ovo je samo moja nadmoc da pokazem da znam i CQRS 
+        [HttpPost("cqrs/{symbol:alpha}")] 
         [Authorize]
         public async Task<IActionResult> CreateCqrs([FromRoute] string symbol, [FromBody] CreateCommentRequestDTO request, CancellationToken cancellationToken)
         {
@@ -181,7 +181,7 @@ namespace Api.Controllers
                 Content = request.Content
             };
 
-            var userName = User.GetUserName(); // Pogledaj HttpContext.txt
+            var userName = User.GetUserName(); // Pogledaj HttpContext.txt + ovo je extension metoda za Claims
             
             // Necu pravim novi CommentCreateRequest object da sadrzi symbol + polja iz CreateCommentRequestDTO, jer ocu da potpis bude isti kao u Create endpoint
             var command = new CommentCreateCommand(userName, symbol, commandModel);
@@ -196,7 +196,7 @@ namespace Api.Controllers
             return CreatedAtAction(nameof(GetById), new { id = result.CommentDTOResponse.Id }, result.CommentDTOResponse);
         }
 
-        [HttpDelete("{id:int}")] // Ne moze ista route kao za Create, jer nece moci se testirati u Postman, ali ovo je samo moja nadmoc da pokazem da znam i CQRS 
+        [HttpDelete("cqrs/{id:int}")] 
         [Authorize]
         public async Task<IActionResult> DeleteCqrs([FromRoute] int id, CancellationToken cancellationToken)
         {
@@ -216,7 +216,7 @@ namespace Api.Controllers
             return Ok(result);
         }
 
-        [HttpPut("{id:int}")] // Ne moze ista route kao za Update, jer nece moci se testirati u Postman, ali ovo je samo moja nadmoc da pokazem da znam i CQRS
+        [HttpPut("cqrs/{id:int}")] 
         [Authorize]
         public async Task<IActionResult> UpdateCqrs([FromRoute] int id, [FromBody] UpdateCommentRequestDTO request, CancellationToken cancellationToken)
         {

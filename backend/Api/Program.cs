@@ -23,6 +23,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models; // Add this using directive
+using Serilog;
+using Serilog.Context;
+using Serilog.Events;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -140,7 +143,8 @@ builder.Services.AddStackExchangeRedisCache(config =>
     config.Configuration = builder.Configuration.GetConnectionString("Redis");
 });
 
-
+// Add UserRepository 
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 // Add AccountService i IAccountService 
 builder.Services.AddScoped<IAccountService, AccountService>(); 
 // Add CommentService i ICommentService
@@ -213,6 +217,11 @@ builder.Services.AddSingleton(resolver => resolver.GetRequiredService<IOptions<M
 // Localization - pogledaj Localization.txt
 builder.Services.AddLocalization(options => options.ResourcesPath = "Localization");
 
+// Serilog - sve sto ide kroz ILogger, prosledi Serilogu
+builder.Host.UseSerilog((context, services, lc) => lc.ReadFrom.Configuration(context.Configuration) // Cita Serilog:WriteTo iz appsettings
+                                                              .Enrich.FromLogContext()
+                       );
+
 var app = builder.Build();
 
 // Dodavanje middleware u pipeline bitan redosled jer request ide nizvodno ovde, a response uzvodno - pogledaj Middleware.txt 
@@ -242,7 +251,30 @@ app.UseCookiePolicy(new CookiePolicyOptions
 Ako ovo imam, onda u AccountController ne pisem Append i ne navodim one parametre.*/
 
 // Enable Authentication - pogledaj Authentication middleware.txt
-app.UseAuthentication(); 
+app.UseAuthentication();
+
+// Dodaj Serilog request logging (1 log event po http request) middleware za svaki http request automatski da logira. Mora ovde jer mogu tek nakon authentication koristiti Username 
+app.UseSerilogRequestLogging(options =>
+{
+    options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
+    options.GetLevel = (httpContext, elapsed, ex) =>
+               ex != null || httpContext.Response.StatusCode >= 500 ? LogEventLevel.Error : LogEventLevel.Information;
+
+
+    options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+    {
+        diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
+        diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
+        diagnosticContext.Set("UserAgent", httpContext.Request.Headers["User-Agent"].ToString());
+        // Ova tri nisu default kolone niti sam ih u appsettings dodao pa ce ovo biti vrednosti iz LogEvent JSON kolone
+        if (httpContext.User.Identity?.IsAuthenticated == true)
+        {
+            diagnosticContext.Set("UserName", httpContext.User.Identity.Name);
+            // Ovo sam u appsettings postavio kao kolonu, pa ce da se upise i u UserName kolonu i u LogEvent JSON kolonu
+        }
+    };
+});
+
 // Enable Authorization after Authentication - pogledaj Authorization middleware.txt 
 app.UseAuthorization();  
 // Enable using of Rate Limiter middleware on desired endpoints 

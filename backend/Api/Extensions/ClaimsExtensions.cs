@@ -6,8 +6,18 @@ namespace Api.Extensions
     {
         public static string GetUserName(this ClaimsPrincipal user)
         {   // ClaimsPrincipal je AppUser koji je currently logged in
-            // Claims sam definisao prilikom JWT creation u TokenService i sadrzi Email i UserName(GivenName) ili Email i Profile ako je GoogleLogin
+            // Claims sam definisao prilikom JWT creation u TokenService i sadrzi Email+GivenName+Sub ili Email+ Profile ako je GoogleLogin
             return user.FindFirst(ClaimTypes.GivenName)?.Value ?? throw new UnauthorizedAccessException("Username claim not found");
+        }
+
+        public static string GetEmail(this ClaimsPrincipal user)
+        {
+            return user.FindFirst(ClaimTypes.Email)?.Value ?? throw new UnauthorizedAccessException("Email claim not found");
+        }
+
+        public static string GetUserId(this ClaimsPrincipal user)
+        {
+            return user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException("UserId claim not found");
         }
     }
 }

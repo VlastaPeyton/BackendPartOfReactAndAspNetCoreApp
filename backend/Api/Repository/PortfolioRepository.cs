@@ -69,5 +69,21 @@ namespace Api.Repository
 
             return portfolio;
         }
+        public async Task SoftDeleteByUserIdAsync(string userId, DateTime utcNow, CancellationToken cancellationToken)
+        {
+            // Pogledaj u UserRepository zasto je ovo Bulk insert koji smanjuje br of round trips to Db
+
+            /*U OnModelCreating pise "entityHasQueryFilter(c => !c.IsDeleted)" EF automatski uzima samo redove gde
+              IsDeleted = false.Da bih postigao idempotentnost, jer sad brisanjem usera zelim da obrisem i njegove portfolios,
+              gde su mozda neki od portfolios vec obrisani na drugi nacin(koji ne postoji za sada), moram IgnoreQueryFilter
+              iako cu time da obrisem vec obrisane, nema veze, jer ovako postizem idempotency. */
+            await _dbContext.Portfolios
+                            .IgnoreQueryFilters() 
+                            .Where(p => p.AppUserId == userId && !p.IsDeleted)
+                            .ExecuteUpdateAsync(s => s.SetProperty(p => p.IsDeleted, true)
+                                                      .SetProperty(p => p.DeletedAt, utcNow),
+                            cancellationToken);
+        }
+
     }
 }

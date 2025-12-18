@@ -69,7 +69,7 @@ namespace Api.Controllers
 
         // CQRS endpoints
 
-        [HttpGet]  // Ne moze isti route kao GetUserPortfolios, jer nece moci u Postman testiranje, ali cisto da pokazem i CQRS zelim
+        [HttpGet("cqrs")]  
         [Authorize]
         public async Task<IActionResult> GetUserPortfoliosCqrs(CancellationToken cancellationToken)
         {
@@ -81,7 +81,7 @@ namespace Api.Controllers
             return Ok(result.StockDTOResponses);
         }
 
-        [HttpPost] // Ne moze isti route kao AddPortfolio, jer nece moci u Postman testiranje, ali cisto da pokazem i CQRS zelim
+        [HttpPost("cqrs")] 
         [Authorize]
         public async Task<IActionResult> AddPortfolioCqrs([FromQuery] string symbol, CancellationToken cancellationToken)
         {
@@ -96,7 +96,7 @@ namespace Api.Controllers
             return Ok(result.PortfolioDtoResponse);
         }
 
-        [HttpDelete] // Ne moze isti route kao DeletePortfolio, jer nece moci u Postman testiranje, ali cisto da pokazem i CQRS zelim
+        [HttpDelete("cqrs")] 
         [Authorize]
         public async Task<IActionResult> DeletePortfolioCqrs([FromQuery] string symbol, CancellationToken cancellationToken)
         {

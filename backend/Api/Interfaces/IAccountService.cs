@@ -14,5 +14,6 @@ namespace Api.Interfaces
         Task ResetPasswordAsync(ResetPasswordCommandModel command);
         Task<AccessAndRefreshTokenDTO> RefreshTokenAsync(string refreshToken);
         Task<NewUserDTO> GoogleLoginRegisterAsync();
+        Task SoftDeleteUserAsync(string userId, CancellationToken cancellationToken);
     }
 }

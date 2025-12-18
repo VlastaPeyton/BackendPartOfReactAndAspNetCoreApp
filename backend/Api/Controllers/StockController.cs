@@ -136,7 +136,7 @@ namespace Api.Controllers
 
         // CQRS endpoints
 
-        [HttpGet]   // Ne moze ista route kao za Update, jer nece moci se testirati u Postman, ali ovo je samo moja nadmoc da pokazem da znam i CQRS
+        [HttpGet("cqrs")]   // Ne moze ista route kao za Update, jer nece moci se testirati u Postman, ali ovo je samo moja nadmoc da pokazem da znam i CQRS
         [Authorize] 
         public async Task<IActionResult> GetAllCqrs([FromQuery] StockQueryObject query, CancellationToken cancellationToken)
         {
@@ -147,7 +147,7 @@ namespace Api.Controllers
             return Ok(result.StockDTOResponses);
         }
 
-        [HttpGet("{id:int}")] // Ne moze ista route kao za GetAll, jer nece moci se testirati u Postman, ali ovo je samo moja nadmoc da pokazem da znam i CQRS
+        [HttpGet("cqrs/{id:int}")] 
         [Authorize]
         public async Task<IActionResult> GetByIdCqrs([FromRoute] int id, CancellationToken cancellationToken)
         {
@@ -161,7 +161,7 @@ namespace Api.Controllers
             return Ok(result.StockDTOResponse);
         }
 
-        [HttpPost]    // Ne moze ista route kao za GetById, jer nece moci se testirati u Postman, ali ovo je samo moja nadmoc da pokazem da znam i CQRS
+        [HttpPost("cqrs")]    
         [Authorize]
         public async Task<IActionResult> CreateCqrs([FromBody] CreateStockRequestDTO dto, CancellationToken cancellationToken)
         {
@@ -185,7 +185,7 @@ namespace Api.Controllers
             return CreatedAtAction(nameof(GetById), new { id = stockDtoResponse.Id }, stockDtoResponse);
         }
 
-        [HttpPut("{id:int}")] // Ne moze ista route kao za Create, jer nece moci se testirati u Postman, ali ovo je samo moja nadmoc da pokazem da znam i CQRS
+        [HttpPut("cqrs/{id:int}")] 
         [Authorize]
         public async Task<IActionResult> UpdateCqrs([FromRoute] int id, [FromBody] UpdateStockRequestDTO dto, CancellationToken cancellationToken)
         {
@@ -212,7 +212,7 @@ namespace Api.Controllers
             return Ok(result.StockDTOResponse);
         }
 
-        [HttpDelete("{id:int}")] // Ne moze ista route kao za Delete, jer nece moci se testirati u Postman, ali ovo je samo moja nadmoc da pokazem da znam i CQRS
+        [HttpDelete("cqrs/{id:int}")]
         [Authorize]
         public async Task<IActionResult> DeleteCqrs([FromRoute] int id, CancellationToken cancellationToken)
         {

@@ -69,5 +69,16 @@ namespace Api.Repository.BaseRepository
 
             return comment;
         }
+
+        public async Task DeleteByUserIdAsync(string userId, DateTime utcNow, CancellationToken cancellationToken)
+        {
+            await _dbContext.Comments
+                            .IgnoreQueryFilters()
+                            .Where(c => c.AppUserId == userId && !c.IsDeleted)
+                            .ExecuteUpdateAsync(s => s.SetProperty(c => c.IsDeleted, true)
+                                                       .SetProperty(c => c.DeletedAt, utcNow),
+                            cancellationToken);
+
+        }
     }
 }

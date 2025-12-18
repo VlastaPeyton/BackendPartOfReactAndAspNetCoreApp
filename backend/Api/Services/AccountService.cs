@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
+using System.Threading;
 using Api.Data;
 using Api.DTOs.Account;
 using Api.DTOs.AccountDTOs;
@@ -8,6 +9,7 @@ using Api.Exceptions;
 using Api.Exceptions_i_Result_pattern;
 using Api.Exceptions_i_Result_pattern.Exceptions;
 using Api.Interfaces;
+using Api.Interfaces.IRepositoryBase;
 using Api.Localization;
 using Api.Models;
 using DotNetEnv;
@@ -28,11 +30,13 @@ namespace Api.Services
         // Zbog AppUser updating via UserManager i SignInManager, automatski je implementiran Race Condition using ConcurrencyStamp kolonu of IdentityUser
         private readonly ITokenService _tokenService;
         private readonly IEmailService _emailService;
-        private readonly ApplicationDBContext _dbContext; 
+        private readonly ApplicationDBContext _dbContext; // Pogledaj neki drugi service objasnjeno je 
         private readonly ILogger<AccountService> _logger;
         private readonly IValidator<LoginCommandModel> _loginValidator; // Za LoginAsync method jer samo tu koristim FluentValidation tj LoginCommandModelValidator
         private readonly IStringLocalizer<Resource> _localization; // Pogledaj Localization.txt
-
+        private readonly IUserRepository _userRepository;
+        private readonly ICommentRepositoryBase _commentRepository;
+        private readonly IPortfolioRepository _portfolioRepository;
         public AccountService(UserManager<AppUser> userManager, 
                               SignInManager<AppUser> signInManager, 
                               ITokenService tokenService, 
@@ -40,7 +44,10 @@ namespace Api.Services
                               IEmailService emailService, 
                               ApplicationDBContext dbContext, 
                               IValidator<LoginCommandModel> loginValidator,
-                              IStringLocalizer<Resource> localization
+                              IStringLocalizer<Resource> localization,
+                              IUserRepository userRepository,
+                              ICommentRepositoryBase commentRepository,
+                              IPortfolioRepository portfolioRepository
                              )
         {
             _userManager = userManager;
@@ -51,6 +58,9 @@ namespace Api.Services
             _dbContext = dbContext;
             _loginValidator = loginValidator;
             _localization = localization;
+            _userRepository = userRepository;
+            _commentRepository = commentRepository;
+            _portfolioRepository = portfolioRepository;
         }
         /* UserManager i SignInManager metode ne prihvataju cancellationToken i zato ga nema u endpoints ni ovde.
            Metode nemaju try-catch, pa se exception propagira u Controller odakle se dalje propagira u GlobalExceptionHandlingMidleware - pogledaj Services.txt
@@ -123,6 +133,9 @@ namespace Api.Services
             if (appUser is null)
                 //throw new WrongUsernameException($"Invalid username"); - umesto exception, koristim Result pattern jer nije neocekivana greska systema, vec biznis logika
                 return Result<NewUserDTO>.Fail("Password nije zadovoljio standarde");
+
+            if (appUser.IsDeleted)
+                    throw new UserDeletedException($"{_localization["UserDeletedException"]}");
 
             // Ako UserName dobar, proverava password tj hashes it and compares it with PasswordHash column in AspNetUsers jer ne postoji Password kolona u AspNetUsers vec samo PasswordHash zbog sigurnosti
             var result = await _signInManager.CheckPasswordSignInAsync(appUser, command.Password, false);
@@ -340,6 +353,31 @@ namespace Api.Services
                 Token = accessToken,
                 RefreshToken = refreshToken,
             };
+        }
+
+        public async Task SoftDeleteUserAsync(string userId, CancellationToken cancellationToken)
+        {
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            try
+            {
+                var now = DateTime.UtcNow;
+
+                await _commentRepository.DeleteByUserIdAsync(userId, now, cancellationToken);
+                await _portfolioRepository.SoftDeleteByUserIdAsync(userId, now, cancellationToken);
+
+                var affectedUser = await _userRepository.SoftDeleteAsync(userId, now, cancellationToken);
+                if (affectedUser == 0) // AKo nije pronaso usera by userId
+                {
+                    // user ne postoji ili je već soft-deleted
+                    await transaction.RollbackAsync(cancellationToken);
+                    return;
+                }
+            }
+            catch
+            {
+                await transaction.CommitAsync(cancellationToken);
+                throw; 
+            }
         }
     }
 }

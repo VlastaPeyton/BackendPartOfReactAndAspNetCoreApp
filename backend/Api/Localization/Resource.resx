@@ -144,6 +144,9 @@
   <data name="GoogleLoginException6" xml:space="preserve">
     <value>Failed to link google account</value>
   </data>
+  <data name="InvalidBase64" xml:space="preserve">
+    <value>Invalid Base64Url string length</value>
+  </data>
   <data name="OpstaSystemGreskaKojaNijeDefinisana" xml:space="preserve">
     <value>Implicit internal server error u service/repository</value>
   </data>
@@ -182,6 +185,9 @@
   </data>
   <data name="UserCreatedExceptionOrRoleAssignmentException" xml:space="preserve">
     <value>Implicit internal server error u service/repository</value>
+  </data>
+  <data name="UserDeletedException" xml:space="preserve">
+    <value>Ne moze Login/Register jer sam ga soft delete</value>
   </data>
   <data name="UserNotFoundException" xml:space="preserve">
     <value>User not found</value>
