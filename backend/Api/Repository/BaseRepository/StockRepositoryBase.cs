@@ -4,6 +4,7 @@ using Api.Helpers;
 using Api.Interfaces;
 using Api.Interfaces.IRepositoryBase;
 using Api.Models;
+using Api.Query_objects;
 using Microsoft.EntityFrameworkCore;
 
 namespace Api.Repository.BaseRepository
@@ -16,20 +17,22 @@ namespace Api.Repository.BaseRepository
 
         public StockRepositoryBase(ApplicationDBContext dBContext) : base(dBContext) { }
 
+        protected override IQueryable<Stock> BuildQuery(QueryObjectParent query)
+        {  // Ovde mora QueryObjectParent, jer cu je pozvati za Stock/CommentRepositoryBase iz BaseRepository.GetAllAsync, a znace zbog polimorfizma
+            return _dbContext.Stocks
+                            .Include(c => c.Comments)
+                            .ThenInclude(c => c.AppUser)
+                            .AsNoTracking()
+                            .AsQueryable();
+        }
+
         // CreateAsync mi odgovara iz BaseRepository, pa necu je override 
 
-        // Overload metod, pa imacu GetAllAsync iz IStockRepositoryBase i iz IBaseRepository, ali mi treba ovaj
+        // Overload metod, pa imacu GetAllAsync iz IStockRepositoryBase i iz IBaseRepository, a koristim oba
         public async Task<IEnumerable<Stock>> GetAllAsync(StockQueryObject query, CancellationToken cancellationToken)
         {
-            var stocks = _dbContext.Stocks
-                                   .Include(c => c.Comments)
-                                   .ThenInclude(c => c.AppUser)
-                                   .AsNoTracking()
-                                   .AsQueryable();
 
-            var skipNumber = (query.PageNumber - 1) * query.PageSize;
-
-            return await stocks.Skip(skipNumber).Take(query.PageSize).ToListAsync(cancellationToken);
+            return await base.GetAllAsync(query, cancellationToken); // Mogu proslediti StockQueryObject jer on nasledio QueryObjectParent
         }
 
         public override async Task<Stock?> GetByIdAsync(int id, CancellationToken cancellationToken)

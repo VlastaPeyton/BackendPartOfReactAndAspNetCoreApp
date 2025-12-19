@@ -5,6 +5,7 @@ namespace Api.Helpers
     // Objasnjeno u StockQueryObject
     public class CommentQueryObject : QueryObjectParent
     {
-        public int NebitnoPolje { get; set; } = 0; // Ne treba ovo polje nikad, ali da bih iskoristio parent klasu zelim. 
+        public int NebitnoPolje { get; set; } = 0; 
+        // Ne treba ovo polje nikad, ali da bih iskoristio parent klasu zelim, ali u praksi ovde cu imati polja.
     }
 }

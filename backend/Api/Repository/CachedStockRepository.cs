@@ -7,6 +7,7 @@ using Api.Interfaces;
 using Api.Interfaces.IRepositoryBase;
 using Api.Mapper;
 using Api.Models;
+using Api.Query_objects;
 using Api.Value_Objects;
 using Microsoft.Extensions.Caching.Distributed;
 using Newtonsoft.Json; // Jer u Controllers endpoint koristim ovaj NuGet, pa ne zelim da ga mesam za System.Text.Json 
@@ -77,9 +78,10 @@ namespace Api.Repository
         }
 
         // Ovo mi ne treba, ali mora da stoji, jer IStockRepositoryBase je nasledio iz IBaseRepository 
-        public async Task<IEnumerable<Stock>> GetAllAsync(CancellationToken cancellationToken)
+        public async Task<IEnumerable<Stock>> GetAllAsync(QueryObjectParent query, CancellationToken cancellationToken)
         {
-            return await _stockRepository.GetAllAsync(cancellationToken);
+
+            return await _stockRepository.GetAllAsync((StockQueryObject)query, cancellationToken);
         }
 
         public async Task<Stock?> GetByIdAsync(int id, CancellationToken cancellationToken)

@@ -7,10 +7,12 @@
      */
     public class QueryObjectParent
     {
-        // Zbog https://localhost:port/api/stock(comment)/?symbol=tsla 
         public string? Symbol { get; set; } = null;
 
-        // Zbog https://localhost:port/api/stock(comment)/?isdescending=true
         public bool IsDescending { get; set; } = false;
+
+        // Pagination defaults:
+        public int PageNumber { get; set; } = 1;
+        public int PageSize { get; set; } = 20;
     }
 }

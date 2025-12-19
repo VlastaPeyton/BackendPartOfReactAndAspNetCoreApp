@@ -9,10 +9,7 @@ namespace Api.Helpers
      */
     public class StockQueryObject : QueryObjectParent
     {
-        // Zbog https://localhost:port/api/stock/?pangenumber=2
-        public int PageNumber { get; set; } = 1;// Pagination 
-
-        // Zbog https://localhost:port/api/stock/?pagesize=20
-        public int PageSize { get; set; } = 10;// Pagination 
+        public int NebitnoPolje { get; set; } = 0;
+        // Ne treba ovo polje nikad, ali da bih iskoristio parent klasu zelim, ali u praksi ovde cu imati polja.
     }
 }

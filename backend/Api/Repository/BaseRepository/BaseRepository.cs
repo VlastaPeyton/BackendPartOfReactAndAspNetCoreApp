@@ -1,6 +1,7 @@
 ﻿using System.Runtime.ConstrainedExecution;
 using Api.Data;
 using Api.Interfaces.IRepositoryBase;
+using Api.Query_objects;
 using MassTransit.Internals.GraphValidation;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,6 +21,9 @@ namespace Api.Repository.BaseRepository
             _dbContext = dbContext;
         }
 
+        // Ovo je "hook" koji svaka izvedena klasa mora da implementira
+        protected abstract IQueryable<T> BuildQuery(QueryObjectParent query);
+
         /* Sve metode su virtual, da mogu ih override ako mi zatreba custom logika u Stock/CommentRepositoryBase, jer nemaju bas sve ove metode istu implementaciju 
           u Stock/CommentRepositoryBase.
         */
@@ -32,9 +36,13 @@ namespace Api.Repository.BaseRepository
              pa cu to u CommentRepositoryBase uraditi => ovu metodu override u CommentRepositoryBase.
             */
         }
-        public virtual async Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken)
+        public virtual async Task<IEnumerable<T>> GetAllAsync(QueryObjectParent query, CancellationToken cancellationToken)
         {   
-            return await _dbContext.Set<T>().AsNoTracking().ToListAsync(cancellationToken);
+            var queryIzChildMetode = BuildQuery(query);
+
+            var skip = (query.PageNumber - 1) * query.PageSize;
+
+            return await queryIzChildMetode.Skip(skip).Take(query.PageSize).ToListAsync(cancellationToken);
             /* Ovaj metod ce biti overloaded u (I)Stock/CommentRepositoryBase, jer u Stock/CommentRepository ima argument odgovarajuci +
              u oba slucaja ova metoda sadrzi Include i jos neke provere, pa zato cu koristiti GetAllAsync overloaded iz (I)Stock/CommentRepositoryBase, a 
              ne ovaj metod. Ova metoda je navedena ovde, tek onako, da ispostuje samo zato jer se pojavljuje u oba StockRepository i CommentRepository.

@@ -3,6 +3,7 @@ using Api.DTOs.CommentDTOs;
 using Api.Helpers;
 using Api.Interfaces.IRepositoryBase;
 using Api.Models;
+using Api.Query_objects;
 using Api.Value_Objects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
@@ -19,19 +20,18 @@ namespace Api.Repository.BaseRepository
        
         }
 
-        // Overload metod iz (I)BaseRepository, pa imacu GetAllAsync iz ICommentRepositoryBase i iz IBaseRepository, ali mi treba ovaj
+        protected override IQueryable<Comment> BuildQuery(QueryObjectParent query)
+        {   // Ovo ce iz base.GetAllAsync da se pozove zbog polimorfizma
+            return _dbContext.Comments.Include(c => c.AppUser)
+                                      .Include(c => c.Stock)
+                                      .AsNoTracking()
+                                      .AsQueryable();
+        }
+
+        // Overload metod iz (I)BaseRepository, pa imacu GetAllAsync iz ICommentRepositoryBase i iz IBaseRepository, a koristim oba
         public async Task<IEnumerable<Comment>> GetAllAsync(CommentQueryObject commentQueryObject, CancellationToken cancellationToken)
         {
-            var comments = _dbContext.Comments.Include(c => c.AppUser).Include(c => c.Stock).AsNoTracking().AsQueryable();
-            if (!string.IsNullOrWhiteSpace(commentQueryObject.Symbol))
-                comments = comments.Where(s => s.Stock.Symbol == commentQueryObject.Symbol);
-
-            if (commentQueryObject.IsDescending)
-                comments = comments.OrderByDescending(c => c.CreatedOn);
-            else
-                comments = comments.OrderBy(c => c.CreatedOn);
-
-            return await comments.ToListAsync(cancellationToken);
+            return await base.GetAllAsync(commentQueryObject, cancellationToken); // Moze jer CommentQueryObject nasledio QueryObjectParent
         }
 
         public override async Task<Comment?> GetByIdAsync(int id, CancellationToken cancellationToken)
@@ -82,5 +82,6 @@ namespace Api.Repository.BaseRepository
                             cancellationToken);
 
         }
+
     }
 }

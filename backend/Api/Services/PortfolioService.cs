@@ -84,7 +84,9 @@ namespace Api.Services
             {
                 StockId = stock.Id,
                 AppUserId = appUser.Id, 
-                // Ne dodajem Stock i AppUser jer vec sigurno postoje u bazi. To bih uradio kada bih prilikom upisa novog portfolio u bazu zeleo i novi Stock/AppUser da upisem
+                /* Ne dodajem Stock i AppUser jer vec sigurno postoje u bazi. To bih uradio kada bih prilikom upisa novog portfolio u bazu zeleo i novi Stock/AppUser da upisem.
+                  Ako dodam  stcok/appUser, EF ce da misli da su novi i bice vrv greska, jer ce preko postojeceg da proba da upise. 
+                  Dodelio sam StockId/AppUserId sto je idealno za slucaj kada postoji u bazi Stock/AppUser. */
                 //Stock = stock, 
                 //AppUser = appUser,
             };

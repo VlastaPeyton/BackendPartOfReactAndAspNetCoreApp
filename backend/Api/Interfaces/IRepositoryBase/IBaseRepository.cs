@@ -1,4 +1,6 @@
-﻿namespace Api.Interfaces.IRepositoryBase
+﻿using Api.Query_objects;
+
+namespace Api.Interfaces.IRepositoryBase
 {   
     /* Prvo sam napravio IStock/IComment/IPortfolioRepository i Stock/Comment/PortfolioRepository, ali Stock/CommentRepository imaju
       zajednicke CRUD metode, pa da smanjim boilerplate code, pravim IBaseRepository i BaseRepository kako bih tu napravio zajednicku 
@@ -17,7 +19,7 @@
         Task<T> CreateAsync(T entity, CancellationToken cancellationToken);
 
         // GetAllAsync metoda u Stock/CommentRepository prima argument, zato cu je overload u (I)Stock/CommentRepositoryBase, a ovde je pisem  samo jer je zajednicka
-        Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken); 
+        Task<IEnumerable<T>> GetAllAsync(QueryObjectParent query, CancellationToken cancellationToken); // Mogu proslediti i child of QueryParentObject
         Task<T?> GetByIdAsync(int id, CancellationToken cancellationToken);
         // UpdateAsync je ovde da ispostuje CRUD, ali cu u IStock/CommentRepositoryBase da overload jer mi ne treba ovakav potpis, pa ovu necu ni koristiti
         Task<T?> UpdateAsync(int id, T entity, CancellationToken cancellationToken);
