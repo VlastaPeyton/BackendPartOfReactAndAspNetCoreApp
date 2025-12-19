@@ -138,7 +138,6 @@ C:\Projects\BackendPartOfReactAndAspNetCoreAppGithub\backend\bin\Debug\Newtonsof
 C:\Projects\BackendPartOfReactAndAspNetCoreAppGithub\backend\bin\Debug\Serilog.Settings.Configuration.dll
 C:\Projects\BackendPartOfReactAndAspNetCoreAppGithub\backend\bin\Debug\System.Text.Encodings.Web.dll
 C:\Projects\BackendPartOfReactAndAspNetCoreAppGithub\backend\bin\Debug\Microsoft.EntityFrameworkCore.Abstractions.dll
-C:\Projects\BackendPartOfReactAndAspNetCoreAppGithub\backend\bin\Debug\Mapster.dll
 C:\Projects\BackendPartOfReactAndAspNetCoreAppGithub\backend\bin\Debug\System.Text.Json.dll
 C:\Projects\BackendPartOfReactAndAspNetCoreAppGithub\backend\bin\Debug\System.IO.Pipelines.dll
 C:\Projects\BackendPartOfReactAndAspNetCoreAppGithub\backend\bin\Debug\Microsoft.AspNetCore.Cryptography.KeyDerivation.dll
@@ -166,7 +165,6 @@ C:\Projects\BackendPartOfReactAndAspNetCoreAppGithub\backend\bin\Debug\Microsoft
 C:\Projects\BackendPartOfReactAndAspNetCoreAppGithub\backend\bin\Debug\Microsoft.Extensions.DependencyModel.dll
 C:\Projects\BackendPartOfReactAndAspNetCoreAppGithub\backend\bin\Debug\Microsoft.Extensions.Diagnostics.dll
 C:\Projects\BackendPartOfReactAndAspNetCoreAppGithub\backend\bin\Debug\Sprache.dll
-C:\Projects\BackendPartOfReactAndAspNetCoreAppGithub\backend\bin\Debug\Mapster.Core.dll
 C:\Projects\BackendPartOfReactAndAspNetCoreAppGithub\backend\bin\Debug\Microsoft.AspNetCore.Cryptography.Internal.dll
 C:\Projects\BackendPartOfReactAndAspNetCoreAppGithub\backend\bin\Debug\Pipelines.Sockets.Unofficial.dll
 C:\Projects\BackendPartOfReactAndAspNetCoreAppGithub\backend\bin\Debug\Microsoft.Extensions.Compliance.Abstractions.dll

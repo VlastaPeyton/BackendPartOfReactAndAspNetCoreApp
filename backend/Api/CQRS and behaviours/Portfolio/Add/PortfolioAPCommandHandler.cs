@@ -58,8 +58,9 @@ namespace Api.CQRS_and_behaviours.Portfolio.AddPortfolio
                 /* FMP API u searchCompanies u FE prikazuje sve Stocks i ETFs koji sadrze "tsla",ipak necu moci dodati bilo koji, jer neki od njih su ETF (a ne Stock) zato sto FMP API in FindStockBySymbolAsync pretrazuje samo Stocks ! */
                 if (stock is null)
                     return Result<PortfolioApResult>.Fail("Ovo sto pokusavas dodati nije Stock, vec ETF, iako ga vidis u listu kad search uradis u FE. Jer API u BE pretrazuje samo Stocks (ne i ETFs). Dok SearchCompanies u FE pretrazuje FMP API koji prikazuje firme a one mogu biti Stock ili ETF.  ");
-                else
-                    await _stockRepository.CreateAsync(stock, cancellationToken); // stock je azuriran sa Id poljem, jer u CreateAsync EF tracking je to odradio. Sad stock je azuriran i ovde jer je reference type 
+                
+                await _stockRepository.CreateAsync(stock, cancellationToken); // ChangeTracker dodaje privremeni Id, ali treba SaveChangesAsync da mu baza dodeli pravi 
+                await _dbContext.SaveChangesAsync(cancellationToken);// stock je dobio Id i ChangeTracker vidi to 
             }
 
             // Ako izabrani symbol nije Stock, vec ETF, iznad izlazimo iz ove metode zbog return. Ali ako je to Stock, onda proveravam da li on vec postoji u listi stocks of current appUser
@@ -67,19 +68,29 @@ namespace Api.CQRS_and_behaviours.Portfolio.AddPortfolio
             if (userStocks.Any(e => e.Symbol.ToLower() == command.Symbol.ToLower()))
                 return Result<PortfolioApResult>.Fail("Cannot add same stock to portfolio as this user has already this stock in portfolio");
 
-            // Ako izabrani stock postoji, nebitno da l u bazi ili u FMP API, dodajemo ga u listu stockova za appUser
-            var portfolio = new Api.Models.Portfolio // Jer Stock je jedan Portfolio
-            {              
+            // Jer 1Stock je 1Portfolio
+            var portfolio = new global::Api.Models.Portfolio
+            {
                 StockId = stock.Id,
                 AppUserId = appUser.Id,
-                Stock = stock,
-                AppUser = appUser,
+                // Ne dodajem Stock i AppUser jer vec sigurno postoje u bazi. To bih uradio kada bih prilikom upisa novog portfolio u bazu zeleo i Stock/AppUser da upisem
+                //Stock = stock, 
+                //AppUser = appUser,
             };
 
-            await _portfolioRepository.CreateAsync(portfolio, cancellationToken); // ne treba mi da dohvatim povratnu vrednost iz CreateAsync, jer portfolio je reference type pa je njegova promena u CreateAsync applied i ovde odma
+            await _portfolioRepository.CreateAsync(portfolio, cancellationToken); 
+
             await _dbContext.SaveChangesAsync(cancellationToken);
 
-            return Result<PortfolioApResult>.Success(new PortfolioApResult(portfolio.ToPortfolioDtoResponse()));
+            // Ne moze portfolio.ToPortfolioDtoResponse, jer portfolio nema Stock polje upisano iznad
+            var response = new PortfolioDtoResponse
+            {
+                StockId = portfolio.StockId,
+                AppUserId = portfolio.AppUserId,
+                Stock = stock.ToStockDtoResponse()
+            };
+
+            return Result<PortfolioApResult>.Success(new PortfolioApResult(response));
         }
     }
 }

@@ -1,4 +1,4 @@
-Klasa A ima navigational property tipa B ako:
+Klasa A ima navigational property(attribute) tipa B ako:
 	- A i B su tabele tj def u ApplicationDbContext kao tabele 
 	- Property je tipa klase B + A sadrzi BId => EF Core automatski FK-PK one-to-one napravi
 	- Property je List/IEnumerable<B> + B sadrzi A.Id => EF Core automatski FK-PK one-to-many napravi
@@ -10,6 +10,8 @@ Za navigtional property:
 	- Ako je B tipa IEnumerable, default uvek "new()" dodelim
 	- Ako je B tipa klase -> a u OnModelCreating ima HasForeignKey.IsRequired, onda required B ili B =null! 
 						  -> a u OnModelCreating nema IsRequired, onda B? 
+	
+	- Tokom kreiranja A, prosledjujem i B u konstruktoru samo ako B vec ne postoji u bazi ! 
 
 Klasa A ima Owned entity property tipa B ako:
 	- A je tabela u bazi

@@ -158,6 +158,8 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 // Add IPortfolioRepository i PortfolioRepository 
 builder.Services.AddScoped<IPortfolioRepository, PortfolioRepository>();
+// Add PortfolioService as IportfolioService 
+builder.Services.AddScoped<IPortfolioService, PortfolioService>();
 
 // Add HttpClient for FinancialModelingPrepService 
 builder.Services.AddHttpClient<IFinacialModelingPrepService, FinancialModelingPrepService>() // Pogledaj IHttpClientFactory, HttpClient, Resilience.txt

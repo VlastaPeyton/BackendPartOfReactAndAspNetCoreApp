@@ -101,7 +101,7 @@ namespace Api.Repository
         {   // FirstOrDefaultAsync moze da vrati null i zato Stock? return type, da se compiler ne buni. 
             return await _dbContext.Stocks.AsNoTracking().FirstOrDefaultAsync(s => s.Symbol == symbol, cancellationToken); // Ne moze FindAsync, iako je brze, jer FindAsync pretrazuje po Id samo
             // Iako ovaj Endpoit ne koristim cesto, jer retko pisem komentare za stock u FE, Stock.Symbol sam stavio u Index zbog DeletePortfolio, pa automatski i ovde brze ce da pretrazi
-            // EF track changes after FirstOrDefaultAsync ali mi to ovde ne treba i zato nema znak jednakosti + AsNoTracking ima jer tracking ubaca overhead and memory bespotrebno ovde
+            // EF track changes after FirstOrDefaultAsync ali mi to ovde ne treba i zato nema znak jednakosti
         }
 
         public async Task<bool> StockExists(int id, CancellationToken cancellationToken)

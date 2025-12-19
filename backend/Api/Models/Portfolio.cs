@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
-using Api.Value_Objects;
 
 namespace Api.Models
 {

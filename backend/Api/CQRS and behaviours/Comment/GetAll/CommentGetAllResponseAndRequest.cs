@@ -7,5 +7,5 @@ namespace Api.CQRS_and_behaviours.Comment.GetAll
     */
 
     // Nemam CommetGetAllRequest objekat, jer zelim da GetAllCqrs i GetAll endpoints budu istog zaglavlja + da ista GetAll Repository metoda opsluzi Service i CQRS! 
-    public record CommentGetAllResponse(List<CommentDTOResponse> commentResponseDTOs);
-}
+    //public record CommentGetAllResponse(IEnumerable<CommentDTOResponse> CommentResponseDTOs); nepotrebno jer necu da mapiram bezveze Result u Response
+} 

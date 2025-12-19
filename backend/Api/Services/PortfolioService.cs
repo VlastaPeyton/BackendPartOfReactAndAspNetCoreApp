@@ -60,38 +60,49 @@ namespace Api.Services
                 return Result<PortfolioDtoResponse>.Fail("User not found via userManager");
 
             // Kada u search ukucan npr "tsla" izadje mi 1 ili lista Stocks ili ETFs koji pocinju sa "tsla" i zelim kliknuti Add da dodam bilo koji stock u portfolio, pa prvo provera da li je zeljeni stock u bazi
-            var stock = await _stockRepository.GetBySymbolAsync(symbol, cancellationToken);
+            var stock = await _stockRepository.GetBySymbolAsync(symbol, cancellationToken); 
 
             // ako ne postoji Stock u bazi, trazi ga na netu u FininacinalModelingPrep
             if (stock is null)
             {
-                stock = await _finacialModelingPrepService.FindStockBySymbolAsync(symbol, cancellationToken);
+                stock = await _finacialModelingPrepService.FindStockBySymbolAsync(symbol, cancellationToken); // nema Id jer nije iz baze dohvacen, vec sa neta
                 /* FMP API u searchCompanies u FE prikazuje sve Stocks i ETFs koji sadrze "tsla",ipak necu moci dodati bilo koji, jer neki od njih su ETF (a ne Stock) zato sto FMP API in FindStockBySymbolAsync pretrazuje samo Stocks ! */
                 if (stock is null)
                     return Result<PortfolioDtoResponse>.Fail("Ovo sto pokusavas dodati nije Stock, vec ETF, iako ga vidis u listu kad search uradis u FE. Jer API u BE pretrazuje samo Stocks (ne i ETFs). Dok SearchCompanies u FE pretrazuje FMP API koji prikazuje firme a one mogu biti Stock ili ETF.  ");
-                else
-                    await _stockRepository.CreateAsync(stock, cancellationToken); // stock je azuriran sa Id poljem, jer u CreateAsync EF tracking je to odradio. Sad stock je azuriran i ovde jer je reference type 
+                
+                await _stockRepository.CreateAsync(stock, cancellationToken); // ChangeTracker dodaje privremeni Id, ali treba SaveChangesAsync da mu baza dodeli pravi 
+                await _dbContext.SaveChangesAsync(cancellationToken);// stock je dobio Id i ChangeTracker vidi to 
             }
 
             // Ako izabrani symbol nije Stock, vec ETF, iznad izlazimo iz ove metode zbog return. Ali ako je to Stock, onda proveravam da li on vec postoji u listi stocks of current appUser
-            var userStocks = await _portfolioRepository.GetUserPortfoliosAsync(appUser, cancellationToken); // Lista svih Stocks koje appUser ima 
-            if (userStocks.Any(e => e.Symbol.ToLower() == symbol.ToLower()))
+            var userStocks = await _portfolioRepository.GetUserPortfoliosAsync(appUser, cancellationToken); // Lista svih Stocks koje appUser ima, jer 1Stock=1Porftolio
+            if (userStocks.Any(s => s.Symbol.ToLower() == symbol.ToLower()))
                 return Result<PortfolioDtoResponse>.Fail("Cannot add same stock to portfolio as this user has already this stock in portfolio");
 
-            // Ako izabrani stock postoji, nebitno da l u bazi ili u FMP API, dodajemo ga u listu stockova za appUser
-            var portfolio = new Portfolio // Jer Stock je jedan Portfolio
+            // Jer 1Stock je 1Portfolio
+            var portfolio = new Portfolio 
             {
                 StockId = stock.Id,
-                AppUserId = appUser.Id,
-                Stock = stock,
-                AppUser = appUser,
+                AppUserId = appUser.Id, 
+                // Ne dodajem Stock i AppUser jer vec sigurno postoje u bazi. To bih uradio kada bih prilikom upisa novog portfolio u bazu zeleo i Stock/AppUser da upisem
+                //Stock = stock, 
+                //AppUser = appUser,
             };
 
-            await _portfolioRepository.CreateAsync(portfolio, cancellationToken); // ne treba mi da dohvatim povratnu vrednost iz CreateAsync, jer portfolio je reference type pa je njegova promena u CreateAsync applied i ovde odma
+            await _portfolioRepository.CreateAsync(portfolio, cancellationToken); 
 
-            await _dbContext.SaveChangesAsync(cancellationToken); 
+            await _dbContext.SaveChangesAsync(cancellationToken);
 
-            return Result<PortfolioDtoResponse>.Success(portfolio.ToPortfolioDtoResponse());
+            // Ne moze portfolio.ToPortfolioDtoResponse, jer portfolio nema Stock polje upisano iznad
+            var response = new PortfolioDtoResponse
+            {
+                StockId = portfolio.StockId,
+                AppUserId = portfolio.AppUserId,
+                Stock = stock.ToStockDtoResponse() 
+            };
+
+            return Result<PortfolioDtoResponse>.Success(response);
+            //return Result<PortfolioDtoResponse>.Success(portfolio.ToPortfolioDtoResponse());
         }
 
         public async Task<Result<PortfolioDtoResponse>> DeletePortfolioAsync(string symbol, string userName, CancellationToken cancellationToken)
@@ -107,7 +118,7 @@ namespace Api.Services
             // Ovaj if-else je dobra praksa za ne daj boze, ali sam vec u AddPortfolio obezbedio da moze samo 1 isti stock biti u listi
             if (stockInPortfolios.Count == 1) // is not null jer samo 1 Stock unique stock moze biti u portfolios list, jer AddPortfolio metoda iznad to ogranicila
             {
-                var deletedPortfolio = await _portfolioRepository.DeletePortfolioAsync(appUser, symbol, cancellationToken);
+                var deletedPortfolio = await _portfolioRepository.DeletePortfolioAsync(appUser, symbol, cancellationToken); 
                 
                 if (deletedPortfolio is not null)
                 {

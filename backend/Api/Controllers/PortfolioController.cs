@@ -24,7 +24,7 @@ namespace Api.Controllers
             _sender = sender;
         }
         // Objasnjeno u Account i Comment controller
-
+        
         // Service endpoints 
 
         [HttpGet]

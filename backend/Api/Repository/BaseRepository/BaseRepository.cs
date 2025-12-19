@@ -26,7 +26,6 @@ namespace Api.Repository.BaseRepository
         public virtual async Task<T> CreateAsync(T entity, CancellationToken cancellationToken)
         {
             await _dbContext.Set<T>().AddAsync(entity, cancellationToken);
-            await _dbContext.SaveChangesAsync(cancellationToken);
             
             return entity;
             /* Ovo telo je dovoljno za StockRepository i ovu metodu necu override u StockRepositoryBase, ali za CommentRepository fali "_publishEndpoint...", 
@@ -53,7 +52,6 @@ namespace Api.Repository.BaseRepository
                 return null;
 
             _dbContext.Entry(existingEntity).CurrentValues.SetValues(entity);
-            await _dbContext.SaveChangesAsync(cancellationToken);
 
             return existingEntity;
 
@@ -66,7 +64,7 @@ namespace Api.Repository.BaseRepository
                 return null;
 
             _dbContext.Set<T>().Remove(entity);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+
             return entity;
             // Ovo telo nije dovoljno za Stock/CommentRepository, pa cu u Stock/CommentRepository da override ovu metodu
         }

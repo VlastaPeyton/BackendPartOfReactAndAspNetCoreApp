@@ -7,5 +7,5 @@ namespace Api.CQRS_and_Validation.Comment
        Obzirom da samo 1 argument prostog tipa postoji u CommentGetByIdRequest, onda ne treba mi taj Request objekat, ali Query objekat mora postojati uvek .*/
 
     // CommentGetByIdResponse je ustvari CommentDTOResponse
-    public record CommentGetByIdResponse(CommentDTOResponse commentDTOResponse);
+    //public record CommentGetByIdResponse(CommentDTOResponse CommentDTOResponse); // Ne treba mi jer zadrzavam sve iz Result
 }

@@ -9,7 +9,7 @@ using Api.Mapper;
 namespace Api.CQRS_and_Validation.Comment
 {
     public record CommentGetByIdQuery(int Id) : IQuery<CommentGetByIdResult>; 
-    public record CommentGetByIdResult(CommentDTOResponse commentDTOResponse); 
+    public record CommentGetByIdResult(CommentDTOResponse CommentDTOResponse); 
 
     // Nema validacija, jer Query cita iz baze
     public class CommentGetByIdQueryHandler : IQueryHandler<CommentGetByIdQuery, CommentGetByIdResult>

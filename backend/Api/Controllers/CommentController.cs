@@ -154,9 +154,8 @@ namespace Api.Controllers
         {
             // Nemam CommetGetAllRequest objekat, jer zelim da GetAllCqrs i GetAll endpoints budu istog zaglavlja + da ista GetAll Repository metoda opsluzi Service i CQRS! 
             var result = await _sender.Send(new CommentGetAllQuery(commentQueryObject), cancellationToken); // Aktivira samo Handler, jer nema validacija za Query
-            var response = result.Adapt<CommentGetAllResponse>(); // Mapirace dobro i polje tipa CommentQueryObject unutar Result i Request objekata.
-
-            return Ok(response.commentResponseDTOs);
+            // Nema potrebe da mapiram iz Result u Reponse 
+            return Ok(result.CommentResponseDTOs);
         }
 
         [HttpGet("cqrs/{id:int}")] 
@@ -165,9 +164,8 @@ namespace Api.Controllers
         {
             // Ne mapiram Request to Query, jer Request object nema potrebe zbog jednog argumenta primitivnog tipa da postoji, vec odma Query objekat pravim i saljem u MediatR pipeline
             var result = await _sender.Send(new CommentGetByIdQuery(id), cancellationToken);
-            var response = result.Adapt<CommentGetByIdResponse>(); // Mapster auto mapira jer su polja istog imena i tipa u obe klase. Mogo sam i bez Response, ali cisto da vidite kako izgleda mapiranje sa Result pattern.
-
-            return Ok(response.commentDTOResponse);
+            // Nema potrebe da mapiram jer zadrzavam sve iz Result
+            return Ok(result.CommentDTOResponse);
         }
 
         [HttpPost("cqrs/{symbol:alpha}")] 
@@ -191,7 +189,7 @@ namespace Api.Controllers
                 return BadRequest(new { message = resultPattern.Error });
 
             var result = resultPattern.Value!;
-            // Ne treba mi CommentCreateResponse 
+            // Ne treba mi CommentCreateResponse jer sve iz result saljem u FE
 
             return CreatedAtAction(nameof(GetById), new { id = result.CommentDTOResponse.Id }, result.CommentDTOResponse);
         }
@@ -211,7 +209,7 @@ namespace Api.Controllers
                 return NotFound(new { message = resultPattern.Error });
 
             var result = resultPattern.Value; // CommentDeleteResult ima ista polja kao CommentDTOResponse 
-            // Ne treba mi CommentDeleteResponse 
+            // Ne treba mi CommentDeleteResponse jer sve iz result saljem u FE
 
             return Ok(result);
         }
@@ -235,7 +233,7 @@ namespace Api.Controllers
                 return NotFound(resultPattern.Error);
 
             var result = resultPattern.Value!.CommentDTOResponse; // CommentDTOResponse
-            // Ne treba mi CommentDeleteResponse
+            // Ne treba mi CommentDeleteResponse jer sve iz Result saljem u FE
 
             return Ok(result);
         }

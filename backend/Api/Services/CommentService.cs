@@ -64,48 +64,61 @@ namespace Api.Services
 
         }
         public async Task<Result<CommentDTOResponse>> CreateAsync(string userName, string symbol, CreateCommentCommandModel command, CancellationToken cancellationToken)
-        {
-            // U FE, zelim da ostavim komentar za neki stock, pa u search kucam npr "tsla" i onda on trazi sve stocks koji pocinju na "tsla" u bazi pomocu GetBySymbolAsync
-            var stock = await _stockRepository.GetBySymbolAsync(symbol, cancellationToken); // Nadje u bazy stock za koji ocu da napisem komentar 
-            // ako nije naso "tsla" stock u bazi, nadje ga na netu pomocu FinancialModelingPrepService, pa ga ubaca u bazu, pa onda uzima ga iz baze da bih mi se pojavio na ekranu i da mogu da udjem u njega da comment ostavim
-            if (stock is null)
-            {   
-                stock = await _finacialModelingPrepService.FindStockBySymbolAsync(symbol, cancellationToken); 
-                if (stock is null) // Ako nije ga naso na netu, onda smo lose ukucali u search i to je biznis greska
-                    return Result<CommentDTOResponse>.Fail("Nepostojeci stock symbol koji nema ni na netu ili FMP API ne radi mozda");
+        {   
+            // Jer imam 2 SaveChangesAsync gde drugi zavisi od uspeha prvog
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            try 
+            {
+                // U FE, zelim da ostavim komentar za neki stock, pa u search kucam npr "tsla" i onda on trazi sve stocks koji pocinju na "tsla" u bazi pomocu GetBySymbolAsync
+                var stock = await _stockRepository.GetBySymbolAsync(symbol, cancellationToken); // Nadje u bazy stock za koji ocu da napisem komentar 
+                                                                                                // ako nije naso "tsla" stock u bazi, nadje ga na netu pomocu FinancialModelingPrepService, pa ga ubaca u bazu, pa onda uzima ga iz baze da bih mi se pojavio na ekranu i da mogu da udjem u njega da comment ostavim
+                if (stock is null)
+                {
+                    stock = await _finacialModelingPrepService.FindStockBySymbolAsync(symbol, cancellationToken);
+                    if (stock is null) // Ako nije ga naso na netu, onda smo lose ukucali u search i to je biznis greska
+                        return Result<CommentDTOResponse>.Fail("Nepostojeci stock symbol koji nema ni na netu ili FMP API ne radi mozda");
 
-                // Ako ga naso na netu, konvertovao FmpDto to Stock ali bez Id i ubaca ga u bazu
-                await _stockRepository.CreateAsync(stock, cancellationToken); // Baza nije jos uvek dodelila Stock.Id jer ceka SaveChangesAsync, dok ChangeTracker stavio Stock.Id neku privremeno
-                await _dbContext.SaveChangesAsync(cancellationToken); // Baza generisala Stock.Id i ChangeTracker sad vidi tu vrednost
+                    // Ako ga naso na netu, konvertovao FmpDto to Stock ali bez Id i ubaca ga u bazu
+                    await _stockRepository.CreateAsync(stock, cancellationToken); // Baza nije jos uvek dodelila Stock.Id jer ceka SaveChangesAsync, dok ChangeTracker stavio Stock.Id neku privremeno
+                    await _dbContext.SaveChangesAsync(cancellationToken); // Baza generisala Stock.Id i ChangeTracker sad vidi tu vrednost
+                }
+
+                // stock.Id postoji bilo da je FMP naso stock pa upisan u bazu ili da l vec postojao u bazi 
+
+                // Mora ovako, jer AppUser ima many Portfolios(Stock), pa ne moze preko stock da nadjem appUser 
+                var appUser = await _userManager.FindByNameAsync(userName); // Pretrazi AspNetUser tabelu da nadje usera na osnovu userName
+                                                                            // _userManager methods does not use cancellationToken
+                if (appUser is null)
+                    return Result<CommentDTOResponse>.Fail("User not found in userManager");
+
+                // Moram mapirati DTO(command) u Comment Entity jer Repository prima Entity kad god moze
+                var comment = command.ToCommentFromCreateCommentRequestDTO(stock.Id);
+                comment.AppUserId = appUser.Id;
+
+                await _commentRepository.CreateAsync(comment, cancellationToken); // Comment.Id ima neku temp vrednost u ChangeTracker privremeno dok SaveChangesAsync ne upise u bazi pravu
+
+                /*  Outbox pattern via MassTransit + Publish event to message broker via MassTransit, pa MassTransit presretne event u Publish metodi i prvo upise u Outbox tabelu, pa 
+                 MassTransit built-in background job periodicno proverava Outbox tabelu i salje neposlati integration event na message broker i oznaci kao poslat u Outbox table.
+                 Ako nesto pukne izmedju SaveChangesAsync i Publish, event nikad ne ode u message broker jer ga Publish ne upise u Outbox.
+                 Publish mora pre SaveChangesAsync da Outbox bi azuriralo.*/
+                await _publishEndpoint.Publish(new CommentCreatedIntegrationEvent { Text = "Komentar upisan" }, cancellationToken);
+
+                await _dbContext.SaveChangesAsync(cancellationToken); // Ako neka od write repo metoda iznad fail, ovaj commit nece uspeti 
+                                                                      // Baza dodelila Id u Comment i ChangeTracker tu vrednost sad vidi
+
+                await transaction.CommitAsync(cancellationToken);
+
+                // Moram mapirati Comment Entity u CommentDTOResponse jer imam Comment.Id i Comment.StockId
+                var commentDTOResponse = comment.ToCommentDTOResponse();
+
+                return Result<CommentDTOResponse>.Success(commentDTOResponse);
+            }
+            catch 
+            {
+                await transaction.RollbackAsync();
+                throw;
             }
 
-            // stock.Id postoji bilo da je FMP naso stock pa upisan u bazu ili da l vec postojao u bazi 
-
-            // Mora ovako, jer AppUser ima many Portfolios(Stock), pa ne moze preko stock da nadjem appUser 
-            var appUser = await _userManager.FindByNameAsync(userName); // Pretrazi AspNetUser tabelu da nadje usera na osnovu userName
-                                                                        // _userManager methods does not use cancellationToken
-            if (appUser is null)
-                return Result<CommentDTOResponse>.Fail("User not found in userManager"); 
-
-            // Moram mapirati DTO(command) u Comment Entity jer Repository prima Entity kad god moze
-            var comment = command.ToCommentFromCreateCommentRequestDTO(stock.Id); 
-            comment.AppUserId = appUser.Id;
-
-            await _commentRepository.CreateAsync(comment, cancellationToken); // Comment.Id ima neku temp vrednost u ChangeTracker privremeno dok SaveChangesAsync ne upise u bazi pravu
-
-            /*  Outbox pattern via MassTransit + Publish event to message broker via MassTransit, pa MassTransit presretne event u Publish metodi i prvo upise u Outbox tabelu, pa 
-             MassTransit built-in background job periodicno proverava Outbox tabelu i salje neposlati integration event na message broker i oznaci kao poslat u Outbox table.
-             Ako nesto pukne izmedju SaveChangesAsync i Publish, event nikad ne ode u message broker jer ga Publish ne upise u Outbox.
-             Publish mora pre SaveChangesAsync da Outbox bi azuriralo.*/
-            await _publishEndpoint.Publish(new CommentCreatedIntegrationEvent { Text = "Komentar upisan" }, cancellationToken);
-
-            await _dbContext.SaveChangesAsync(cancellationToken); // Ako neka od write repo metoda iznad fail, ovaj commit nece uspeti 
-            // Baza dodelila Id u Comment i ChangeTracker tu vrednost sad vidi
-
-            // Moram mapirati Comment Entity u CommentDTOResponse jer imam Comment.Id i Comment.StockId
-            var commentDTOResponse = comment.ToCommentDTOResponse();
-
-            return Result<CommentDTOResponse>.Success(commentDTOResponse);
         }
         public async Task<Result<CommentDTOResponse>> DeleteAsync(int id, string userName, CancellationToken cancellationToken)
         {

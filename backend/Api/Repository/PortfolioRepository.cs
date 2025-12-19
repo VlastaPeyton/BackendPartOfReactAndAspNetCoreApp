@@ -22,16 +22,17 @@ namespace Api.Repository
             kao za non-composite Id prilikom SaveChangesAsync Db ne zna kako da dodeli vrednost u composite PK, pa stoga mora u Db vec postojati AppUser i Stock 
             kako bi postojali AppUserId i StockId. */
             
-            //await _dbContext.SaveChangesAsync(cancellationToken); 
+            // treba SaveChangesAsync da se promena zabelezi u bazi
             
             return portfolio; 
         }
 
         public async Task<Portfolio?> DeletePortfolioAsync(AppUser appUser, string symbol, CancellationToken cancellationToken)
         {   
-            var portfolio = await _dbContext.Portfolios.FirstOrDefaultAsync(p => p.AppUserId == appUser.Id && p.Stock.Symbol.ToLower() == symbol.ToLower(), cancellationToken);  // Immediate execution
+            var portfolio = await _dbContext.Portfolios.Include(p => p.Stock).FirstOrDefaultAsync(p => p.AppUserId == appUser.Id && p.Stock.Symbol.ToLower() == symbol.ToLower(), cancellationToken);  // Immediate execution
             // EF start tracking changes in portfolio object. Ne smem AsNoTracking, jer Remove(portfolio) ne moze za untracked entity objects. 
             // U OnModelCreating objasnjeno zasto sam Stock.Symbol Indexirao.
+            // Include mi treba zbog ToPortfolioDtoResponse
 
             // FirstOrDefaultAsync moze vratiti null, ali mi ova provera treba zbog Remove 
             if (portfolio == null)
@@ -41,8 +42,7 @@ namespace Api.Repository
             
             // waits for SaveChangesAsync to apply changes in Db
 
-            return portfolio;
-             
+            return portfolio;     
         }
 
         public async Task<IEnumerable<Stock>> GetUserPortfoliosAsync(AppUser user, CancellationToken cancellationToken)
