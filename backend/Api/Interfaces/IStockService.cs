@@ -8,7 +8,7 @@ namespace Api.Interfaces
     public interface IStockService
     {   
         // Objasnjeno u ICommentService 
-        public Task<IEnumerable<StockDTOResponse>> GetAllAsync(StockQueryObject query, CancellationToken cancellationToken);
+        public Task<IEnumerable<StockDTOResponse>> GetAllAsync(StockQueryObject query,CancellationToken cancellationToken);
         public Task<Result<StockDTOResponse>> GetByIdAsync(int id, CancellationToken cancellationToken);
         public Task<StockDTOResponse> CreateAsync(CreateStockCommandModel command, CancellationToken cancellationToken);
         public Task<Result<StockDTOResponse>> UpdateAsync(int id, UpdateStockCommandModel commandModel,CancellationToken cancellationToken);

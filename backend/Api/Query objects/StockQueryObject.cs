@@ -9,13 +9,6 @@ namespace Api.Helpers
      */
     public class StockQueryObject : QueryObjectParent
     {
-        
-        // Zbog https://localhost:port/api/stock/?companyname=tesla
-        public string? CompanyName { get; set; } = null;
-
-        // Zbog https://localhost:port/api/stock/?sortby=nesto
-        public string? SortBy { get; set; } = null;
-
         // Zbog https://localhost:port/api/stock/?pangenumber=2
         public int PageNumber { get; set; } = 1;// Pagination 
 

@@ -77,10 +77,10 @@ namespace Api.Services
         public async Task<StockDTOResponse> DeleteAsync(int id, CancellationToken cancellationToken)
         {
             var stock = await _stockRepository.DeleteAsync(id, cancellationToken);
-            await _dbContext.SaveChangesAsync(cancellationToken); 
             if (stock is null)
                 throw new StockNotFoundException($"{_localization["StockNotFoundException"]}");
-            
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
             return stock.ToStockDtoResponse();
         }
     }

@@ -6,8 +6,12 @@ services:
       dockerfile: Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__Database=Server=host.docker.internal,1433;Database=ReactTSDotNetAppDB;User Id=vlasta;Password=vlasta;Encrypt=True;TrustServerCertificate=True;
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       - messagebroker2
+      - distributedcache2
 
   # messagebroker postoji u EshopMicroservices sa 5672 i 15672 vec zauzetim portovima za taj rabbitmq container, ali sad pravim nov rabbitmq container pa ih mogu koristiti opet
   messagebroker2:

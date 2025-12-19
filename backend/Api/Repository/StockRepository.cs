@@ -19,23 +19,13 @@ namespace Api.Repository
 
         // Metoda koja ima Stock?, zato sto compiler warning prikaze ako return moze biti null jer FirstOrDefault moze i null da vrati
 
-        public async Task<IEnumerable<Stock>> GetAllAsync(StockQueryObject query, CancellationToken cancellationToken)
+        public async Task<IEnumerable<Stock>> GetAllAsync(StockQueryObject query,CancellationToken cancellationToken)
         {   // Iako treba da primi Entity argument, ne moze, jer QueryObject ne moze da se mapira niti u jedan Entity objekat
 
             var stocks = _dbContext.Stocks.Include(c => c.Comments).ThenInclude(c => c.AppUser).AsNoTracking().AsQueryable(); // Dohvati sve stocks + njihove komentare + AppUser svakog komentara. Ovo je deffered execution
             // Stock ima List<Comment> polje i FK-PK vezu sa Comment i zato moze include. Bez tog polja, moralo bi kompleksiniji LINQ.
             // Include.ThenInclude ne vraca IQueryable, vec IIncludableQueryable, pa mora AsQueryable da zadrzim LINQ osobine, pa mogu kasnije npr stocks.Where/Skip/Take/ToListAsync
             // Ovde nema EF change tracking zbog AsNoTracking, obzirom da ne azuriram ono sto sam dohvatio, pa da neam bespotrebni overhead and memory zbog tracking
-
-            // In if statements there is no need for AsQueryable again 
-            if (!string.IsNullOrWhiteSpace(query.CompanyName))
-                stocks = stocks.Where(s => s.CompanyName.Contains(query.CompanyName));
-
-            if (!string.IsNullOrWhiteSpace(query.Symbol))
-                stocks = stocks.Where(s => s.Symbol.Contains(query.Symbol));
-
-            if (!string.IsNullOrWhiteSpace(query.SortBy) && query.SortBy.Equals("Symbol", StringComparison.OrdinalIgnoreCase))
-                    stocks = query.IsDescending ? stocks.OrderByDescending(s => s.Symbol) : stocks.OrderBy(s => s.Symbol);
 
             var skipNumber = (query.PageNumber - 1) * query.PageSize; // Pagination
 

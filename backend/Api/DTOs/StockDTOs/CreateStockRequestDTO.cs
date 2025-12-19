@@ -15,12 +15,12 @@ namespace Api.DTOs.Stock
     {
 
         [Required]
-        [MinLength(5, ErrorMessage = "Symbol must be at least 3 chars")]
+        [MinLength(3, ErrorMessage = "Symbol must be at least 3 chars")]
         [MaxLength(10, ErrorMessage = "Symbol cannot be over 10 chars")]
         public string Symbol { get; set; } = string.Empty; 
         
         [Required]
-        [MinLength(5, ErrorMessage = "CompanyName must be at least 3 chars")]
+        [MinLength(3, ErrorMessage = "CompanyName must be at least 3 chars")]
         [MaxLength(10, ErrorMessage = "CompanyName cannot be over 10 chars")]
         public string CompanyName { get; set; } = string.Empty;
 

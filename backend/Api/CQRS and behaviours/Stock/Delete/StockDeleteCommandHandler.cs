@@ -34,10 +34,11 @@ namespace Api.CQRS_and_behaviours.Stock.Delete
         public async Task<StockDeleteResult> Handle(StockDeleteCommand command, CancellationToken cancellationToken)
         {
             var stock = await _stockRepository.DeleteAsync(command.Id, cancellationToken);
-            await _dbContext.SaveChangesAsync(cancellationToken);
 
             if (stock is null)
                 throw new StockNotFoundException("Nije nadjen stock");
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
 
             return new StockDeleteResult(stock.ToStockDtoResponse());
         }

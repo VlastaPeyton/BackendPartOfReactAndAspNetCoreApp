@@ -125,7 +125,8 @@ namespace Api.Controllers
         [Authorize]
         public async Task<IActionResult> Delete([FromRoute] int id, CancellationToken cancellationToken)
         // Id kroz URL se obicno salje iz FE i zato [FromRoute]
-        {
+        {   // Ne moze da se odradi ovo ako Stock ima bar 1 Comment, jer u OnModelCreating je Restrict
+
             // Iako je write to DB, nema mapiranje, jer samo id je argument 
 
             await _stockService.DeleteAsync(id, cancellationToken);
@@ -142,7 +143,7 @@ namespace Api.Controllers
         {
             // Nemam StocktGetAllRequest objekat, jer zelim da GetAllCqrs i GetAll endpoints budu istog zaglavlja + da ista GetAll Repository metoda opsluzi Service i CQRS! 
             var result = await _sender.Send(new StockGetAllQuery(query), cancellationToken);
-            // Ne treba StockGetAllResponse objekat 
+            // Ne treba StockGetAllResponse objekat jer sve salje u FE
 
             return Ok(result.StockDTOResponses);
         }
@@ -215,7 +216,7 @@ namespace Api.Controllers
         [HttpDelete("cqrs/{id:int}")]
         [Authorize]
         public async Task<IActionResult> DeleteCqrs([FromRoute] int id, CancellationToken cancellationToken)
-        {
+        {   // Ne moze da se odradi ovo ako Stock ima bar 1 Comment, jer u OnModelCreating je Restrict
             // Iako je write to DB, nema mapiranje, jer samo id je argument 
 
             var result = await _sender.Send(new StockDeleteCommand(id), cancellationToken);

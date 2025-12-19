@@ -73,7 +73,7 @@ namespace Api.CQRS_and_behaviours.Portfolio.AddPortfolio
             {
                 StockId = stock.Id,
                 AppUserId = appUser.Id,
-                // Ne dodajem Stock i AppUser jer vec sigurno postoje u bazi. To bih uradio kada bih prilikom upisa novog portfolio u bazu zeleo i Stock/AppUser da upisem
+                // Ne dodajem Stock i AppUser jer vec sigurno postoje u bazi. To bih uradio kada bih prilikom upisa novog portfolio u bazu zeleo i novi Stock/AppUser da upisem
                 //Stock = stock, 
                 //AppUser = appUser,
             };
