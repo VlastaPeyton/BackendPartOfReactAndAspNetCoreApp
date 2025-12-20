@@ -1,0 +1,28 @@
+﻿Include:
+	Include generise LEFT JOIN i SELECT.
+	Ako koristim vise Include i svaki je na kolekciju entiteta u istom LINQ, moze se deseti Cartesian explision (sql napravi redove zbog LEFT JOIN koji ne 
+	postoje u bazi) i zato je bitno koristim AsSplitQuery() da se u bazi napravi za svaki Include poseban
+	SQL query, ali to povecava round trips to Database sto je pozeljan trade-off jer iz baze dohvatamo podatke bez duplikata.
+	
+	Znaci: ako entity klasa ima 2+ kolekcije i samo ako koristim Include bar na 2 kolekcije u LINQ za tu tabelu, treba AsSplitQuery, 
+	u suprotnom ne treba !!!!!!!!!!
+
+Kako proveriti da se nad entitetom nesto ne izvrsi duplo:
+	1. Unique constraint na index kolonu u bazi ako ta kolona nije PK ( jer PK je automatski IsUnique) - u OnModelCreating namestim.
+	2. Concurrency prevention on row with [Timestamp] annotation - u Entity klasi namestim.
+	3. Locking u bazi.
+	4. Idempotency key kolona u DtoRequest i Entity, FE generise GUID Idempotency Key i posalje u BE a BE ima tu kolonu.
+	  Ako u FE kliknes tri puta brzo da se izvrsi neki unos u bazu bez Idempotency Key ce uspeti i bice 3 iste kolone nepotrebmo, a sa idempotency key nece,
+	  jer prvi put je upisan idempotency key, a svaki naredni put proveri da l postoji u bazi i ako jeste onda POST ne moze jer isti 
+	  objekat vec postoji u bazi. 
+	   Update/Delete/Read su idempotent by default, ali POST nije. 
+	   Ja fakticki ne moram da nazovem kolonu IdempotencyKey vec je samo bitno da ta kolona ima IsUnique jer FE salje vrednost
+	  za tu kolonu, a ja u BE samo proverim logiku da l vec postoi
+	5. Distributed lock Redis.
+
+Index:
+	Clustered - Id kolona jer to fizicki sortira tabelu i samo 1 u tabeli. HashMap strukutra je by default ispod ovoga.
+	Non-clustered - bilo koja non-Id moze biti i po njoj pretrazujem kao po Clustered brzo ( u OnModelCreating HasIndex) 
+               ali ne previse indexa u tabeli jer write postaje spor jer mora azurirati strukturu (B-tree ili HashMap)
+			   jer kad je kolona Index ona ima jednu od ove dve strukture. B-tree koristim za range index a HashMap za 
+			   normalan insert.

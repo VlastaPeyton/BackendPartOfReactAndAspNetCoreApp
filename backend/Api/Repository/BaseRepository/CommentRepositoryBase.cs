@@ -21,14 +21,14 @@ namespace Api.Repository.BaseRepository
         }
 
         protected override IQueryable<Comment> BuildQuery(QueryObjectParent query)
-        {   // Ovo ce iz base.GetAllAsync da se pozove zbog polimorfizma
+        {   // Ovo ce iz base.GetAllAsync da se pozove, jer zbog polimorfizma znace
             return _dbContext.Comments.Include(c => c.AppUser)
-                                      .Include(c => c.Stock)
+                                      .Include(c => c.Stock) // Ne treba AsSplitQuery, jer Comment:AppUser/Stock=N:1
                                       .AsNoTracking()
                                       .AsQueryable();
         }
 
-        // Overload metod iz (I)BaseRepository, pa imacu GetAllAsync iz ICommentRepositoryBase i iz IBaseRepository, a koristim oba
+        // Overload metod iz (I)BaseRepository, pa imacu GetAllAsync iz ICommentRepositoryBase i iz IBaseRepository, a koristim oba u ovoj metodi
         public async Task<IEnumerable<Comment>> GetAllAsync(CommentQueryObject commentQueryObject, CancellationToken cancellationToken)
         {
             return await base.GetAllAsync(commentQueryObject, cancellationToken); // Moze jer CommentQueryObject nasledio QueryObjectParent

@@ -26,7 +26,8 @@ namespace Api.Repository
             // Stock ima List<Comment> polje i FK-PK vezu sa Comment i zato moze include. Bez tog polja, moralo bi kompleksiniji LINQ.
             // Include.ThenInclude ne vraca IQueryable, vec IIncludableQueryable, pa mora AsQueryable da zadrzim LINQ osobine, pa mogu kasnije npr stocks.Where/Skip/Take/ToListAsync
             // Ovde nema EF change tracking zbog AsNoTracking, obzirom da ne azuriram ono sto sam dohvatio, pa da neam bespotrebni overhead and memory zbog tracking
-
+            // Nema AsSplitQuery, iako Stock.Comments je kolekcija, ali Stock.AppUser nije ! 
+            
             var skipNumber = (query.PageNumber - 1) * query.PageSize; // Pagination
 
             return await stocks.Skip(skipNumber).Take(query.PageSize).ToListAsync(cancellationToken); // Immediate execution 

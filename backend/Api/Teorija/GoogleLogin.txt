@@ -1,11 +1,11 @@
 Pogledaj Authentication middleware.txt 
 
 Prvi tip Login je via Login endpoint (ClaimIdentity1), a drugi je via Google account (ClaimIdentity2). 
-Na https://console.cloud.google.com/ selektujem "OAuth consent screen", selektujem sve redom, i na kraju "Authorized URI" upisem URL za
+Na https://console.cloud.google.com/ selektujem "OAuth consent screen" (pogledaj OAuth2.txt), selektujem sve redom, i na kraju "Authorized URI" upisem URL za
 GoogleCallback endpoint, jer Google mora da redirektuje na moj endpoint. 
 Sacuvam "client_id" i "client_secret" koje dobijem na sajtu, jer mi to treba za kodiranje, ali ih skladistim u .env zbog Github.
 
-Ako korisnik nije registrovan pomocu Google naloga, prilikom prvog Google login, automatski se registruje, a svaki naredni put se samo logira.
+Ako korisnik nije registrovan pomocu Google naloga, prilikom prvog Google login, automatski se registruje, a svaki naredni put se samo logira (AccountService pogledaj).
 
 Potrebna su 2 endpoints:
 	1. GoogleLogin:
@@ -40,10 +40,22 @@ Potrebna su 2 endpoints:
 		}
 		, a Google odgovori sa 
 		{"access_token": "...",
+		 "refresh_token":"...",
+		 "scope": "email profile",
 		 "expires_in" : 3599,
-		 "id_token" : "...."
+		 "id_token" : "...." // Sve iz Program.cs tj email i profile upakovano u jedno
 		},
-		pa handler validira token_id (JWT from Google with user info such as email and profile jer njih u Program.cs sam upisao) i napravi od toga ClaimsIdentity i ClaimsPrincipal 
+		pa .NET salje id_token na https://www.googleapis.com/oauth2/v2/userinfo, a onda google vrati 
+		  {
+		  "id": "108396145698471234567", // Ovo dobijem jer u Program.cs imam options.Scope.Add("email"); 
+
+		  // Ovo dobijem jer u Program.cs imam options.Scope.Add("profile")
+		  "verified_email": true,
+		  "name": "Petar Petrovic",
+		  "picture": "https://lh3.googleusercontent.com/...",
+		  "email": "korisnik@gmail.com",
+			}
+		pa handler napravi od toga ClaimsIdentity i ClaimsPrincipal 
 		na osnovu Program.cs gde sam samo email i profile zahtevao od google da ubaci u id_token, i upise to u HttpContext da bi _signInManager.GetExternalLoginInfoAsync() mogo
 		da ocita te podatke.
 

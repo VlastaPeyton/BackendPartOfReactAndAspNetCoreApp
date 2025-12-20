@@ -3,6 +3,7 @@ using Api.Data;
 using Api.Interfaces.IRepositoryBase;
 using Api.Query_objects;
 using MassTransit.Internals.GraphValidation;
+using MassTransit.Util.Scanning;
 using Microsoft.EntityFrameworkCore;
 
 namespace Api.Repository.BaseRepository
@@ -24,9 +25,8 @@ namespace Api.Repository.BaseRepository
         // Ovo je "hook" koji svaka izvedena klasa mora da implementira
         protected abstract IQueryable<T> BuildQuery(QueryObjectParent query);
 
-        /* Sve metode su virtual, da mogu ih override ako mi zatreba custom logika u Stock/CommentRepositoryBase, jer nemaju bas sve ove metode istu implementaciju 
-          u Stock/CommentRepositoryBase.
-        */
+        /* Sve metode su virtual, da mogu ih override ako mi zatreba custom logika u Stock/CommentRepositoryBase, jer nemaju bas sve ove metode 
+         istu implementaciju u Stock/CommentRepositoryBase.*/
         public virtual async Task<T> CreateAsync(T entity, CancellationToken cancellationToken)
         {
             await _dbContext.Set<T>().AddAsync(entity, cancellationToken);
@@ -38,15 +38,12 @@ namespace Api.Repository.BaseRepository
         }
         public virtual async Task<IEnumerable<T>> GetAllAsync(QueryObjectParent query, CancellationToken cancellationToken)
         {   
-            var queryIzChildMetode = BuildQuery(query);
+            var queryIzChildMetode = BuildQuery(query); // Zbog polimorfizma, u zavisnosti od Stock/CommentRepositoryBase moze + QueryObjectParent ima decu
 
             var skip = (query.PageNumber - 1) * query.PageSize;
 
             return await queryIzChildMetode.Skip(skip).Take(query.PageSize).ToListAsync(cancellationToken);
-            /* Ovaj metod ce biti overloaded u (I)Stock/CommentRepositoryBase, jer u Stock/CommentRepository ima argument odgovarajuci +
-             u oba slucaja ova metoda sadrzi Include i jos neke provere, pa zato cu koristiti GetAllAsync overloaded iz (I)Stock/CommentRepositoryBase, a 
-             ne ovaj metod. Ova metoda je navedena ovde, tek onako, da ispostuje samo zato jer se pojavljuje u oba StockRepository i CommentRepository.
-            */
+            
         }
         public virtual async Task<T?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {

@@ -5,3 +5,16 @@ SQL Function:
 SQL Stored procedure: 
 	can query and write DB. Not used inside SELECT. "EXEC" keyword for SQL Server. 
 	Stored in DB.
+
+Oba skracuju number of round trips ka bazi, ubrzavaju izvrsenje jer je u bazi kod, r Db bolje optimizuje upite nego .NET  +
+izbegavam SQL Injection jer u bazi kad je SQL kod ne moze da se uradi manipulacija.
+
+Dapper koristim ako stored procedura:
+	- vraca reporting analizu
+	- vraca vise tabela od jednom
+	- vraca DTO koji nije EF entitet
+
+EF Core korisitm ako stored procedura:
+	- vraca entite koji zelim da trackujem
+	- deo transakcije sa drugim EF Core operacijama
+

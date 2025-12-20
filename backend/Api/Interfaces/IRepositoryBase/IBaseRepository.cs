@@ -14,7 +14,7 @@ namespace Api.Interfaces.IRepositoryBase
       U Program.cs NE registrujem services.AddScoped<IBaseRepository, BaseRepository>(), jer BaseRepository je abstract class + sluzi za code reuse, a ne 
       konkretnu implementaciju.
      */
-    public interface IBaseRepository<T> where T : class
+    public interface IBaseRepository<T> where T : class 
     {
         Task<T> CreateAsync(T entity, CancellationToken cancellationToken);
 

@@ -227,9 +227,10 @@ namespace Api.Controllers
             };
 
             return Challenge(properties, "Google");
-        /* Creates OAuth request using "Google" auth scheme from Program.cs. 
-        Browser is redirected to https://accounts.google.com/o/oauth2/v2/auth?client_id=...&redirect_uri=...
-        */
+            /* Creates OAuth request using "Google" auth scheme from Program.cs. 
+            Browser is redirected to https://accounts.google.com/o/oauth2/v2/auth?client_id=...&redirect_uri=... and after 
+            Google login completes, browser is redirected to RedirectUri endpoint.
+            */
         }
 
         // Pogledaj GoogleLogin.txt

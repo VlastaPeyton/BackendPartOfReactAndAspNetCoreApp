@@ -90,7 +90,7 @@ builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
 // JWT Authentication when http request hits [Authorize] endpoint - pogledaj Authentication middleware.txt
 builder.Services.AddAuthentication(options =>
 {   
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme; // Authenticate user via JwtBearerHandler to read JWT on when accessing HttpContext.User
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme; // Authenticate user via JwtBearerHandler to read JWT when accessing HttpContext.User
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;    // Specifies the scheme to use when an unauthenticated user hits [Authorize] endpoint and return 401
     options.DefaultForbidScheme = JwtBearerDefaults.AuthenticationScheme;       // User is authenticated but forbidden on specific endpoint and return 403
     options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;             // Fallback if other shcemas arent specified
@@ -106,7 +106,7 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(builder.Configuration["JWT:SigningKey"]!))
     };
 }).AddGoogle("Google", options =>
-{   // Google auth handler for google login/register - pogledaj GoogleLogin.txt 
+{   // Google auth handler for google login/register - pogledaj GoogleLogin.txt i OAuth2.txt
     options.ClientId = Env.GetString("GOOGLE_AUTH_CLIENT_ID");
     options.ClientSecret = Env.GetString("GOOGLE_AUTH_CLIENT_SECRET");
 

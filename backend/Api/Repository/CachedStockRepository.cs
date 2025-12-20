@@ -77,7 +77,7 @@ namespace Api.Repository
             return listStocks;
         }
 
-        // Ovo mi ne treba, ali mora da stoji, jer IStockRepositoryBase je nasledio iz IBaseRepository 
+        // Ovo mi ne treba, ali mora da stoji, jer IStockRepositoryBase je nasledio iz IBaseRepository
         public async Task<IEnumerable<Stock>> GetAllAsync(QueryObjectParent query, CancellationToken cancellationToken)
         {
 

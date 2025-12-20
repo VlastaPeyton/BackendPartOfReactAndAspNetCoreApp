@@ -18,20 +18,19 @@ namespace Api.Repository.BaseRepository
         public StockRepositoryBase(ApplicationDBContext dBContext) : base(dBContext) { }
 
         protected override IQueryable<Stock> BuildQuery(QueryObjectParent query)
-        {  // Ovde mora QueryObjectParent, jer cu je pozvati za Stock/CommentRepositoryBase iz BaseRepository.GetAllAsync, a znace zbog polimorfizma
+        {  // Ovde mora QueryObjectParent, jer cu je pozvati za Stock/CommentRepositoryBase iz BaseRepository.GetAllAsync, a znace zbog polimorfizma 
             return _dbContext.Stocks
                             .Include(c => c.Comments)
                             .ThenInclude(c => c.AppUser)
                             .AsNoTracking()
-                            .AsQueryable();
+                            .AsQueryable(); // Nema AsSplitQuery, iako Stock.Comments je kolekcija, ali Stock.AppUser nije ! 
         }
 
         // CreateAsync mi odgovara iz BaseRepository, pa necu je override 
 
-        // Overload metod, pa imacu GetAllAsync iz IStockRepositoryBase i iz IBaseRepository, a koristim oba
+        // Overload metod, pa imacu GetAllAsync iz IStockRepositoryBase i iz IBaseRepository, a koristim oba u ovoj metodi
         public async Task<IEnumerable<Stock>> GetAllAsync(StockQueryObject query, CancellationToken cancellationToken)
-        {
-
+        {   
             return await base.GetAllAsync(query, cancellationToken); // Mogu proslediti StockQueryObject jer on nasledio QueryObjectParent
         }
 

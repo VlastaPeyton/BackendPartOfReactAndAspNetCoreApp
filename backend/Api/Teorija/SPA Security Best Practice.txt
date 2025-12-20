@@ -19,7 +19,7 @@ Zelim SPA App, a best practice to achieve SPA is to enhance security on BE side:
 	-Refresh Token (long-lived) stored in Cookie (HttpOnly, Secure, SameSite - prevent CSRF). 
 	 Lasting npr 7days u mom slucaju. After 7days, user has to manually logout and login (or automaticly logout by app) to obtain a new refresh token.
 	 Refresh Token je stored in DB i to je stateful, ali on se proverava u bazi samo kad Access Token istice tj nije za svaki Request provera u bazi, jer se tad JWT proverava koji je in Request (stateless).
-	 BE salje Refresh Token in Cookie to Browser (not to FE), a Browser ga salje via Cookie samo kada FE vidi da JWT uskori istice (u FE napravljen Axios interceptor koji poziva RefreshToken endpoint samo kad treba).
+	 BE salje Refresh Token in Cookie to Browser (not to FE), a Browser ga salje via Cookie samo kada FE vidi da JWT uskori istice (u FE napravljen Axios interceptor koji poziva RefreshToken endpoint samo kad je JWT AccessToken blizu isteka).
 	 Token rotation = kada JWT is about to expire, menja se i JWT i Refresh Token.
 
 Popravka1 to achieve SPA security best practice:

@@ -20,6 +20,6 @@ Kada Serilog kreira tabelu, bez dodatne konfiguracije, njene kolone su:
     MessageTemplate - Template poruke sa placeholders
     Level - Information/Warning/Error zavisi u appsettings sta stoji npr Informatioj jer _logger.Information("porukaaa")
     TimeStamp 
-    Exception - stack trace ako ima exception
+    Exception - stack trace ako se desi exception
     Properties - u xml formatu. iskljucim je
     LogEvent - ovo sam dodao, jer Properties sam iskljucio, da ceo log event u JSON format

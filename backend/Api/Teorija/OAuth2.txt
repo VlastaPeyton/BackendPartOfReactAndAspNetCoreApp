@@ -1,0 +1,2 @@
+﻿Pogledaj GoogleLogin.txt
+OAuth2 je protokol koji omogucava mom backend da pristupi npr Google/Fb bez da zna password za Google/Fb.

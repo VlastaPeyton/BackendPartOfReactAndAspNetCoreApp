@@ -120,8 +120,8 @@ namespace Api.Data
 
             // U FE cesto brisem portfolio(stock) koji sam added to my portfolios, pa se DeletePortfolio metoda cesto koristi u kojoj je LINQ by Stock.Symbol i zato mu dodelim index da brze pretrazuje. Isto vazi i za GetAllAsync jer cesto gledam Company profile za neki stock pa ovaj endpoint cesto pokrecem.
             builder.Entity<Stock>()
-                   .HasIndex(s => s.Symbol)
-                   .IsUnique(); // Index kolona mora biti unique (kao sto je Id PK index by default i uvek je unique), a Symbol je unique.
+                   .HasIndex(s => s.Symbol) // Non-clustered index, mogu imati ovakvih koliko ocu, ali Clustered je samo 1 (Id) kolona po kojoj podaci su sortirani u tabeli - pogledaj EF Core.txt
+                   .IsUnique(); // Index kolona NE mora biti unique osim ako nije PK istovremeno, ali ja zelim da bude jer Symbol je unique + da se ne izvrsi dupli unos tokom iste transakcije.
 
             // IdentityRole (AspNetRoles) table configuration 
             builder.Entity<IdentityRole>(entity =>

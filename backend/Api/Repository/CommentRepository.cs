@@ -43,6 +43,7 @@ namespace Api.Repository
             // Comment ima AppUser polje i PK-FK vezu sa AppUser, pa zato moze Include(c => c.AppUser)
             // AsQueryable mora nakon Include kako bih zadrzao LINQ osobine, da mogu kasnije npr comments.Where(...), comments.OrderByDescending(...) itd.
             // Ovde nema EF tracking jer sam stavio AsNoTracking posto necu da modifikujem/brisem comments nakon ocitavanja iz baze, pa da ne dodajem overhead and memory zbog tracking
+            // Ne treba AsSplitQuery, jer Comment:AppUser=N:1 i Comment:Stock=N:1
 
             // In if statement no need to AsQueryable again
             if (!string.IsNullOrWhiteSpace(commentQueryObject.Symbol))

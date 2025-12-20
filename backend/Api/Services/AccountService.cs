@@ -261,7 +261,7 @@ namespace Api.Services
 
         public async Task<NewUserDTO> GoogleLoginRegisterAsync()
         {
-            // Ocita informacija o Google login koje je Google Auth Handler smestio u HttpContext
+            // Ocita informacija o Google login koje je Google Auth Handler (iz Program.cs) smestio u HttpContext
             var info = await _signInManager.GetExternalLoginInfoAsync();
             if (info is null)
                 throw new GoogleLoginException($"{_localization["GoogleLoginException2"]}");
@@ -275,25 +275,26 @@ namespace Api.Services
             if (string.IsNullOrEmpty(email))
                 throw new GoogleLoginException($"{_localization["GoogleLoginException3"]}");
 
-            // Provera da li korisnik vec postoji i to povezan sa Google nalogom
+            // Provera da li korisnik, povezan sa Google nalogom, vec postoji u bazi tj da li se vec logirao sa Google
             var appUser = await _userManager.FindByLoginAsync(loginProvider, providerKey);
             if (appUser is null)
-            {
-                // Korisnik nije povezan sa Google nalog
-                // Provera da li postoji korisnik sa istim email u bazi (nebitno kako je registrovan)
+            {   // User se nikad nije logirao sa Google, ali ne znaci da se nije registrovao sa Register form
+
+                // Provera da li postoji korisnik sa istim email u bazi (jer mozda je vec registrovan putem Login forme)
                 appUser = await _userManager.FindByEmailAsync(email);
 
-                // Transaction: kreiranje korisnika + dodavanje role + linking Google naloga
+                // Transaction: kreiranje novi korisnik + dodavanje role + linking Google naloga sa novim korisnikom
                 using var transaction = await _dbContext.Database.BeginTransactionAsync();
                 try
-                {
+                {   
                     if (appUser is null)
-                    {
-                        // Kreiranje novi korisnik, jer ne postoji niko u bazi sa ovim email
+                    {   // User sa Google nalog i email nije registrovan ni preko Google, a ni preko Login forme => kreiraj novi user
+                        
+                        // Kreiranje novi user
                         appUser = new AppUser { UserName = email, 
                                                 Email = email, 
                                                 EmailConfirmed = true,
-                        };
+                                               };
 
                         var createResult = await _userManager.CreateAsync(appUser);
                         if (!createResult.Succeeded)
@@ -304,13 +305,12 @@ namespace Api.Services
                         if (!roleResult.Succeeded)
                             throw new GoogleLoginException($"{_localization["GoogleLoginException5"]}");
                     }
-
-                    // Povezuje Google nalog sa korisnikom
+                    // Ako u bazi postoji vec taj email, user koji trenutno zeli login sa Google nalog, vec je registrovan preko Login forme => link Google i njegov mejl
+                    // Povezuje Google nalog sa korisnikom jer User (koji mozda se vec registrovao preko Login form) se jos uvek nije login sa Google
                     var addLoginResult = await _userManager.AddLoginAsync(appUser, info);
                     if (!addLoginResult.Succeeded)
                         throw new GoogleLoginException($"{_localization["GoogleLoginException6"]}");
 
-                    // Commit transaction 
                     await transaction.CommitAsync();
                 }
                 catch
@@ -320,31 +320,21 @@ namespace Api.Services
                     throw; // Prosledi uzvodno u stack do narednog catch (GlobalExceptionHandlingMiddleware)
                 }
             }
+            // User se vec prethodno logirao sa Google (ali mozda nije sa Register form)
 
             // JWT AccessToken i RefreshToken 
             var accessToken = _tokenService.CreateAccessToken(appUser);
             var refreshToken = _tokenService.CreateRefreshToken();
             var hashedRefreshToken = _tokenService.HashRefreshToken(refreshToken);
 
-            // Transaction: azuriranje refresh token
-            using var tokenTransaction = await _dbContext.Database.BeginTransactionAsync();
-            try
-            {
-                appUser.RefreshTokenHash = hashedRefreshToken;
-                appUser.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
-                appUser.LastRefreshTokenUsedAt = null;
+            
+            appUser.RefreshTokenHash = hashedRefreshToken;
+            appUser.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+            appUser.LastRefreshTokenUsedAt = null;
 
-                var updateResult = await _userManager.UpdateAsync(appUser);
-                if (!updateResult.Succeeded)
-                    throw new GoogleLoginException("Failed to update refresh token");
-
-                await tokenTransaction.CommitAsync();
-            }
-            catch
-            {
-                await tokenTransaction.RollbackAsync();
-                throw;
-            }
+            var updateResult = await _userManager.UpdateAsync(appUser);
+            if (!updateResult.Succeeded)
+                throw new GoogleLoginException("Failed to update refresh token");
 
             return new NewUserDTO
             {
@@ -372,10 +362,12 @@ namespace Api.Services
                     await transaction.RollbackAsync(cancellationToken);
                     return;
                 }
+                await transaction.CommitAsync(cancellationToken);
+
             }
             catch
             {
-                await transaction.CommitAsync(cancellationToken);
+                await transaction.RollbackAsync(cancellationToken);
                 throw; 
             }
         }

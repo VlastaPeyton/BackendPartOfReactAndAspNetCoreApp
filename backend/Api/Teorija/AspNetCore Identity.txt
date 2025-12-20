@@ -37,3 +37,4 @@ How to use Identity in code:
     U OnModelCreating seedujem AspNetRoles, ali AspNetUsers ne mogu, jer za to mi treba UserManager koga NE SMEM koristiti u ApplicationDbContext.
 
 U Program.cs definisem zahteve za password (veliko/malo slovo, digit itd) cime izbegavam proveru u Register/LoginDTO ili FluentValidation.
+U Program.cs AddIdentity sam povezao sa ApplicationDbContext da bi se isti DbContext koristio za EF Core i za Identity(UserManager, SignInManager itd)
