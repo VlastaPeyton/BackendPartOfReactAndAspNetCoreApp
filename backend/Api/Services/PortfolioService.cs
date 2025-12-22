@@ -1,4 +1,5 @@
 ﻿using Api.Data;
+using Api.DTOs.Keyless_entity;
 using Api.DTOs.PortfolioDTOs;
 using Api.DTOs.StockDTO;
 using Api.Exceptions_i_Result_pattern;
@@ -9,6 +10,7 @@ using Api.Localization;
 using Api.Mapper;
 using Api.Models;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
 
 namespace Api.Services
@@ -28,8 +30,8 @@ namespace Api.Services
                                 IFinacialModelingPrepService finacialModelingPrepService,
                                 IStringLocalizer<Resource> localization,
                                 ApplicationDBContext dBContext)
-        {
-             _userManager = userManager;
+        {   
+            _userManager = userManager;
             _stockRepository = stockRepository;
             _portfolioRepository = portfolioRepository;
             _finacialModelingPrepService = finacialModelingPrepService;
@@ -133,6 +135,24 @@ namespace Api.Services
             }
             else
                 return Result<PortfolioDtoResponse>.Fail("Stock is not in your portfolio list");
+        }
+
+        public async Task<decimal> GetUserPortfolioTotalPurchaseAsync(string userName, CancellationToken cancellationToken)
+        {   // Pogledaj SQL function vs stored procedure.txt 
+
+            // Zbog stored procedure, moram sve redove(Iako ovde samo 1 red ima) uzeti, a tek onda samo onaj koji mi treba
+            var rows = await _dbContext.Set<UserPortfolioTotal>()
+                                        .FromSqlInterpolated($"EXEC GetUserPortfolioTotalStoredProcedure @UserName = {userName}")
+                                        .AsNoTracking()
+                                        .ToListAsync(cancellationToken);
+            
+            var userPortfolioTotal = rows.FirstOrDefault(); 
+
+
+            if (userPortfolioTotal is null)
+                throw new UserNotFoundException(_localization["StoredProcedureProble"]);
+
+            return userPortfolioTotal.TotalPurchaseValue;
         }
     }
 }

@@ -4,8 +4,10 @@
 	postoje u bazi) i zato je bitno koristim AsSplitQuery() da se u bazi napravi za svaki Include poseban
 	SQL query, ali to povecava round trips to Database sto je pozeljan trade-off jer iz baze dohvatamo podatke bez duplikata.
 	
+	Kod Include.ThenInclude ne treba AsSplitQuery, jer kolekcije moraju biti na istom nivou tj unutar klase nad kojom radim LINQ 
+
 	Znaci: ako entity klasa ima 2+ kolekcije i samo ako koristim Include bar na 2 kolekcije u LINQ za tu tabelu, treba AsSplitQuery, 
-	u suprotnom ne treba !!!!!!!!!!
+	u suprotnom ne treba !! 
 
 Kako proveriti da se nad entitetom nesto ne izvrsi duplo:
 	1. Unique constraint na index kolonu u bazi ako ta kolona nije PK ( jer PK je automatski IsUnique) - u OnModelCreating namestim.

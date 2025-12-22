@@ -1,0 +1,6 @@
+﻿Sql serve => Azure Sql Databse
+Redis => Azure Managed Redis
+RabbitMQ => CloudAMQP from Azure Marketplace or Azure Service Bus 
+
+U pocetku, Azure VM napravim i tamo instaliram SQL Server + RabbitMQ + Redis kao na laptopu mom, a tek onda 
+kada projekat narase predjem na Azure SQL Database + Azure Service Bus + Azure Managed Redis.

@@ -177,6 +177,9 @@
   <data name="StockNotFoundException" xml:space="preserve">
     <value>Stock not found</value>
   </data>
+  <data name="StoredProcedureProble" xml:space="preserve">
+    <value>Nesto se desilo u stored procedure</value>
+  </data>
   <data name="UnauthorizedAccessException" xml:space="preserve">
     <value>Claims not found</value>
   </data>

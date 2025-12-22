@@ -1,4 +1,5 @@
 ﻿using System.Reflection.Emit;
+using Api.DTOs.Keyless_entity;
 using Api.Models;
 using Api.Value_Objects;
 using MassTransit;
@@ -28,6 +29,11 @@ namespace Api.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+            // Keyless entity - pogledaj SQL function vs Stored procedure.txt
+            builder.Entity<UserPortfolioTotal>()
+                   .HasNoKey()
+                   .ToView(null);
 
             // Comment configuration stavljam u blok jer lakse je za pratiti 
             builder.Entity<Comment>(entity =>

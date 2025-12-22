@@ -3,11 +3,18 @@ SQL Function:
 	Stored in DB.
 
 SQL Stored procedure: 
-	can query and write DB. Not used inside SELECT. "EXEC" keyword for SQL Server. 
+	can both query and write DB. Not used inside SELECT. "EXEC" keyword for SQL Server. 
 	Stored in DB.
 
 Oba skracuju number of round trips ka bazi, ubrzavaju izvrsenje jer je u bazi kod, r Db bolje optimizuje upite nego .NET  +
 izbegavam SQL Injection jer u bazi kad je SQL kod ne moze da se uradi manipulacija.
+
+Procedura(funkcija) vraca tip podatka koji nije Entity, vec napravim keyless klasu koja predstavlja rezultat iz baze
+da bi EF Core mogo da mapria rezultat procedure koja cita iz baze. Ova klasa nece biti tabela u bazi, ali je u OnModelCreating
+registrujem with HasNoKey i ToView(null) ako ne zelim rezultat procedure napravi tabelu/view u bazi. Ovo mora, jer procedura ne cita tabele, vec iz jedne ili vise tabela cita i pravi zeljeni rezultat 
+koji mora da mapira u postojeci objekat u kodu. 
+Ako u Db imam View, pomocu keyless klase i ToView(ime_view) mogu raditi LINQ nad tim View.
+Sve kolone iz keyless entity klase koje nisu nullable moram select u stored proceduri inace error.
 
 Dapper koristim ako stored procedura:
 	- vraca reporting analizu

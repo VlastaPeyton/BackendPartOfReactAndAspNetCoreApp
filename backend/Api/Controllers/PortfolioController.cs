@@ -1,6 +1,7 @@
 ﻿using Api.CQRS_and_behaviours.Portfolio.AddPortfolio;
 using Api.CQRS_and_behaviours.Portfolio.Delete;
 using Api.CQRS_and_behaviours.Portfolio.GetUserPortfolios;
+using Api.CQRS_and_behaviours.Portfolio.TotalPurchase;
 using Api.Extensions;
 using Api.Interfaces;
 using Api.Models;
@@ -67,6 +68,21 @@ namespace Api.Controllers
             return Ok();
         }
 
+
+        [HttpGet("totalPurchase")]
+        [Authorize]
+        public async Task<IActionResult> GetUserPortfolioTotalPurchase(CancellationToken cancellationToken)
+        {
+            var userName = User.GetUserName();
+
+            decimal totalPortfolioPurchase = await _portfolioService.GetUserPortfolioTotalPurchaseAsync(userName, cancellationToken);
+
+            if (totalPortfolioPurchase == 0)
+                return NotFound($"User '{userName}' not found or has no portfolio");
+
+            return Ok(totalPortfolioPurchase);
+        }
+
         // CQRS endpoints
 
         [HttpGet("cqrs")]  
@@ -107,6 +123,21 @@ namespace Api.Controllers
                 return BadRequest(new { message = resultPattern.Error });
 
             return Ok();
+        }
+
+        [HttpGet("cqrs/totalPurchase")]
+        [Authorize]
+        public async Task<IActionResult> GetUserPortfolioTotalPurchaseCqrs(CancellationToken cancellationToken)
+        {   
+            var userName = User.GetUserName();
+
+            // Nema potrebe za Request object jer neam argument u endpoint 
+            var result = await _sender.Send(new UserPortfolioTotalQuery(userName), cancellationToken); 
+            
+            if (result.TotalPurchaseValue == 0)
+                return NotFound($"User '{userName}' not found or has no portfolio");
+
+            return Ok(result.TotalPurchaseValue);
         }
     }
 }
