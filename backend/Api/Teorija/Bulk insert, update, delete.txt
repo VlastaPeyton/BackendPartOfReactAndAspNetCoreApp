@@ -14,12 +14,12 @@ Da bi se smanjio broj round trips to Db, posebno ako menjam vise redova u bazu, 
 	1. Bulk insert:
 		EF Core nema ovo, vec moram koristiti NuGet koje omogucavaju.
 
-	2. Bulk update:
+	2. Bulk update + atomic:
 		Pogledaj User/Portfolio/CommentRepository. 
 		Ne radim explicitni select kao obicno, pa da EF Core ChageTrackuje taj objekat, pa SaveChangesAsync da promene nad tim objektom upise u bazu. 
 		Vec radim ExecuteUpdateAsync gde se vrsta iz baze ne prevodi u objekat, vec direkt se pristupa bazi i nad bazom se vrse izmene.
 		
-	3. Bulk delete:
+	3. Bulk delete + atomic:
 		Ne radim explicitni select kao obicno, pa da EF Core ChangeTrackuje taj objekat, pa SaveChangesAsync da promene nad tim objektom upise u bazu.
 		Vec radim ExecuteDeleteAsync gde se vrsta iz baze ne prevodi u objekat, vec direkt se pristupa bazi i nad bazom se vrse izmene.
 

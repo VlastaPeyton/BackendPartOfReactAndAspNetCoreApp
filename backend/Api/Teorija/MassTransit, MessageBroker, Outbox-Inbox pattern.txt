@@ -26,6 +26,7 @@ Outbox/Inbox pattern:
 	  Consumer ima Inbox tabelu, koja ne zna sadrzaj poruke, ali zna koje events je Consumer vec obradio i periodicno cita iz Inbox pomocu 
 	 background job da vidi je l ima neki neobradjen event.
 	  Inbox sprecava da Consumer 2x obradi isti event. 
+	  MassTransit ce automatski da serializuje IntegrationEvent objekat i upisati ga u OutboxMessage tabelu Body kolonu.
 
 	Ako mikroservis i salje i prima events od message broker, onda on ima u svojoj Db ima Outbox i Inbox, ali ako samo prima onda Inbox samo, 
    a ako samo salje onda Outbox, jer tehnicki moze uvek imati oba, ali sta ce mu ako mu ne treba.
@@ -45,4 +46,4 @@ Outbox/Inbox pattern:
 		  Uradim migracije u oba microservisa da bih Outbox/Inbox tabelu dodao u bazu.
 		  Sada publishEndpoint.Publish(event) upise Integration Event u Outbox, a pozadinski built-in MassTransit proces ocitava Outbox periodicno
 		 i salje neposlate Integration Events u message broker. Tek nakon SaveChangesAsync, Outbox tabela omoguci pozadinskom procesu da vidi novi event.
-
+		  

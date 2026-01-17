@@ -120,13 +120,12 @@ namespace Api.Repository
 
         public async Task DeleteByUserIdAsync(string userId, DateTime utcNow, CancellationToken cancellationToken)
         {
-            // Pogledaj u UserRepository zasto je ovo Bulk insert i kako smanjuje br of round trips to Db
+            // Pogledaj u UserRepository zasto je ovo Bulk insert + atomicnost i kako smanjuje br of round trips to Db
 
             /* U OnModelCreating pise "entityHasQueryFilter(c => !c.IsDeleted)" EF automatski uzima samo redove gde
               IsDeleted=false. Da bih postigao idempotentnost, jer sad brisanjem usera zelim da obrisem i njegove comments, 
               gde su mozda neki od comments vec obrisani na drugi nacin (CommentRepository.DeleteAsync), moram IgnoreQueryFilter 
-              iako cu time da obrisem vec obrisane, nema veze, jer ovako postizem idempotency.
-             */
+              iako cu time da obrisem vec obrisane, nema veze, jer ovako postizem consistency.*/
             await _dbContext.Comments 
                             .IgnoreQueryFilters() 
                             .Where(c => c.AppUserId == userId && !c.IsDeleted)

@@ -19,7 +19,7 @@ namespace Api.Repository
                   - 1 ako user nadjen i soft delete
                   - 0 ako vec soft deleted 
 
-              Ovo je Bulk update gde EF ne uradi SELECT, pa azurira objekte posebno pa SaveChangesAsync, vec odma azurira u bazi
+              Ovo je Bulk update + Atomicity gde EF ne uradi SELECT, pa azurira objekte posebno pa SaveChangesAsync, vec odma azurira u bazi
               gde izbegavam SELECT cime smanjujem br round trips ka bazi sa 2 na 1. - pogledaj Bulk insert, update, delete.txt
             */
             return await _dbContext.Users.Where(u => u.Id == userId && !u.IsDeleted)

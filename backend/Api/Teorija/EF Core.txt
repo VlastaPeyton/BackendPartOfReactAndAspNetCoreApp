@@ -12,15 +12,16 @@
 Kako proveriti da se nad entitetom nesto ne izvrsi duplo:
 	1. Unique constraint na index kolonu u bazi ako ta kolona nije PK ( jer PK je automatski IsUnique) - u OnModelCreating namestim.
 	2. Concurrency prevention on row with [Timestamp] annotation - u Entity klasi namestim.
-	3. Locking u bazi.
-	4. Idempotency key kolona u DtoRequest i Entity, FE generise GUID Idempotency Key i posalje u BE a BE ima tu kolonu.
+	3. Identity package has ConcurrencyStamp column to prevent race conditions.
+	4. Locking u bazi.
+	5. Idempotency key kolona u DtoRequest i Entity, FE generise GUID Idempotency Key i posalje u BE a BE ima tu kolonu.
 	  Ako u FE kliknes tri puta brzo da se izvrsi neki unos u bazu bez Idempotency Key ce uspeti i bice 3 iste kolone nepotrebmo, a sa idempotency key nece,
 	  jer prvi put je upisan idempotency key, a svaki naredni put proveri da l postoji u bazi i ako jeste onda POST ne moze jer isti 
 	  objekat vec postoji u bazi. 
 	   Update/Delete/Read su idempotent by default, ali POST nije. 
-	   Ja fakticki ne moram da nazovem kolonu IdempotencyKey vec je samo bitno da ta kolona ima IsUnique jer FE salje vrednost
-	  za tu kolonu, a ja u BE samo proverim logiku da l vec postoi
-	5. Distributed lock Redis.
+	   Ja fakticki ne moram da nazovem kolonu IdempotencyKey vec je samo bitno da ta kolona ima IsUnique u OnModelCreating, jer FE salje vrednost
+	  za tu kolonu, a ja u BE samo proverim logiku da l vec postoi.
+	6. Distributed lock Redis.
 
 Index:
 	Clustered - Id kolona jer to fizicki sortira tabelu i samo 1 u tabeli. HashMap strukutra je by default ispod ovoga.

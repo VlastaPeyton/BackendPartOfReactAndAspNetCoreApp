@@ -65,7 +65,7 @@ namespace Api.Services
         }
         public async Task<Result<CommentDTOResponse>> CreateAsync(string userName, string symbol, CreateCommentCommandModel command, CancellationToken cancellationToken)
         {   
-            // Jer imam 2 SaveChangesAsync gde drugi zavisi od uspeha prvog
+            // Jer imam 2 SaveChangesAsync gde drugi zavisi od uspeha prvog, pa transakcija treba
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
             try 
             {

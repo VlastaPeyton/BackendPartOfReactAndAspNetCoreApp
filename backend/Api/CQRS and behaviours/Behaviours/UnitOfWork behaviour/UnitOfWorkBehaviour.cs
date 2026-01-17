@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Api.CQRS_and_behaviours.Behaviours.UnitOfWork_behaviour
 {
-    //Samo se Command validira, jer on menja podatke u bazi zato ICommand - ne koristim, jer ako treba vise SaveChangesAsync u Handle, onda ovo ne moze
+    //Samo se Command validira, jer on menja podatke u bazi zato ICommand - NE KORISTIM, jer ako treba vise SaveChangesAsync u Handle, onda ovo ne moze
     public class UnitOfWorkBehavior<TRequest, TResponse>: IPipelineBehavior<TRequest, TResponse> where TRequest : ICommand<TResponse>
     {
         private readonly ApplicationDBContext _dbContext;

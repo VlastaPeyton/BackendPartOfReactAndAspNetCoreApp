@@ -74,6 +74,8 @@ namespace Api.Repository.BaseRepository
 
         public async Task DeleteByUserIdAsync(string userId, DateTime utcNow, CancellationToken cancellationToken)
         {
+            // Pogledaj u UserRepository zasto je ovo Bulk insert + atomicnost i kako smanjuje br of round trips to Db
+
             await _dbContext.Comments
                             .IgnoreQueryFilters()
                             .Where(c => c.AppUserId == userId && !c.IsDeleted)

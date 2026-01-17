@@ -38,7 +38,7 @@ namespace Api.Repository.BaseRepository
         }
         public virtual async Task<IEnumerable<T>> GetAllAsync(QueryObjectParent query, CancellationToken cancellationToken)
         {   
-            var queryIzChildMetode = BuildQuery(query); // Zbog polimorfizma, u zavisnosti od Stock/CommentRepositoryBase moze + QueryObjectParent ima decu
+            var queryIzChildMetode = BuildQuery(query); // Zbog polimorfizma, u zavisnosti od Stock/CommentRepositoryBase + QueryObjectParent ima decu za te klase
 
             var skip = (query.PageNumber - 1) * query.PageSize;
 

@@ -1,8 +1,15 @@
 Klijent posalje request, on se upise u Request objekat koji definisem
 U endpoint Request objekat se mapira u Command/Query objekat, gde Request i Command/Query moraju imati ista polja
-Command sluzi za pisanje u bazu, a Query za citanje iz baze.
+Command sluzi za pisanje u bazu, a Query za citanje iz baze. 
 Kada endpont posalje Command/Query kroz MediatR, Validation za Command, pa Command/QueryHandler se automatski aktivira
 MediatR NuGet se koristi za CQRS pattern
+
+CQRS zahteva da entity objekte upisujem u tabele njihove, ali za query da ne citam entity tabele, vec druge tabele koje su read modeli.
+Da bi se read model tabele napunile, potreban je background worker da iz entity (write) tabela popuni read tabele.
+Zbog ovoga, Repository mora imati samo write metode tj u CommandHandler (ili write service metodi) koristim repository, dok 
+u QueryHandler (ili read service metode) koristim applicationdbcontext (pristu bazi) direktno.
+
+Ja nemam ovo, vec write i read rade nad entity tabela, pa je ovo light-CQRS u mom slucaju.
 
 Validacija se radi za Command, retko za Query, jer bitno je validirati ono sto ulazi u bazu, a ne ono sto je ocitava
 FluentValidation, FluentValidation.DependencyInjection i FluentValidation.AspNetCore  NuGet se koristi

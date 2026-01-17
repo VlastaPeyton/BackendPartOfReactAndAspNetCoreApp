@@ -66,11 +66,12 @@ namespace Api.Data
 
                 // Portfolios tabela imace PK kao kombinaciju AppUserId i StockId zato sto Portfolio.cs tako napravljen i jer u Portfolio.cs ne mogu compositni PK da napravim, nego ovde moram
                 entity.HasKey(p => new { p.AppUserId, p.StockId }); 
-                /* Ovo je samo po sebi index za ovaj composite PK. 
+                /* Ovo je samo po sebi index za ovaj composite PK => 1 commentar by same user for same portfolio !
                    AppUserId i StockId cu ispod definisati kao FK za AppUser i Stock.
                    Ovaj composite PK je sastavljen od 2 FK i zato moram prvo dodati AppUser i Stock u bazu, kako bi tokom AddAsync(portfolio) u PortfolioRepository mogao da doda ga u bazu, 
                 jer composite PK ne moze baza da napravi sama kao obican Id PK, vec to moram da osiguram prethodno. 
                    Da je composite PK sastavljen od 2 polja gde nijedno nije FK, onda ne bih morao imati AppUser i Stock u bazi pre AddAsync(portfolio).
+                   Ako composite PK sadrzi Frontend-generated value, onda to istovremeno resava idempotency.
                 */
 
                 // Zbog explicitno defisanja PK za Portfolio, moram definisati explicitno 1-to-many AppUser/Stock - Portfolio veze
@@ -127,14 +128,14 @@ namespace Api.Data
             // U FE cesto brisem portfolio(stock) koji sam added to my portfolios, pa se DeletePortfolio metoda cesto koristi u kojoj je LINQ by Stock.Symbol i zato mu dodelim index da brze pretrazuje. Isto vazi i za GetAllAsync jer cesto gledam Company profile za neki stock pa ovaj endpoint cesto pokrecem.
             builder.Entity<Stock>()
                    .HasIndex(s => s.Symbol) // Non-clustered index, mogu imati ovakvih koliko ocu, ali Clustered je samo 1 (Id) kolona po kojoj podaci su sortirani u tabeli - pogledaj EF Core.txt
-                   .IsUnique(); // Index kolona NE mora biti unique osim ako nije PK istovremeno, ali ja zelim da bude jer Symbol je unique + da se ne izvrsi dupli unos tokom iste transakcije.
+                   .IsUnique(); // Index kolona NE mora biti unique osim ako nije PK istovremeno, ali ja zelim da bude jer Symbol je unique + da se ne izvrsi dupli unos tokom iste transakcije prilikom POST (race condition)
 
             // IdentityRole (AspNetRoles) table configuration 
             builder.Entity<IdentityRole>(entity =>
             {
                 // IdentityRole moze imati proizvoljno ime role.
                 List<IdentityRole> roles = new List<IdentityRole>
-                {
+                {   
                     new IdentityRole
                     {
                         Id = "8d04dce2-969a-435d-bba4-df3f325983dc",
